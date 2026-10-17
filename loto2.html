@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Loto Benin - Analyse Avancée</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 950px; margin: 20px auto; padding: 0 15px; background: #f9f9f9; }
+  h1, h2 { color: #1a5c2a; }
+  .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  input, button, select { padding: 8px; font-size: 15px; margin: 4px 2px; border-radius: 4px; border: 1px solid #ccc; }
+  input[type=number] { width: 60px; }
+  button { background: #1a5c2a; color: white; border: none; cursor: pointer; }
+  button:hover { background: #144a22; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background: #1a5c2a; color: white; }
+  .msg { font-weight: bold; margin-top: 8px; }
+  .ball { display: inline-block; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; background: #1a5c2a; color: white; font-weight: bold; margin: 0 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; margin-top: 10px;}
+  .box { padding: 8px; text-align: center; border-radius: 4px; font-size: 13px; border: 1px solid #eee;}
+  .hot { background: #ffe0e0; border-color: #ffb3b3; }
+  .cold { background: #e0e8ff; border-color: #b3c6ff; }
+</style>
+</head>
+<body>
+
+<h1>🎰 Loto Bénin - Analyse Avancée</h1>
+
+<!-- ====== SAISIE ====== -->
+<div class="card">
+  <h2>Saisir un tirage</h2>
+  <label>Date : <input type="date" id="date"></label><br><br>
+  <label>Numéros : </label>
+  <input type="number" id="b1" min="1" max="90">
+  <input type="number" id="b2" min="1" max="90">
+  <input type="number" id="b3" min="1" max="90">
+  <input type="number" id="b4" min="1" max="90">
+  <input type="number" id="b5" min="1" max="90">
+  <button id="btnAjouter">Ajouter le tirage</button>
+  <div class="msg" id="message"></div>
+</div>
+
+<!-- ====== ANALYSE ====== -->
+<div class="card">
+  <h2>📊 Analyse des données</h2>
+  <p>Période à analyser : 
+    <select id="filtrePeriode" onchange="afficherAnalyse()">
+      <option value="all">Tous les tirages</option>
+      <option value="30">30 derniers tirages</option>
+      <option value="50">50 derniers tirages</option>
+      <option value="100">100 derniers tirages</option>
+    </select>
+  </p>
+
+  <h3>Résumé des numéros</h3>
+  <div id="resumeChaudsFroids" style="margin-bottom: 20px; font-size: 15px;"></div>
+
+  <h3>Fréquences et Écarts (1 à 90)</h3>
+  <p style="font-size: 13px; color: #555;">Le chiffre du haut est le nombre de sorties. Le chiffre du bas (R) est le nombre de tirages depuis la dernière sortie (Retard).</p>
+  <div class="grid" id="grilleStats"></div>
+</div>
+
+<!-- ====== PAIRES ====== -->
+<div class="card">
+  <h2>🤝 Paires de numéros fréquentes</h2>
+  <p>Les numéros qui sortent le plus souvent ensemble sur la période sélectionnée.</p>
+  <table id="tablePaires">
+    <thead><tr><th>Paire</th><th>Nombre de sorties ensemble</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- ====== LISTE ====== -->
+<div class="card">
+  <h2>📜 Historique (<span id="nb">0</span>)</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Boules</th><th>Action</th></tr></thead>
+    <tbody id="corps"></tbody>
+  </table>
+</div>
+
+<script>
+var CLE = "lotoBenin";
+
+function charger() {
+  var d = localStorage.getItem(CLE);
+  return d ? JSON.parse(d) : [];
+}
+function sauver(t) {
+  localStorage.setItem(CLE, JSON.stringify(t));
+}
+
+// Ajout d'un tirage
+document.getElementById("btnAjouter").addEventListener("click", function () {
+  var msg = document.getElementById("message");
+  msg.textContent = "";
+  var date = document.getElementById("date").value;
+  var boules = [];
+  
+  for (var i = 1; i <= 5; i++) {
+    var v = parseInt(document.getElementById("b" + i).value, 10);
+    if (isNaN(v) || v < 1 || v > 90) {
+      msg.style.color = "red";
+      msg.textContent = "Erreur : chaque boule doit etre entre 1 et 90.";
+      return;
+    }
+    boules.push(v);
+  }
+  
+  if (!date) {
+    msg.style.color = "red";
+    msg.textContent = "Erreur : choisissez une date.";
+    return;
+  }
+  if (new Set(boules).size !== 5) {
+    msg.style.color = "red";
+    msg.textContent = "Erreur : les 5 boules doivent etre differentes.";
+    return;
+  }
+
+  var tirages = charger();
+  tirages.push({ date: date, boules: boules });
+  sauver(tirages);
+
+  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
+  msg.style.color = "green";
+  msg.textContent = "Tirage ajoute !";
+  afficherTout();
+});
+
+function supprimer(i) {
+  if (!confirm("Supprimer ce tirage ?")) return;
+  var t = charger();
+  t.splice(i, 1);
+  sauver(t);
+  afficherTout();
+}
+
+// Affichage global
+function afficherTout() {
+  afficherHistorique();
+  afficherAnalyse();
+}
+
+function afficherHistorique() {
+  var tirages = charger();
+  document.getElementById("nb").textContent = tirages.length;
+  var corps = document.getElementById("corps");
+  corps.innerHTML = "";
+
+  var tri = tirages.map(function (t, i) { return { t: t, i: i }; });
+  tri.sort(function (a, b) { return b.t.date.localeCompare(a.t.date); });
+
+  tri.forEach(function (obj) {
+    var tr = document.createElement("tr");
+    var html = "<td>" + obj.t.date + "</td><td>";
+    obj.t.boules.forEach(function (n) { html += "<span class='ball'>" + n + "</span>"; });
+    html += "</td><td><button onclick='supprimer(" + obj.i + ")' style='background:#b03030;'>X</button></td>";
+    tr.innerHTML = html;
+    corps.appendChild(tr);
+  });
+}
+
+// Analyse des données
+function afficherAnalyse() {
+  var tousLesTirages = charger();
+  var limite = document.getElementById("filtrePeriode").value;
+  
+  // Trier par date du plus récent au plus ancien pour le filtre
+  var tirages = tousLesTirages.map(function (t, i) { return { t: t, i: i }; });
+  tirages.sort(function (a, b) { return b.t.date.localeCompare(a.t.date); });
+  
+  if (limite !== "all") {
+    tirages = tirages.slice(0, parseInt(limite, 10));
+  }
+
+  // --- 1. Calcul des fréquences et écarts ---
+  var freq = {};
+  var ecarts = {};
+  for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
+
+  tirages.forEach(function(obj) {
+    obj.t.boules.forEach(function(n) { freq[n]++; });
+  });
+
+  // Calcul des écarts (pour chaque numéro, depuis combien de tirages il n'est pas sorti)
+  // On parcourt du plus récent au plus ancien
+  tirages.forEach(function(obj, index) {
+    obj.t.boules.forEach(function(n) {
+      if (ecarts[n] === 0 && index !== 0) {
+        // On a trouvé le dernier tirage où ce numéro est sorti
+        // Mais on doit vérifier s'il est sorti dans le tirage 0 (le plus récent)
+        ecarts[n] = index; 
+      }
+    });
+  });
+  
+  // Correction de l'écart pour ceux sortis au tirage 0
+  if (tirages.length > 0) {
+      tirages[0].t.boules.forEach(function(n) { ecarts[n] = 0; });
+  } else {
+      for (var k = 1; k <= 90; k++) ecarts[k] = 0;
+  }
+  
+  // --- 2. Affichage de la grille ---
+  var grid = document.getElementById("grilleStats");
+  grid.innerHTML = "";
+  
+  var top10 = Object.keys(freq).map(function(n) { return { n: parseInt(n), f: freq[n] }; })
+                .filter(function(x) { return x.f > 0; })
+                .sort(function(a, b) { return b.f - a.f; })
+                .slice(0, 10);
+  var top10Ids = top10.map(function(x) { return x.n; });
+
+  for (var i = 1; i <= 90; i++) {
+    var div = document.createElement("div");
+    div.className = "box";
+    if (top10Ids.indexOf(i) !== -1) div.classList.add("hot");
+    else if (freq[i] === 0 && tirages.length > 0) div.classList.add("cold");
+    
+    div.innerHTML = "<b style='font-size:15px;'>" + i + "</b><br>" + 
+                    "Sorties: " + freq[i] + "<br>" +
+                    "<span style='color:#888;'>Retard: " + ecarts[i] + "</span>";
+    grid.appendChild(div);
+  }
+
+  // --- 3. Résumé Chauds / Froids ---
+  var resume = document.getElementById("resumeChaudsFroids");
+  if (tirages.length === 0) {
+    resume.innerHTML = "<i>Aucune donnée sur cette période.</i>";
+  } else {
+    var plusFrequents = top10.map(function(x) { return x.n + " (" + x.f + ")"; }).join(", ");
+    resume.innerHTML = "<b>🔥 Top 10 (les plus sortis) :</b> " + plusFrequents;
+  }
+
+  // --- 4. Calcul des paires ---
+  var paires = {};
+  tirages.forEach(function(obj) {
+    var b = obj.t.boules.sort(function(a, b) { return a - b; });
+    for (var i = 0; i < b.length; i++) {
+      for (var j = i + 1; j < b.length; j++) {
+        var paireStr = b[i] + "-" + b[j];
+        paires[paireStr] = (paires[paireStr] || 0) + 1;
+      }
+    }
+  });
+
+  var listePaires = Object.keys(paires).map(function(k) { return { p: k, n: paires[k] }; })
+                      .sort(function(a, b) { return b.n - a.n; })
+                      .slice(0, 5); // Top 5 des paires
+
+  var tbodyPaires = document.querySelector("#tablePaires tbody");
+  tbodyPaires.innerHTML = "";
+  if (listePaires.length === 0 || tirages.length === 0) {
+    tbodyPaires.innerHTML = "<tr><td colspan='2'>Pas assez de données.</td></tr>";
+  } else {
+    listePaires.forEach(function(p) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td><b>" + p.p + "</b></td><td>" + p.n + " fois</td>";
+      tbodyPaires.appendChild(tr);
+    });
+  }
+}
+
+// Initialisation
+document.getElementById("date").valueAsDate = new Date();
+afficherTout();
+</script>
+</body>
+</html>
