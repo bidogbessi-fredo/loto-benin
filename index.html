@@ -496,4 +496,89 @@ function remplirSelectMulti() {
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = "";
   if (tirages.length === 0) { s2.innerHTML = "<option>Aucun tirage</option>"; return; }
-  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t
+  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
+}
+
+function analyserTirageLabo() {
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var idx = document.getElementById("selectTirageLabo").value;
+  if(idx !== "" && tirages[idx]) { tirageActifLabo = tirages[idx]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageActifLabo.boules.join(" - "); }
+}
+
+function faireTurning() {
+  if(!tirageActifLabo) return;
+  var res = tirageActifLabo.boules.map(function(n) { var s = n.toString(); if(s.length === 1) s = "0" + s; var inv = parseInt(s.split('').reverse().join(''), 10); return (inv > 90 || inv === 0) ? n : inv; });
+  document.getElementById("resultatOperations").innerHTML = "<b>Turning :</b><br>Base : " + tirageActifLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#8e44ad;'>" + res.join(" - ") + "</span>";
+}
+
+function faireAddition() {
+  if(!tirageActifLabo) return;
+  var somme = tirageActifLabo.boules.reduce(function(a, b) { return a + b; }, 0);
+  var reduit = somme; while(reduit > 90) { reduit -= 90; }
+  document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#8e44ad;'>" + reduit + "</span>";
+}
+
+function analyserPositions() {
+  var tirages = charger(); if(tirages.length === 0) return;
+  var stats = [{}, {}, {}, {}, {}];
+  tirages.forEach(function(t) { t.boules.forEach(function(n, i) { if(i<5) stats[i][n] = (stats[i][n] || 0) + 1; }); });
+  var html = "<table class='pos-table'><tr><th>Pos</th><th>Top 3</th></tr>";
+  stats.forEach(function(c, i) {
+    var top = Object.keys(c).map(function(n){ return {n: parseInt(n), v: c[n]}; }).sort(function(a,b){return b.v-a.v;}).slice(0,3);
+    html += "<tr><td><b>" + (i+1) + "</b></td><td>" + top.map(function(x){ return "<span class='ball'>" + x.n + "</span>"; }).join(" ") + "</td></tr>";
+  });
+  document.getElementById("resultatPositions").innerHTML = html + "</table>";
+}
+
+function chercherBanker() {
+  var val = document.getElementById("creneauBanker").value.split("-");
+  var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
+  filtres.sort(function(a, b) { return b.date.localeCompare(a.date); }); filtres = filtres.slice(0, 15);
+  if(filtres.length === 0) { document.getElementById("resultatBanker").textContent = "Pas de données."; return; }
+  var freq = {}; filtres.forEach(function(t) { t.boules.forEach(function(n) { freq[n] = (freq[n] || 0) + 1; }); });
+  var top = Object.keys(freq).map(function(n){ return {n: parseInt(n), v: freq[n]}; }).sort(function(a,b){return b.v-a.v;}).slice(0, 3);
+  document.getElementById("resultatBanker").innerHTML = "<b>Top Bankers (" + filtres.length + " tirages) :</b><br>" + top.map(function(x){ return "<span class='ball'>" + x.n + "</span> " + x.v + " fois"; }).join("<br>");
+}
+
+function executerAdditions() {
+  var s = document.getElementById("selectMultiTirages");
+  var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var sel = idx.map(function(i) { return tirages[i]; });
+  var html = "<h4>Addition de " + sel.length + " Draws</h4><ul style='font-size:12px;'>" + sel.map(function(t){ return "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join("-") + "</li>"; }).join("") + "</ul>";
+  
+  var sommeGlobale = 0; sel.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
+  var reduitGlobal = sommeGlobale; while(reduitGlobal > 90) reduitGlobal -= 90; if(reduitGlobal === 0) reduitGlobal = 90;
+  html += "<div style='background:#eef5ef; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Somme Globale :</b> " + sommeGlobale + " -> <span class='ball'>" + reduitGlobal + "</span></div>";
+  
+  var addPos = [0,0,0,0,0]; sel.forEach(function(t) { for(var i=0; i<5; i++) addPos[i] += t.boules[i]; });
+  var grille = []; var htmlB = "";
+  addPos.forEach(function(s) { var r = s; while(r > 90) r -= 90; if(r === 0) r = 90; grille.push(r); htmlB += "<span class='ball'>" + r + "</span> "; });
+  html += "<div style='background:#fff3cd; padding:10px; border-radius:4px;'><b>Par Position :</b><br>" + htmlB + "</div>";
+  document.getElementById("resultatLaboAvance").innerHTML = html;
+}
+
+function executerBankersMulti() {
+  var s = document.getElementById("selectMultiTirages");
+  var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var sel = idx.map(function(i) { return tirages[i]; });
+  
+  var pres = {}; sel.forEach(function(t) { t.boules.forEach(function(n) { pres[n] = (pres[n] || 0) + 1; }); });
+  var communs = [], autres = [];
+  for (var n in pres) { if (pres[n] === sel.length) communs.push(n); else if (pres[n] > 1) autres.push({n: n, f: pres[n]}); }
+  
+  var html = "<h4>Bankers Multi-Lignes</h4>";
+  if (communs.length > 0) { html += "<div style='background:#d4edda; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Communs (toutes lignes) :</b><br>" + communs.map(function(n){ return "<span class='ball'>" + n + "</span>"; }).join(" ") + "</div>"; } else { html += "<p><i>Aucun numéro sur toutes les lignes.</i></p>"; }
+  if (autres.length > 0) { autres.sort(function(a,b){return b.f-a.f;}); html += "<div style='background:#f8f9fa; padding:10px; border-radius:4px;'><b>Récurrents :</b><br>" + autres.map(function(x){ return "<span class='ball' style='background:#6c757d;'>" + x.n + "</span> (" + x.f + "x)"; }).join("<br>") + "</div>"; }
+  document.getElementById("resultatLaboAvance").innerHTML = html;
+}
+
+// Initialisation
+document.getElementById("date").valueAsDate = new Date();
+afficherHistorique();
+</script>
+</body>
+</html>
