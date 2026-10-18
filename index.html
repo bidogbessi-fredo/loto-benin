@@ -265,6 +265,39 @@ function afficherAnalyse() {
 // Initialisation
 document.getElementById("date").valueAsDate = new Date();
 afficherTout();
+async function recupererDernierResultat() {
+  const url = 'https://www.24haubenin.info/'; // Page d'accueil du site
+  try {
+    // Note: Cette requête fonctionnera seulement depuis votre site GitHub Pages
+    // (ou si le site autorise les requêtes cross-origin)
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Erreur réseau');
+    
+    const text = await response.text();
+    
+    // Chercher un motif de 5 numéros séparés par des points médians ou des espaces
+    // Exemple: 61 • 59 • 04 • 47 • 29
+    const regex = /(\d{1,2})\s*[•\s]\s*(\d{1,2})\s*[•\s]\s*(\d{1,2})\s*[•\s]\s*(\d{1,2})\s*[•\s]\s*(\d{1,2})/;
+    const match = text.match(regex);
+    
+    if (match) {
+      const boules = [match[1], match[2], match[3], match[4], match[5]].map(n => parseInt(n, 10));
+      // Remplir automatiquement le formulaire
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('b' + i).value = boules[i-1];
+      }
+      document.getElementById('message').textContent = "Résultat récupéré automatiquement !";
+      document.getElementById('message').style.color = "green";
+    } else {
+      document.getElementById('message').textContent = "Aucun résultat trouvé sur la page. Saisie manuelle requise.";
+      document.getElementById('message').style.color = "orange";
+    }
+  } catch (error) {
+    console.error(error);
+    document.getElementById('message').textContent = "Impossible de récupérer automatiquement. Saisissez manuellement.";
+    document.getElementById('message').style.color = "red";
+  }
+}
 </script>
 </body>
 </html>
