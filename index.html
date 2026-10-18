@@ -1,459 +1,191 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Loto Bénin - Pro Importation</title>
-<style>
-  :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; --accent: #d32f2f; }
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
-  h1, h2, h3 { color: var(--primary); }
-  .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-  input, button, select { padding: 10px; font-size: 15px; margin: 4px 2px; border-radius: 6px; border: 1px solid #ccc; outline: none; }
-  input:focus, select:focus { border-color: var(--primary); }
-  input[type=number] { width: 65px; text-align: center; font-weight: bold; }
-  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-  button:hover { background: #144a22; transform: translateY(-1px); }
-  button.secondary { background: #6c757d; }
-  
-  /* Navigation par onglets */
-  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
-  .tab-btn { background: none; color: #555; border: none; font-size: 15px; padding: 10px 15px; cursor: pointer; border-radius: 6px 6px 0 0; font-weight: bold;}
-  .tab-btn.active { background: var(--primary); color: white; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-  th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: center; }
-  th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
-  .msg { font-weight: bold; margin-top: 10px; font-size: 14px; }
-  .ball { display: inline-block; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 1px; font-size: 13px;}
-  .ball.star { background: #f39c12; }
-  .ball.fortune { background: #2980b9; }
-  .ball.digital { background: #8e44ad; }
-  
-  /* Grille de stats */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 15px;}
-  .box { padding: 10px; text-align: center; border-radius: 6px; font-size: 13px; border: 1px solid #eee; background: #fafafa; }
-  .box b { font-size: 16px; color: #333; }
-  .hot { background: #ffebee; border-color: #ffcdd2; }
-  .cold { background: #e3f2fd; border-color: #bbdefb; }
-  
-  /* Styles pour la vue combinée */
-  .combo-day { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-  .combo-header { font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
-  .combo-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
-  .combo-row:last-child { border-bottom: none; }
-  .combo-time { width: 100px; font-weight: bold; color: #555; }
-  .combo-source { width: 250px; font-size: 13px; color: #777; font-style: italic; }
-  .combo-nums { flex: 1; }
-  .highlight-star-fortune { background-color: #fff8e1; border-left: 4px solid #f39c12; padding-left: 10px; border-radius: 4px; }
-
-  /* Zone d'importation */
-  .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 30px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.2s; margin-bottom: 15px; }
-  .drop-zone:hover { border-color: var(--primary); background: #eef5ef; }
-  .drop-zone p { margin: 0; font-size: 16px; color: #666; }
-  .drop-zone input[type="file"] { display: none; }
-</style>
-</head>
-<body>
-
-<h1>🎰 Loto Bénin - Pro Dashboard</h1>
-
-<!-- Onglets -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Saisie</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('combine')">🔀 Vue Combinée</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('analyseJeu')">📊 Par Jeu</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('analyseCrenea')">⏱️ Par Créneau</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('import')" style="background-color: #e67e22;">📁 Importer</button>
-</div>
-
-<!-- ====== ONGLET 1 : SAISIE ====== -->
-<div id="onglet-saisie" class="tab-content active">
+<!-- ====== ONGLET LABORATOIRE (MISE A JOUR) ====== -->
+<div id="onglet-labo" class="tab-content">
   <div class="card">
-    <h2>➕ Saisir un tirage</h2>
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 15px;">
-      <label>Jeu : 
-        <select id="jeuSaisie">
-          <option value="Star">Loto Star</option>
-          <option value="Fortune">Loto Fortune</option>
-          <option value="Digital">Digital</option>
-        </select>
-      </label>
-      <label>Heure : 
-        <select id="heureSaisie">
-          <option value="00H">00H</option>
-          <option value="08H">08H</option>
-          <option value="11H">11H</option>
-          <option value="14H">14H</option>
-          <option value="18H">18H</option>
-          <option value="20H">20H</option>
-        </select>
-      </label>
-      <label>Date : <input type="date" id="date"></label>
-      <label>B1 <input type="number" id="b1" min="1" max="90"></label>
-      <label>B2 <input type="number" id="b2" min="1" max="90"></label>
-      <label>B3 <input type="number" id="b3" min="1" max="90"></label>
-      <label>B4 <input type="number" id="b4" min="1" max="90"></label>
-      <label>B5 <input type="number" id="b5" min="1" max="90"></label>
-      <button id="btnAjouter">Ajouter</button>
-    </div>
-    <div class="msg" id="message"></div>
-  </div>
-
-  <div class="card">
-    <h2>📜 Historique complet (<span id="nbTotal">0</span>)</h2>
-    <div style="max-height: 400px; overflow-y: auto;">
-      <table>
-        <thead><tr><th>Date</th><th>Heure</th><th>Jeu</th><th>Boules</th><th>Action</th></tr></thead>
-        <tbody id="corps"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 2 : VUE COMBINÉE ====== -->
-<div id="onglet-combine" class="tab-content">
-  <div class="card">
-    <h2>🔀 Vue Combinée (Chronologie Journalière)</h2>
-    <div id="contenuCombine"></div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 3 : ANALYSE PAR JEU ====== -->
-<div id="onglet-analyseJeu" class="tab-content">
-  <div class="card">
-    <h2>📊 Analyse par Jeu</h2>
-    <div style="background: #eef5ef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <label><b>Sélectionnez le jeu :</b>
-        <select id="jeuAnalyse" onchange="afficherAnalyseJeu()" style="font-weight: bold;">
-          <option value="Star">Loto Star</option>
-          <option value="Fortune">Loto Fortune</option>
-          <option value="Digital">Digital</option>
-        </select>
-      </label>
-    </div>
-    <div class="grid" id="grilleStatsJeu"></div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 4 : ANALYSE PAR CRÉNEAU ====== -->
-<div id="onglet-analyseCrenea" class="tab-content">
-  <div class="card">
-    <h2>⏱️ Analyse par Créneau Horaire</h2>
-    <div style="background: #eef5ef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <label><b>Sélectionnez le créneau :</b>
-        <select id="creneauAnalyse" onchange="afficherAnalyseCreneau()" style="font-weight: bold;">
-          <option value="Digital-00H">Digital 00H</option>
-          <option value="Digital-08H">Digital 08H</option>
-          <option value="Digital-20H">Digital 20H</option>
-          <option value="Star-11H">Star 11H</option>
-          <option value="Star-14H">Star 14H</option>
-          <option value="Star-18H">Star 18H</option>
-          <option value="Fortune-11H">Fortune 11H</option>
-          <option value="Fortune-14H">Fortune 14H</option>
-          <option value="Fortune-18H">Fortune 18H</option>
-        </select>
-      </label>
-      <span id="infoNbCreneau" style="margin-left: 20px; font-weight: bold; color: #555;"></span>
-    </div>
-    <div class="grid" id="grilleStatsCreneau"></div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 5 : IMPORTATION ====== -->
-<div id="onglet-import" class="tab-content">
-  <div class="card">
-    <h2>📁 Importer des anciens résultats (CSV)</h2>
-    <p style="color:#555;">Chargez un fichier CSV contenant votre historique. Les données seront ajoutées à votre base actuelle.</p>
+    <h2>🧪 Laboratoire Avancé (Croisements & Multi-Lignes)</h2>
     
-    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
-      <p>📄 Cliquez ici ou glissez-déposez votre fichier CSV</p>
-      <input type="file" id="fileInput" accept=".csv" onchange="importerCSV(event)">
+    <div class="lab-grid">
+      
+      <!-- BLOC GAUCHE : SELECTION MULTIPLE -->
+      <div class="lab-box">
+        <h3>1. Sélectionnez jusqu'à 5 tirages (Draws)</h3>
+        <p style="font-size: 13px; color: #666;">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs lignes.</p>
+        
+        <select id="selectMultiTirages" multiple style="width: 100%; height: 200px; padding: 5px; border-radius: 6px;">
+          <!-- Rempli par JS -->
+        </select>
+
+        <div style="margin-top: 15px;">
+          <button onclick="executerAdditions()" style="background-color: #2980b9;">➕ Additionner (Point 15 & 18)</button>
+          <button onclick="executerBankersMulti()" style="background-color: #f39c12;">🏦 Chercher Bankers Communs (Point 12-14)</button>
+        </div>
+      </div>
+
+      <!-- BLOC DROIT : RESULTATS -->
+      <div class="lab-box">
+        <h3>2. Résultats des Opérations</h3>
+        <div id="resultatLaboAvance" style="min-height: 200px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px;">
+          <i>En attente de sélection...</i>
+        </div>
+      </div>
+
     </div>
-    
-    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px;">
-      <b>Format attendu (séparé par des virgules ou des points-virgules) :</b><br>
-      <code>Date ; Heure ; Jeu ; B1 ; B2 ; B3 ; B4 ; B5</code><br>
-      <i>Exemple :</i> <code>2026-10-17 ; 20H ; Digital ; 12 ; 45 ; 67 ; 89 ; 03</code><br>
-      <span style="color:#856404;">Le script acceptera aussi les formats de date comme JJ/MM/AAAA.</span>
-    </div>
-    
-    <div class="msg" id="importMessage" style="font-size: 16px;"></div>
   </div>
 </div>
 
 <script>
-var CLE = "lotoBeninPro";
-
-function charger() {
-  var d = localStorage.getItem(CLE);
-  return d ? JSON.parse(d) : [];
-}
-function sauver(t) {
-  localStorage.setItem(CLE, JSON.stringify(t));
-}
-
-function ouvrirOnglet(id) {
-  var tabs = document.querySelectorAll('.tab-content');
-  var btns = document.querySelectorAll('.tab-btn');
-  tabs.forEach(function(t) { t.classList.remove('active'); });
-  btns.forEach(function(b) { b.classList.remove('active'); });
+// Fonction pour charger les tirages dans le menu multiple
+function remplirSelectMulti() {
+  var tirages = charger();
+  var select = document.getElementById("selectMultiTirages");
+  select.innerHTML = "";
   
-  document.getElementById('onglet-' + id).classList.add('active');
-  event.currentTarget.classList.add('active');
-  
-  if(id === 'combine') afficherCombine();
-  if(id === 'analyseJeu') afficherAnalyseJeu();
-  if(id === 'analyseCrenea') afficherAnalyseCreneau();
-}
-
-// --- AJOUT MANUEL ---
-document.getElementById("btnAjouter").addEventListener("click", function () {
-  var msg = document.getElementById("message");
-  msg.textContent = "";
-  var date = document.getElementById("date").value;
-  var jeu = document.getElementById("jeuSaisie").value;
-  var heure = document.getElementById("heureSaisie").value;
-  var boules = [];
-  
-  for (var i = 1; i <= 5; i++) {
-    var v = parseInt(document.getElementById("b" + i).value, 10);
-    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
-    boules.push(v);
+  if (tirages.length === 0) {
+    select.innerHTML = "<option>Aucun tirage enregistré.</option>";
+    return;
   }
-  if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
-  if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
+  
+  // Trier du plus récent au plus ancien
+  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  
+  tirages.forEach(function(t, index) {
+    var opt = document.createElement("option");
+    opt.value = index; 
+    opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]";
+    select.appendChild(opt);
+  });
+}
+
+// --- LOGIQUE 1 : ADDITION DE PLUSIEURS DRAWS (Points 15, 16, 18, 19) ---
+function executerAdditions() {
+  var select = document.getElementById("selectMultiTirages");
+  var indicesSelectionnes = Array.from(select.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  
+  if (indicesSelectionnes.length < 2) {
+    document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Veuillez sélectionner au moins 2 tirages.</span>";
+    return;
+  }
 
   var tirages = charger();
-  tirages.push({ date: date, jeu: jeu, heure: heure, boules: boules });
-  sauver(tirages);
-
-  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Tirage ajouté !";
-  afficherHistorique();
-});
-
-function supprimer(i) {
-  if (!confirm("Supprimer ce tirage ?")) return;
-  var t = charger(); t.splice(i, 1); sauver(t);
-  afficherHistorique();
-}
-
-// --- AFFICHAGE HISTORIQUE ---
-function afficherHistorique() {
-  var tirages = charger();
-  document.getElementById("nbTotal").textContent = tirages.length;
-  var corps = document.getElementById("corps"); corps.innerHTML = "";
-
-  var tri = tirages.map(function (t, i) { return { t: t, i: i }; });
-  tri.sort(function (a, b) { 
-    var dc = b.t.date.localeCompare(a.t.date);
-    if(dc !== 0) return dc;
-    return (a.t.heure || "").localeCompare(b.t.heure || "");
-  });
-
-  tri.forEach(function (obj) {
-    var tr = document.createElement("tr");
-    var html = "<td>" + obj.t.date + "</td><td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
-    var cb = obj.t.jeu === 'Star' ? 'star' : (obj.t.jeu === 'Fortune' ? 'fortune' : 'digital');
-    obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
-    html += "</td><td><button onclick='supprimer(" + obj.i + ")' style='background:#b03030; padding: 5px 10px;'>X</button></td>";
-    tr.innerHTML = html; corps.appendChild(tr);
-  });
-}
-
-// --- VUE COMBINÉE ---
-function afficherCombine() {
-  var tirages = charger();
-  var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
-  if (tirages.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
-
-  var parDate = {};
-  tirages.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
-  var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); });
-
-  datesTriees.forEach(function(dateStr) {
-    var tiragesDuJour = parDate[dateStr];
-    var divJour = document.createElement("div"); divJour.className = "combo-day";
-    
-    // Formater la date proprement
-    var dateObj = new Date(dateStr);
-    var dateFormatee = isNaN(dateObj) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    var html = "<div class='combo-header'>📅 " + dateFormatee + "</div>";
-
-    function trouverTirage(jeu, heure) { return tiragesDuJour.find(function(t) { return t.jeu === jeu && t.heure === heure; }); }
-    function genBoules(tirage) {
-      if (!tirage) return "<span style='color:#ccc;'>-</span>";
-      var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
-      var s = ""; tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); return s;
-    }
-
-    var t00 = trouverTirage('Digital', '00H');
-    html += "<div class='combo-row'><div class='combo-time'>00H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t00) + "</div></div>";
-    var t08 = trouverTirage('Digital', '08H');
-    html += "<div class='combo-row'><div class='combo-time'>08H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t08) + "</div></div>";
-    var t11 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '11H'; });
-    html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>11H00</div><div class='combo-source'>" + (t11 ? t11.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t11) + "</div></div>";
-    var t14 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '14H'; });
-    html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>14H00</div><div class='combo-source'>" + (t14 ? t14.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t14) + "</div></div>";
-    var t18 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '18H'; });
-    html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>18H00</div><div class='combo-source'>" + (t18 ? t18.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t18) + "</div></div>";
-    var t20 = trouverTirage('Digital', '20H');
-    html += "<div class='combo-row'><div class='combo-time'>20H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t20) + "</div></div>";
-
-    divJour.innerHTML = html; conteneur.appendChild(divJour);
-  });
-}
-
-// --- ANALYSE PAR JEU ---
-function afficherAnalyseJeu() {
-  var jeuActif = document.getElementById("jeuAnalyse").value;
-  var tirages = charger().filter(function(t) { return t.jeu === jeuActif; });
+  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   
-  var freq = {}, ecarts = {};
-  for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
-
-  tirages.forEach(function(obj) { obj.boules.forEach(function(n) { freq[n]++; }); });
+  // Récupérer les tirages sélectionnés
+  var selection = indicesSelectionnes.map(function(i) { return tirages[i]; });
   
-  var tris = tirages.map(function(t) { return t; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
-  tris.forEach(function(obj, index) {
-    obj.boules.forEach(function(n) { if (ecarts[n] === 0 && index !== 0) ecarts[n] = index; });
-  });
-  if (tris.length > 0) tris[0].boules.forEach(function(n) { ecarts[n] = 0; });
+  var html = "<h4>Addition de " + selection.length + " Draws</h4>";
+  html += "<ul style='font-size:13px; margin-bottom:15px;'>";
+  selection.forEach(function(t) { html += "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join(" - ") + "</li>"; });
+  html += "</ul>";
 
-  var grid = document.getElementById("grilleStatsJeu"); grid.innerHTML = "";
-  for (var i = 1; i <= 90; i++) {
-    var div = document.createElement("div"); div.className = "box";
-    div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>";
-    grid.appendChild(div);
-  }
+  // A. Addition Globale (Point 15)
+  var sommeGlobale = 0;
+  selection.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
+  
+  var reduitGlobal = sommeGlobale;
+  while(reduitGlobal > 90) reduitGlobal -= 90;
+  if (reduitGlobal === 0) reduitGlobal = 90; // Si multiple de 90
+
+  html += "<div style='background:#eef5ef; padding:10px; margin-bottom:10px; border-radius:4px;'>";
+  html += "<b>Addition Globale (Point 15) :</b><br>";
+  html += "Somme totale = " + sommeGlobale + "<br>";
+  html += "Numéro réduit : <span class='ball'>" + reduitGlobal + "</span>";
+  html += "</div>";
+
+  // B. Addition avec Position (Point 18)
+  html += "<div style='background:#fff3cd; padding:10px; border-radius:4px;'>";
+  html += "<b>Addition par Position (Point 18/19) :</b><br>";
+  
+  // Additionner boule par boule (1ère avec 1ère, 2ème avec 2ème, etc.)
+  var additionsPositions = [0, 0, 0, 0, 0];
+  selection.forEach(function(t) {
+    for(var i=0; i<5; i++) { additionsPositions[i] += t.boules[i]; }
+  });
+  
+  var htmlBoules = "";
+  var grilleFinale = [];
+  additionsPositions.forEach(function(somme) {
+    var r = somme;
+    while(r > 90) r -= 90;
+    if(r === 0) r = 90;
+    grilleFinale.push(r);
+    htmlBoules += "<span class='ball'>" + r + "</span> ";
+  });
+  
+  html += "1ère boule = " + additionsPositions[0] + " -> <b>" + grilleFinale[0] + "</b><br>";
+  html += "2ème boule = " + additionsPositions[1] + " -> <b>" + grilleFinale[1] + "</b><br>";
+  html += "3ème boule = " + additionsPositions[2] + " -> <b>" + grilleFinale[2] + "</b><br>";
+  html += "4ème boule = " + additionsPositions[3] + " -> <b>" + grilleFinale[3] + "</b><br>";
+  html += "5ème boule = " + additionsPositions[4] + " -> <b>" + grilleFinale[4] + "</b><br><br>";
+  
+  html += "<b>Nouvelle ligne générée :</b><br>" + htmlBoules;
+  html += "</div>";
+
+  document.getElementById("resultatLaboAvance").innerHTML = html;
 }
 
-// --- ANALYSE PAR CRÉNEAU ---
-function afficherAnalyseCreneau() {
-  var valeurSelect = document.getElementById("creneauAnalyse").value;
-  var parties = valeurSelect.split("-");
-  var jeuCible = parties[0];
-  var heureCible = parties[1];
-
-  var tiragesFiltres = charger().filter(function(t) { return t.jeu === jeuCible && t.heure === heureCible; });
-  document.getElementById("infoNbCreneau").textContent = tiragesFiltres.length + " tirage(s) trouvé(s).";
-
-  var freq = {}, ecarts = {};
-  for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
-
-  tiragesFiltres.forEach(function(obj) { obj.boules.forEach(function(n) { freq[n]++; }); });
-
-  var tris = tiragesFiltres.map(function(t) { return t; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
-  tris.forEach(function(obj, index) {
-    obj.boules.forEach(function(n) { if (ecarts[n] === 0 && index !== 0) ecarts[n] = index; });
-  });
-  if (tris.length > 0) tris[0].boules.forEach(function(n) { ecarts[n] = 0; });
-
-  var grid = document.getElementById("grilleStatsCreneau"); grid.innerHTML = "";
-  var top10 = Object.keys(freq).map(function(n) { return { n: parseInt(n), f: freq[n] }; })
-                .filter(function(x) { return x.f > 0; }).sort(function(a, b) { return b.f - a.f; }).slice(0, 10);
-  var top10Ids = top10.map(function(x) { return x.n; });
-
-  for (var i = 1; i <= 90; i++) {
-    var div = document.createElement("div"); div.className = "box";
-    if (top10Ids.indexOf(i) !== -1) div.classList.add("hot");
-    else if (freq[i] === 0 && tiragesFiltres.length > 0) div.classList.add("cold");
-    div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>";
-    grid.appendChild(div);
+// --- LOGIQUE 2 : BANKERS SUR DIFFERENTES LIGNES (Points 12, 13, 14) ---
+function executerBankersMulti() {
+  var select = document.getElementById("selectMultiTirages");
+  var indicesSelectionnes = Array.from(select.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  
+  if (indicesSelectionnes.length < 2) {
+    document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Veuillez sélectionner au moins 2 tirages pour croiser les Bankers.</span>";
+    return;
   }
-}
 
-// --- IMPORTATION CSV ---
-function importerCSV(event) {
-  var file = event.target.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  var msg = document.getElementById("importMessage");
-  msg.textContent = "Lecture du fichier en cours...";
-  msg.style.color = "blue";
-
-  reader.onload = function(e) {
-    var content = e.target.result;
-    var lignes = content.split(/\r?\n/);
-    var tiragesActuels = charger();
-    var ajoutes = 0;
-    var erreurs = 0;
-
-    lignes.forEach(function(ligne) {
-      if (!ligne.trim()) return; // Ignorer les lignes vides
-      
-      // Séparer par point-virgule ou virgule
-      var cols = ligne.split(/[;,]/);
-      
-      // Vérifier qu'on a au moins 8 colonnes (Date, Heure, Jeu, 5 boules)
-      if (cols.length < 8) {
-        // Si c'est la ligne d'en-tête, on l'ignore
-        if (ligne.toLowerCase().indexOf("date") !== -1) return;
-        erreurs++;
-        return;
-      }
-
-      var dateBrute = cols[0].trim();
-      var heure = cols[1].trim().toUpperCase();
-      var jeu = cols[2].trim();
-      var b1 = parseInt(cols[3].trim(), 10);
-      var b2 = parseInt(cols[4].trim(), 10);
-      var b3 = parseInt(cols[5].trim(), 10);
-      var b4 = parseInt(cols[6].trim(), 10);
-      var b5 = parseInt(cols[7].trim(), 10);
-
-      // Formater la date en YYYY-MM-DD pour être cohérent
-      var dateFormatee = dateBrute;
-      if (dateBrute.indexOf("/") !== -1) {
-        var parts = dateBrute.split("/");
-        if (parts.length === 3) {
-          dateFormatee = parts[2] + "-" + parts[1].padStart(2, '0') + "-" + parts[0].padStart(2, '0');
-        }
-      }
-
-      // Normaliser le nom du jeu
-      if (jeu.toLowerCase().indexOf("star") !== -1) jeu = "Star";
-      else if (jeu.toLowerCase().indexOf("fortune") !== -1) jeu = "Fortune";
-      else if (jeu.toLowerCase().indexOf("digital") !== -1) jeu = "Digital";
-
-      // Valider les données
-      var boules = [b1, b2, b3, b4, b5];
-      var valide = true;
-      if (!dateFormatee || !heure || !jeu) valide = false;
-      if (boules.some(function(n) { return isNaN(n) || n < 1 || n > 90; })) valide = false;
-      if (new Set(boules).size !== 5) valide = false; // Les 5 boules doivent être différentes
-
-      if (valide) {
-        tiragesActuels.push({ date: dateFormatee, heure: heure, jeu: jeu, boules: boules });
-        ajoutes++;
-      } else {
-        erreurs++;
-      }
+  var tirages = charger();
+  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var selection = indicesSelectionnes.map(function(i) { return tirages[i]; });
+  
+  // Compter la présence des numéros dans les différentes lignes
+  var presence = {};
+  selection.forEach(function(t) {
+    t.boules.forEach(function(n) {
+      presence[n] = (presence[n] || 0) + 1;
     });
+  });
 
-    if (ajoutes > 0) {
-      sauver(tiragesActuels);
-      msg.style.color = "green";
-      msg.textContent = "✅ Importation réussie : " + ajoutes + " tirage(s) ajouté(s). " + (erreurs > 0 ? "(" + erreurs + " ligne(s) ignorée(s) pour cause d'erreur)" : "");
-      afficherHistorique();
-    } else {
-      msg.style.color = "red";
-      msg.textContent = "❌ Aucun tirage valide trouvé. Vérifiez le format du fichier.";
+  // Trouver les numéros qui apparaissent dans TOUTES les lignes (ou au moins 2)
+  var bankersCommuns = [];
+  var autresCommuns = [];
+  
+  for (var num in presence) {
+    if (presence[num] === selection.length) {
+      bankersCommuns.push(num); // Présent dans toutes les lignes
+    } else if (presence[num] > 1) {
+      autresCommuns.push({ num: num, fois: presence[num] }); // Présent dans plusieurs lignes
     }
-    
-    // Réinitialiser le champ file pour pouvoir réimporter le même fichier
-    document.getElementById("fileInput").value = "";
-  };
+  }
 
-  reader.readAsText(file);
+  var html = "<h4>Analyse des Bankers Multi-Lignes</h4>";
+  
+  if (bankersCommuns.length > 0) {
+    html += "<div style='background:#d4edda; padding:10px; border-radius:4px; margin-bottom:10px;'>";
+    html += "<b>🎯 Bankers Communs (Présents sur TOUTES les lignes) :</b><br>";
+    bankersCommuns.forEach(function(n) { html += "<span class='ball' style='background:#1a5c2a;'>" + n + "</span> "; });
+    html += "</div>";
+  } else {
+    html += "<p><i>Aucun numéro n'est sorti sur toutes les lignes sélectionnées.</i></p>";
+  }
+
+  if (autresCommuns.length > 0) {
+    html += "<div style='background:#f8f9fa; padding:10px; border-radius:4px; border: 1px solid #ddd;'>";
+    html += "<b>Numéros récurrents (sur plusieurs lignes) :</b><br>";
+    autresCommuns.sort(function(a,b) { return b.fois - a.fois; });
+    autresCommuns.forEach(function(item) {
+      html += "<span class='ball' style='background:#6c757d;'>" + item.num + "</span> (sorti " + item.fois + " fois)<br>";
+    });
+    html += "</div>";
+  }
+
+  document.getElementById("resultatLaboAvance").innerHTML = html;
 }
 
-// Initialisation
-document.getElementById("date").valueAsDate = new Date();
-afficherHistorique();
+// Mettre à jour l'initialisation pour charger le menu multiple
+var ancienneFonctionOuvrir = ouvrirOnglet;
+ouvrirOnglet = function(id) {
+  ancienneFonctionOuvrir(id);
+  if(id === 'labo') {
+    remplirSelectMulti();
+  }
+};
 </script>
-</body>
-</html>
