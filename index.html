@@ -383,14 +383,14 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION INTELLIGENTE (MISE A JOUR) ---
+// --- 5. IMPORTATION ULTRA-TOLÉRANTE (CORRIGÉE) ---
 function importerCSV(event) {
   var file = event.target.files[0]; 
   if (!file) return;
   
   var reader = new FileReader(); 
   var msg = document.getElementById("importMessage"); 
-  msg.textContent = "Lecture du fichier..."; 
+  msg.textContent = "Analyse du fichier en cours..."; 
   msg.style.color = "blue";
   
   reader.onload = function(e) {
@@ -402,56 +402,67 @@ function importerCSV(event) {
     var detailsErreurs = [];
 
     lignes.forEach(function(ligne, index) {
-      if (!ligne.trim()) return; // Ignorer les lignes vides
+      if (!ligne.trim()) return; // Ligne vide, on ignore
       
-      // Séparer par point-virgule, virgule ou tabulation
-      var cols = ligne.split(/[;,\t]/);
+      // 1. Remplacer tous les séparateurs possibles par un espace
+      var texteNettoye = ligne.replace(/[;,\t]/g, ' ');
       
-      if (cols.length < 8) { 
-        if (ligne.toLowerCase().indexOf("date") !== -1) return; // Ignorer l'en-tête
-        erreurs++; 
-        detailsErreurs.push("Ligne " + (index+1) + " : pas assez de colonnes");
-        return; 
+      // 2. Séparer par espaces
+      var elements = texteNettoye.split(/\s+/).filter(function(el) { return el !== ""; });
+      
+      // 3. Ignorer l'en-tête (contient "Date", "Jeu" ou "Heure")
+      var estEntete = elements.some(function(el) { 
+          var texte = el.toLowerCase();
+          return texte.indexOf("date") !== -1 || texte.indexOf("jeu") !== -1 || texte.indexOf("heure") !== -1; 
+      });
+      if (estEntete) return;
+
+      // On a besoin d'au moins 8 éléments (Date, Heure, Jeu, 5 boules)
+      if (elements.length < 8) {
+        if (elements.length === 7) {
+            elements.splice(1, 0, "00H"); // Si l'heure est manquante, on met 00H par défaut
+        } else {
+            erreurs++; 
+            detailsErreurs.push("Ligne " + (index+1) + " : format incompréhensible.");
+            return; 
+        }
       }
 
-      // Nettoyage
-      var d = cols[0].trim(); 
-      var h = cols[1].trim().toUpperCase(); 
-      var j = cols[2].trim();
-      var b = [
-        parseInt(cols[3].trim(), 10), 
-        parseInt(cols[4].trim(), 10), 
-        parseInt(cols[5].trim(), 10), 
-        parseInt(cols[6].trim(), 10), 
-        parseInt(cols[7].trim(), 10)
-      ];
+      var d = elements[0]; 
+      var h = elements[1].toUpperCase(); 
+      var j = elements[2];
+      
+      var boulesText = elements.slice(3, 8);
+      var b = boulesText.map(function(numStr) { return parseInt(numStr, 10); });
 
-      // 1. Correction de la Date
+      // Correction Date (ex: 20/05/2024 -> 2024-05-20)
+      d = d.replace(/\./g, '/'); 
       if (d.indexOf("/") !== -1) { 
         var p = d.split("/"); 
         if (p.length === 3) {
-          d = p[2] + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
-        }
-      } else if (d.indexOf("-") !== -1) {
-        var p2 = d.split("-");
-        if (p2.length === 3 && p2[0].length === 2) {
-           d = p2[2] + "-" + p2[1].padStart(2, '0') + "-" + p2[0].padStart(2, '0');
+          var annee = p[2].length === 2 ? "20" + p[2] : p[2];
+          d = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
         }
       }
 
-      // 2. Correction de l'Heure
+      // Correction Heure (ex: 20 -> 20H, 8h -> 08H)
       if (h.indexOf("H") === -1 && h.indexOf(":") === -1) h = h + "H";
       if (h.indexOf(":") !== -1) h = h.split(":")[0] + "H";
-      if (h.length === 1) h = "0" + h;
+      if (h.length === 2) h = "0" + h;
 
-      // 3. Correction du Jeu
+      // Correction Jeu
       if (j.toLowerCase().indexOf("star") !== -1) j = "Star"; 
-      else if (j.toLowerCase().indexOf("fortune") !== -1) j = "Fortune"; 
-      else if (j.toLowerCase().indexOf("digital") !== -1) j = "Digital";
-      else { erreurs++; detailsErreurs.push("Ligne " + (index+1) + " : Jeu inconnu (" + j + ")"); return; }
+      else if (j.toLowerCase().indexOf("fort") !== -1) j = "Fortune"; 
+      else if (j.toLowerCase().indexOf("dig") !== -1) j = "Digital";
+      else { 
+        erreurs++; 
+        detailsErreurs.push("Ligne " + (index+1) + " : Jeu non reconnu (" + j + ")"); 
+        return; 
+      }
 
-      // 4. Vérification des numéros
-      if (!d || !h || b.some(function(n){ return isNaN(n) || n < 1 || n > 90; }) || new Set(b).size !== 5) { 
+      // Vérification finale
+      var boulesValides = b.every(function(n){ return !isNaN(n) && n >= 1 && n <= 90; });
+      if (!boulesValides || new Set(b).size !== 5) { 
         erreurs++; 
         detailsErreurs.push("Ligne " + (index+1) + " : Numéros invalides");
         return; 
@@ -464,14 +475,14 @@ function importerCSV(event) {
     if (ajoutes > 0) { 
       sauver(tiragesActuels); 
       msg.style.color = "green"; 
-      msg.textContent = "✅ " + ajoutes + " tirage(s) ajouté(s) avec succès. (" + erreurs + " ligne(s) ignorée(s))"; 
+      msg.textContent = "✅ Succès ! " + ajoutes + " tirage(s) importé(s). (" + erreurs + " ligne(s) ignorée(s))"; 
       afficherHistorique(); 
+      alert("Importation réussie ! Allez dans l'onglet 'Saisie' ou 'Vue Combinée' pour voir vos données.");
     } else { 
       msg.style.color = "red"; 
-      msg.textContent = "❌ Échec de l'importation. Aucun tirage valide trouvé."; 
+      msg.textContent = "❌ Échec. Aucun tirage valide trouvé."; 
       if(detailsErreurs.length > 0) {
-          var errStr = detailsErreurs.slice(0, 3).join(" | ");
-          msg.textContent += " Détails : " + errStr;
+          msg.textContent += " Détails : " + detailsErreurs.slice(0, 3).join(" | ");
       }
     }
     
