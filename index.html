@@ -1,191 +1,508 @@
-<!-- ====== ONGLET LABORATOIRE (MISE A JOUR) ====== -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Loto Bénin - Pro Dashboard Complet</title>
+<style>
+  :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
+  h1, h2, h3 { color: var(--primary); }
+  .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  input, button, select { padding: 10px; font-size: 15px; margin: 4px 2px; border-radius: 6px; border: 1px solid #ccc; outline: none; }
+  input:focus, select:focus { border-color: var(--primary); }
+  input[type=number] { width: 65px; text-align: center; font-weight: bold; }
+  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+  button:hover { background: #144a22; }
+  button.secondary { background: #6c757d; }
+  
+  /* Navigation par onglets */
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
+  .tab-btn { background: none; color: #555; border: none; font-size: 15px; padding: 10px 15px; cursor: pointer; border-radius: 6px 6px 0 0; font-weight: bold;}
+  .tab-btn.active { background: var(--primary); color: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+  th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: center; }
+  th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
+  .msg { font-weight: bold; margin-top: 10px; font-size: 14px; }
+  .ball { display: inline-block; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 1px; font-size: 13px;}
+  .ball.star { background: #f39c12; }
+  .ball.fortune { background: #2980b9; }
+  .ball.digital { background: #8e44ad; }
+  
+  /* Grille de stats */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 15px;}
+  .box { padding: 10px; text-align: center; border-radius: 6px; font-size: 13px; border: 1px solid #eee; background: #fafafa; }
+  .box b { font-size: 16px; color: #333; }
+  .hot { background: #ffebee; border-color: #ffcdd2; }
+  .cold { background: #e3f2fd; border-color: #bbdefb; }
+  
+  /* Styles pour la vue combinée */
+  .combo-day { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .combo-header { font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+  .combo-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
+  .combo-row:last-child { border-bottom: none; }
+  .combo-time { width: 100px; font-weight: bold; color: #555; }
+  .combo-source { width: 250px; font-size: 13px; color: #777; font-style: italic; }
+  .combo-nums { flex: 1; }
+  .highlight-star-fortune { background-color: #fff8e1; border-left: 4px solid #f39c12; padding-left: 10px; border-radius: 4px; }
+
+  /* Zone d'importation */
+  .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 30px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.2s; margin-bottom: 15px; }
+  .drop-zone:hover { border-color: var(--primary); background: #eef5ef; }
+  .drop-zone input[type="file"] { display: none; }
+
+  /* Styles spécifiques au Laboratoire */
+  .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .lab-box { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; }
+  .result-box { margin-top: 15px; padding: 10px; background: #eef5ef; border-left: 4px solid var(--primary); border-radius: 4px; font-weight: bold; }
+  .pos-table td, .pos-table th { padding: 5px; font-size: 13px; border: 1px solid #ddd; }
+  select[multiple] { padding: 5px; border: 1px solid #ccc; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h1>🎰 Loto Bénin - Pro Dashboard</h1>
+
+<!-- Onglets -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Saisie</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('combine')">🔀 Vue Combinée</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('analyseJeu')">📊 Par Jeu</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('analyseCrenea')">⏱️ Par Créneau</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('import')">📁 Importer</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('labo')" style="background-color: #8e44ad;">🧪 Laboratoire</button>
+</div>
+
+<!-- ====== ONGLET 1 : SAISIE ====== -->
+<div id="onglet-saisie" class="tab-content active">
+  <div class="card">
+    <h2>➕ Saisir un tirage</h2>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 15px;">
+      <label>Jeu : 
+        <select id="jeuSaisie">
+          <option value="Star">Loto Star</option>
+          <option value="Fortune">Loto Fortune</option>
+          <option value="Digital">Digital</option>
+        </select>
+      </label>
+      <label>Heure : 
+        <select id="heureSaisie">
+          <option value="00H">00H</option>
+          <option value="08H">08H</option>
+          <option value="11H">11H</option>
+          <option value="14H">14H</option>
+          <option value="18H">18H</option>
+          <option value="20H">20H</option>
+        </select>
+      </label>
+      <label>Date : <input type="date" id="date"></label>
+      <label>B1 <input type="number" id="b1" min="1" max="90"></label>
+      <label>B2 <input type="number" id="b2" min="1" max="90"></label>
+      <label>B3 <input type="number" id="b3" min="1" max="90"></label>
+      <label>B4 <input type="number" id="b4" min="1" max="90"></label>
+      <label>B5 <input type="number" id="b5" min="1" max="90"></label>
+      <button id="btnAjouter">Ajouter</button>
+    </div>
+    <div class="msg" id="message"></div>
+  </div>
+
+  <div class="card">
+    <h2>📜 Historique complet (<span id="nbTotal">0</span>)</h2>
+    <div style="max-height: 400px; overflow-y: auto;">
+      <table>
+        <thead><tr><th>Date</th><th>Heure</th><th>Jeu</th><th>Boules</th><th>Action</th></tr></thead>
+        <tbody id="corps"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ONGLET 2 : VUE COMBINÉE ====== -->
+<div id="onglet-combine" class="tab-content">
+  <div class="card">
+    <h2>🔀 Vue Combinée (Chronologie Journalière)</h2>
+    <div id="contenuCombine"></div>
+  </div>
+</div>
+
+<!-- ====== ONGLET 3 : ANALYSE PAR JEU ====== -->
+<div id="onglet-analyseJeu" class="tab-content">
+  <div class="card">
+    <h2>📊 Analyse par Jeu</h2>
+    <div style="background: #eef5ef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+      <label><b>Sélectionnez le jeu :</b>
+        <select id="jeuAnalyse" onchange="afficherAnalyseJeu()" style="font-weight: bold;">
+          <option value="Star">Loto Star</option>
+          <option value="Fortune">Loto Fortune</option>
+          <option value="Digital">Digital</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid" id="grilleStatsJeu"></div>
+  </div>
+</div>
+
+<!-- ====== ONGLET 4 : ANALYSE PAR CRÉNEAU ====== -->
+<div id="onglet-analyseCrenea" class="tab-content">
+  <div class="card">
+    <h2>⏱️ Analyse par Créneau Horaire</h2>
+    <div style="background: #eef5ef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+      <label><b>Sélectionnez le créneau :</b>
+        <select id="creneauAnalyse" onchange="afficherAnalyseCreneau()" style="font-weight: bold;">
+          <option value="Digital-00H">Digital 00H</option>
+          <option value="Digital-08H">Digital 08H</option>
+          <option value="Digital-20H">Digital 20H</option>
+          <option value="Star-11H">Star 11H</option>
+          <option value="Star-14H">Star 14H</option>
+          <option value="Star-18H">Star 18H</option>
+          <option value="Fortune-11H">Fortune 11H</option>
+          <option value="Fortune-14H">Fortune 14H</option>
+          <option value="Fortune-18H">Fortune 18H</option>
+        </select>
+      </label>
+      <span id="infoNbCreneau" style="margin-left: 20px; font-weight: bold; color: #555;"></span>
+    </div>
+    <div class="grid" id="grilleStatsCreneau"></div>
+  </div>
+</div>
+
+<!-- ====== ONGLET 5 : IMPORTATION ====== -->
+<div id="onglet-import" class="tab-content">
+  <div class="card">
+    <h2>📁 Importer des anciens résultats (CSV)</h2>
+    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+      <p>📄 Cliquez ici ou glissez-déposez votre fichier CSV</p>
+      <input type="file" id="fileInput" accept=".csv" onchange="importerCSV(event)">
+    </div>
+    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px;">
+      <b>Format attendu (séparé par des virgules ou des points-virgules) :</b><br>
+      <code>Date ; Heure ; Jeu ; B1 ; B2 ; B3 ; B4 ; B5</code>
+    </div>
+    <div class="msg" id="importMessage" style="font-size: 16px;"></div>
+  </div>
+</div>
+
+<!-- ====== ONGLET 6 : LABORATOIRE ====== -->
 <div id="onglet-labo" class="tab-content">
   <div class="card">
-    <h2>🧪 Laboratoire Avancé (Croisements & Multi-Lignes)</h2>
+    <h2>🧪 Laboratoire d'Analyse Avancée</h2>
     
     <div class="lab-grid">
-      
-      <!-- BLOC GAUCHE : SELECTION MULTIPLE -->
-      <div class="lab-box">
-        <h3>1. Sélectionnez jusqu'à 5 tirages (Draws)</h3>
-        <p style="font-size: 13px; color: #666;">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs lignes.</p>
-        
-        <select id="selectMultiTirages" multiple style="width: 100%; height: 200px; padding: 5px; border-radius: 6px;">
-          <!-- Rempli par JS -->
-        </select>
+      <!-- COLONNE GAUCHE : SELECTION -->
+      <div>
+        <div class="lab-box">
+          <h3>1. Analyse d'un seul tirage</h3>
+          <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;">
+            <!-- Rempli par JS -->
+          </select>
+          <div style="margin-top: 10px;">
+            <button onclick="faireTurning()">Miroir / Turning</button>
+            <button onclick="faireAddition()">Somme (+)</button>
+          </div>
+          <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
+        </div>
 
-        <div style="margin-top: 15px;">
-          <button onclick="executerAdditions()" style="background-color: #2980b9;">➕ Additionner (Point 15 & 18)</button>
-          <button onclick="executerBankersMulti()" style="background-color: #f39c12;">🏦 Chercher Bankers Communs (Point 12-14)</button>
+        <div class="lab-box" style="margin-top: 20px;">
+          <h3>2. Multi-Draws (Points 15 à 19)</h3>
+          <p style="font-size: 13px;">Sélectionnez 2 à 5 tirages (Ctrl+Clic).</p>
+          <select id="selectMultiTirages" multiple style="width: 100%; height: 150px;">
+            <!-- Rempli par JS -->
+          </select>
+          <div style="margin-top: 10px;">
+            <button onclick="executerAdditions()" style="background-color: #2980b9;">➕ Additionner</button>
+            <button onclick="executerBankersMulti()" style="background-color: #f39c12;">🏦 Bankers Communs</button>
+          </div>
         </div>
       </div>
 
-      <!-- BLOC DROIT : RESULTATS -->
-      <div class="lab-box">
-        <h3>2. Résultats des Opérations</h3>
-        <div id="resultatLaboAvance" style="min-height: 200px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px;">
-          <i>En attente de sélection...</i>
+      <!-- COLONNE DROITE : RESULTATS -->
+      <div>
+        <div class="lab-box" style="height: 100%;">
+          <h3>Résultats & Analyses</h3>
+          
+          <div id="resultatLaboAvance" style="min-height: 150px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; font-weight: normal;">
+            <i>En attente...</i>
+          </div>
+
+          <h4>📍 Analyse par Position</h4>
+          <button onclick="analyserPositions()" class="secondary" style="width: 100%;">Générer le tableau</button>
+          <div id="resultatPositions" style="margin-top: 15px; overflow-x: auto; font-weight: normal;"></div>
+          
+          <h4 style="margin-top: 20px;">🏦 Détection de Banker (Créneau)</h4>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="creneauBanker" style="flex: 1;">
+              <option value="Digital-20H">Digital 20H</option>
+              <option value="Star-11H">Star 11H</option>
+              <option value="Fortune-14H">Fortune 14H</option>
+            </select>
+            <button onclick="chercherBanker()" class="secondary">Chercher</button>
+          </div>
+          <div id="resultatBanker" style="margin-top: 10px; font-weight: normal;"></div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
 <script>
-// Fonction pour charger les tirages dans le menu multiple
-function remplirSelectMulti() {
-  var tirages = charger();
-  var select = document.getElementById("selectMultiTirages");
-  select.innerHTML = "";
+var CLE = "lotoBeninPro";
+function charger() { return JSON.parse(localStorage.getItem(CLE)) || []; }
+function sauver(t) { localStorage.setItem(CLE, JSON.stringify(t)); }
+
+function ouvrirOnglet(id) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('onglet-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
   
-  if (tirages.length === 0) {
-    select.innerHTML = "<option>Aucun tirage enregistré.</option>";
-    return;
+  if(id === 'combine') afficherCombine();
+  if(id === 'analyseJeu') afficherAnalyseJeu();
+  if(id === 'analyseCrenea') afficherAnalyseCreneau();
+  if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
+}
+
+// --- 1. SAISIE ---
+document.getElementById("btnAjouter").addEventListener("click", function () {
+  var msg = document.getElementById("message");
+  msg.textContent = "";
+  var date = document.getElementById("date").value;
+  var jeu = document.getElementById("jeuSaisie").value;
+  var heure = document.getElementById("heureSaisie").value;
+  var boules = [];
+  
+  for (var i = 1; i <= 5; i++) {
+    var v = parseInt(document.getElementById("b" + i).value, 10);
+    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
+    boules.push(v);
   }
-  
-  // Trier du plus récent au plus ancien
-  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
-  
-  tirages.forEach(function(t, index) {
-    var opt = document.createElement("option");
-    opt.value = index; 
-    opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]";
-    select.appendChild(opt);
+  if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
+  if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
+
+  var tirages = charger();
+  tirages.push({ date: date, jeu: jeu, heure: heure, boules: boules });
+  sauver(tirages);
+
+  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
+  msg.style.color = "green"; msg.textContent = "✅ Tirage ajouté !";
+  afficherHistorique();
+});
+
+function supprimer(i) {
+  if (!confirm("Supprimer ce tirage ?")) return;
+  var t = charger(); t.splice(i, 1); sauver(t);
+  afficherHistorique();
+}
+
+function afficherHistorique() {
+  var tirages = charger();
+  document.getElementById("nbTotal").textContent = tirages.length;
+  var corps = document.getElementById("corps"); corps.innerHTML = "";
+
+  var tri = tirages.map(function (t, i) { return { t: t, i: i }; });
+  tri.sort(function (a, b) { 
+    var dc = b.t.date.localeCompare(a.t.date);
+    if(dc !== 0) return dc;
+    return (a.t.heure || "").localeCompare(b.t.heure || "");
+  });
+
+  tri.forEach(function (obj) {
+    var tr = document.createElement("tr");
+    var html = "<td>" + obj.t.date + "</td><td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
+    var cb = obj.t.jeu === 'Star' ? 'star' : (obj.t.jeu === 'Fortune' ? 'fortune' : 'digital');
+    obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
+    html += "</td><td><button onclick='supprimer(" + obj.i + ")' style='background:#b03030; padding: 5px 10px;'>X</button></td>";
+    tr.innerHTML = html; corps.appendChild(tr);
   });
 }
 
-// --- LOGIQUE 1 : ADDITION DE PLUSIEURS DRAWS (Points 15, 16, 18, 19) ---
-function executerAdditions() {
-  var select = document.getElementById("selectMultiTirages");
-  var indicesSelectionnes = Array.from(select.selectedOptions).map(function(opt) { return parseInt(opt.value); });
-  
-  if (indicesSelectionnes.length < 2) {
-    document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Veuillez sélectionner au moins 2 tirages.</span>";
-    return;
-  }
-
+// --- 2. VUE COMBINÉE ---
+function afficherCombine() {
   var tirages = charger();
-  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
-  
-  // Récupérer les tirages sélectionnés
-  var selection = indicesSelectionnes.map(function(i) { return tirages[i]; });
-  
-  var html = "<h4>Addition de " + selection.length + " Draws</h4>";
-  html += "<ul style='font-size:13px; margin-bottom:15px;'>";
-  selection.forEach(function(t) { html += "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join(" - ") + "</li>"; });
-  html += "</ul>";
+  var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
+  if (tirages.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
 
-  // A. Addition Globale (Point 15)
-  var sommeGlobale = 0;
-  selection.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
-  
-  var reduitGlobal = sommeGlobale;
-  while(reduitGlobal > 90) reduitGlobal -= 90;
-  if (reduitGlobal === 0) reduitGlobal = 90; // Si multiple de 90
+  var parDate = {};
+  tirages.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
+  var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); });
 
-  html += "<div style='background:#eef5ef; padding:10px; margin-bottom:10px; border-radius:4px;'>";
-  html += "<b>Addition Globale (Point 15) :</b><br>";
-  html += "Somme totale = " + sommeGlobale + "<br>";
-  html += "Numéro réduit : <span class='ball'>" + reduitGlobal + "</span>";
-  html += "</div>";
+  datesTriees.forEach(function(dateStr) {
+    var tiragesDuJour = parDate[dateStr];
+    var divJour = document.createElement("div"); divJour.className = "combo-day";
+    var dateObj = new Date(dateStr);
+    var dateFormatee = isNaN(dateObj) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    var html = "<div class='combo-header'>📅 " + dateFormatee + "</div>";
 
-  // B. Addition avec Position (Point 18)
-  html += "<div style='background:#fff3cd; padding:10px; border-radius:4px;'>";
-  html += "<b>Addition par Position (Point 18/19) :</b><br>";
-  
-  // Additionner boule par boule (1ère avec 1ère, 2ème avec 2ème, etc.)
-  var additionsPositions = [0, 0, 0, 0, 0];
-  selection.forEach(function(t) {
-    for(var i=0; i<5; i++) { additionsPositions[i] += t.boules[i]; }
-  });
-  
-  var htmlBoules = "";
-  var grilleFinale = [];
-  additionsPositions.forEach(function(somme) {
-    var r = somme;
-    while(r > 90) r -= 90;
-    if(r === 0) r = 90;
-    grilleFinale.push(r);
-    htmlBoules += "<span class='ball'>" + r + "</span> ";
-  });
-  
-  html += "1ère boule = " + additionsPositions[0] + " -> <b>" + grilleFinale[0] + "</b><br>";
-  html += "2ème boule = " + additionsPositions[1] + " -> <b>" + grilleFinale[1] + "</b><br>";
-  html += "3ème boule = " + additionsPositions[2] + " -> <b>" + grilleFinale[2] + "</b><br>";
-  html += "4ème boule = " + additionsPositions[3] + " -> <b>" + grilleFinale[3] + "</b><br>";
-  html += "5ème boule = " + additionsPositions[4] + " -> <b>" + grilleFinale[4] + "</b><br><br>";
-  
-  html += "<b>Nouvelle ligne générée :</b><br>" + htmlBoules;
-  html += "</div>";
-
-  document.getElementById("resultatLaboAvance").innerHTML = html;
-}
-
-// --- LOGIQUE 2 : BANKERS SUR DIFFERENTES LIGNES (Points 12, 13, 14) ---
-function executerBankersMulti() {
-  var select = document.getElementById("selectMultiTirages");
-  var indicesSelectionnes = Array.from(select.selectedOptions).map(function(opt) { return parseInt(opt.value); });
-  
-  if (indicesSelectionnes.length < 2) {
-    document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Veuillez sélectionner au moins 2 tirages pour croiser les Bankers.</span>";
-    return;
-  }
-
-  var tirages = charger();
-  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
-  var selection = indicesSelectionnes.map(function(i) { return tirages[i]; });
-  
-  // Compter la présence des numéros dans les différentes lignes
-  var presence = {};
-  selection.forEach(function(t) {
-    t.boules.forEach(function(n) {
-      presence[n] = (presence[n] || 0) + 1;
-    });
-  });
-
-  // Trouver les numéros qui apparaissent dans TOUTES les lignes (ou au moins 2)
-  var bankersCommuns = [];
-  var autresCommuns = [];
-  
-  for (var num in presence) {
-    if (presence[num] === selection.length) {
-      bankersCommuns.push(num); // Présent dans toutes les lignes
-    } else if (presence[num] > 1) {
-      autresCommuns.push({ num: num, fois: presence[num] }); // Présent dans plusieurs lignes
+    function trouverTirage(jeu, heure) { return tiragesDuJour.find(function(t) { return t.jeu === jeu && t.heure === heure; }); }
+    function genBoules(tirage) {
+      if (!tirage) return "<span style='color:#ccc;'>-</span>";
+      var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
+      var s = ""; tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); return s;
     }
-  }
 
-  var html = "<h4>Analyse des Bankers Multi-Lignes</h4>";
-  
-  if (bankersCommuns.length > 0) {
-    html += "<div style='background:#d4edda; padding:10px; border-radius:4px; margin-bottom:10px;'>";
-    html += "<b>🎯 Bankers Communs (Présents sur TOUTES les lignes) :</b><br>";
-    bankersCommuns.forEach(function(n) { html += "<span class='ball' style='background:#1a5c2a;'>" + n + "</span> "; });
-    html += "</div>";
-  } else {
-    html += "<p><i>Aucun numéro n'est sorti sur toutes les lignes sélectionnées.</i></p>";
-  }
+    var t00 = trouverTirage('Digital', '00H'); html += "<div class='combo-row'><div class='combo-time'>00H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t00) + "</div></div>";
+    var t08 = trouverTirage('Digital', '08H'); html += "<div class='combo-row'><div class='combo-time'>08H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t08) + "</div></div>";
+    var t11 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '11H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>11H00</div><div class='combo-source'>" + (t11 ? t11.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t11) + "</div></div>";
+    var t14 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '14H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>14H00</div><div class='combo-source'>" + (t14 ? t14.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t14) + "</div></div>";
+    var t18 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '18H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>18H00</div><div class='combo-source'>" + (t18 ? t18.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t18) + "</div></div>";
+    var t20 = trouverTirage('Digital', '20H'); html += "<div class='combo-row'><div class='combo-time'>20H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t20) + "</div></div>";
 
-  if (autresCommuns.length > 0) {
-    html += "<div style='background:#f8f9fa; padding:10px; border-radius:4px; border: 1px solid #ddd;'>";
-    html += "<b>Numéros récurrents (sur plusieurs lignes) :</b><br>";
-    autresCommuns.sort(function(a,b) { return b.fois - a.fois; });
-    autresCommuns.forEach(function(item) {
-      html += "<span class='ball' style='background:#6c757d;'>" + item.num + "</span> (sorti " + item.fois + " fois)<br>";
+    divJour.innerHTML = html; conteneur.appendChild(divJour);
+  });
+}
+
+// --- 3. ANALYSE JEU ---
+function afficherAnalyseJeu() {
+  var jeuActif = document.getElementById("jeuAnalyse").value;
+  var tirages = charger().filter(function(t) { return t.jeu === jeuActif; });
+  var freq = {}, ecarts = {};
+  for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
+  tirages.forEach(function(obj) { obj.boules.forEach(function(n) { freq[n]++; }); });
+  var tris = tirages.map(function(t) { return t; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+  tris.forEach(function(obj, index) { obj.boules.forEach(function(n) { if (ecarts[n] === 0 && index !== 0) ecarts[n] = index; }); });
+  if (tris.length > 0) tris[0].boules.forEach(function(n) { ecarts[n] = 0; });
+  var grid = document.getElementById("grilleStatsJeu"); grid.innerHTML = "";
+  for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
+}
+
+// --- 4. ANALYSE CRÉNEAU ---
+function afficherAnalyseCreneau() {
+  var val = document.getElementById("creneauAnalyse").value.split("-");
+  var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
+  document.getElementById("infoNbCreneau").textContent = filtres.length + " tirage(s).";
+  var freq = {}, ecarts = {};
+  for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
+  filtres.forEach(function(obj) { obj.boules.forEach(function(n) { freq[n]++; }); });
+  var tris = filtres.map(function(t) { return t; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+  tris.forEach(function(obj, index) { obj.boules.forEach(function(n) { if (ecarts[n] === 0 && index !== 0) ecarts[n] = index; }); });
+  if (tris.length > 0) tris[0].boules.forEach(function(n) { ecarts[n] = 0; });
+  var grid = document.getElementById("grilleStatsCreneau"); grid.innerHTML = "";
+  var top10 = Object.keys(freq).map(function(n) { return { n: parseInt(n), f: freq[n] }; }).filter(function(x) { return x.f > 0; }).sort(function(a, b) { return b.f - a.f; }).slice(0, 10);
+  var top10Ids = top10.map(function(x) { return x.n; });
+  for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
+}
+
+// --- 5. IMPORTATION ---
+function importerCSV(event) {
+  var file = event.target.files[0]; if (!file) return;
+  var reader = new FileReader(); var msg = document.getElementById("importMessage"); msg.textContent = "Lecture..."; msg.style.color = "blue";
+  reader.onload = function(e) {
+    var lignes = e.target.result.split(/\r?\n/); var tiragesActuels = charger(); var ajoutes = 0; var erreurs = 0;
+    lignes.forEach(function(ligne) {
+      if (!ligne.trim()) return; var cols = ligne.split(/[;,]/);
+      if (cols.length < 8) { if (ligne.toLowerCase().indexOf("date") !== -1) return; erreurs++; return; }
+      var d = cols[0].trim(); var h = cols[1].trim().toUpperCase(); var j = cols[2].trim();
+      var b = [parseInt(cols[3],10), parseInt(cols[4],10), parseInt(cols[5],10), parseInt(cols[6],10), parseInt(cols[7],10)];
+      if (d.indexOf("/") !== -1) { var p = d.split("/"); d = p[2] + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); }
+      if (j.toLowerCase().indexOf("star") !== -1) j = "Star"; else if (j.toLowerCase().indexOf("fortune") !== -1) j = "Fortune"; else if (j.toLowerCase().indexOf("digital") !== -1) j = "Digital";
+      if (!d || !h || !j || b.some(function(n){ return isNaN(n) || n<1 || n>90; }) || new Set(b).size !== 5) { erreurs++; return; }
+      tiragesActuels.push({ date: d, heure: h, jeu: j, boules: b }); ajoutes++;
     });
-    html += "</div>";
-  }
+    if (ajoutes > 0) { sauver(tiragesActuels); msg.style.color = "green"; msg.textContent = "✅ " + ajoutes + " ajouté(s). (" + erreurs + " erreurs)"; afficherHistorique(); } else { msg.style.color = "red"; msg.textContent = "❌ Echec."; }
+    document.getElementById("fileInput").value = "";
+  };
+  reader.readAsText(file);
+}
 
+// --- 6. LABORATOIRE ---
+var tirageActifLabo = null;
+
+function remplirSelecteurTirage() {
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
+  if (tirages.length === 0) { s1.innerHTML = "<option>Aucun tirage</option>"; return; }
+  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " - " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
+  analyserTirageLabo();
+}
+
+function remplirSelectMulti() {
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = "";
+  if (tirages.length === 0) { s2.innerHTML = "<option>Aucun tirage</option>"; return; }
+  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
+}
+
+function analyserTirageLabo() {
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var idx = document.getElementById("selectTirageLabo").value;
+  if(idx !== "" && tirages[idx]) { tirageActifLabo = tirages[idx]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageActifLabo.boules.join(" - "); }
+}
+
+function faireTurning() {
+  if(!tirageActifLabo) return;
+  var res = tirageActifLabo.boules.map(function(n) { var s = n.toString(); if(s.length === 1) s = "0" + s; var inv = parseInt(s.split('').reverse().join(''), 10); return (inv > 90 || inv === 0) ? n : inv; });
+  document.getElementById("resultatOperations").innerHTML = "<b>Turning :</b><br>Base : " + tirageActifLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#8e44ad;'>" + res.join(" - ") + "</span>";
+}
+
+function faireAddition() {
+  if(!tirageActifLabo) return;
+  var somme = tirageActifLabo.boules.reduce(function(a, b) { return a + b; }, 0);
+  var reduit = somme; while(reduit > 90) { reduit -= 90; }
+  document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#8e44ad;'>" + reduit + "</span>";
+}
+
+function analyserPositions() {
+  var tirages = charger(); if(tirages.length === 0) return;
+  var stats = [{}, {}, {}, {}, {}];
+  tirages.forEach(function(t) { t.boules.forEach(function(n, i) { if(i<5) stats[i][n] = (stats[i][n] || 0) + 1; }); });
+  var html = "<table class='pos-table'><tr><th>Pos</th><th>Top 3</th></tr>";
+  stats.forEach(function(c, i) {
+    var top = Object.keys(c).map(function(n){ return {n: parseInt(n), v: c[n]}; }).sort(function(a,b){return b.v-a.v;}).slice(0,3);
+    html += "<tr><td><b>" + (i+1) + "</b></td><td>" + top.map(function(x){ return "<span class='ball'>" + x.n + "</span>"; }).join(" ") + "</td></tr>";
+  });
+  document.getElementById("resultatPositions").innerHTML = html + "</table>";
+}
+
+function chercherBanker() {
+  var val = document.getElementById("creneauBanker").value.split("-");
+  var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
+  filtres.sort(function(a, b) { return b.date.localeCompare(a.date); }); filtres = filtres.slice(0, 15);
+  if(filtres.length === 0) { document.getElementById("resultatBanker").textContent = "Pas de données."; return; }
+  var freq = {}; filtres.forEach(function(t) { t.boules.forEach(function(n) { freq[n] = (freq[n] || 0) + 1; }); });
+  var top = Object.keys(freq).map(function(n){ return {n: parseInt(n), v: freq[n]}; }).sort(function(a,b){return b.v-a.v;}).slice(0, 3);
+  document.getElementById("resultatBanker").innerHTML = "<b>Top Bankers (" + filtres.length + " tirages) :</b><br>" + top.map(function(x){ return "<span class='ball'>" + x.n + "</span> " + x.v + " fois"; }).join("<br>");
+}
+
+function executerAdditions() {
+  var s = document.getElementById("selectMultiTirages");
+  var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var sel = idx.map(function(i) { return tirages[i]; });
+  var html = "<h4>Addition de " + sel.length + " Draws</h4><ul style='font-size:12px;'>" + sel.map(function(t){ return "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join("-") + "</li>"; }).join("") + "</ul>";
+  
+  var sommeGlobale = 0; sel.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
+  var reduitGlobal = sommeGlobale; while(reduitGlobal > 90) reduitGlobal -= 90; if(reduitGlobal === 0) reduitGlobal = 90;
+  html += "<div style='background:#eef5ef; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Somme Globale :</b> " + sommeGlobale + " -> <span class='ball'>" + reduitGlobal + "</span></div>";
+  
+  var addPos = [0,0,0,0,0]; sel.forEach(function(t) { for(var i=0; i<5; i++) addPos[i] += t.boules[i]; });
+  var grille = []; var htmlB = "";
+  addPos.forEach(function(s) { var r = s; while(r > 90) r -= 90; if(r === 0) r = 90; grille.push(r); htmlB += "<span class='ball'>" + r + "</span> "; });
+  html += "<div style='background:#fff3cd; padding:10px; border-radius:4px;'><b>Par Position :</b><br>" + htmlB + "</div>";
   document.getElementById("resultatLaboAvance").innerHTML = html;
 }
 
-// Mettre à jour l'initialisation pour charger le menu multiple
-var ancienneFonctionOuvrir = ouvrirOnglet;
-ouvrirOnglet = function(id) {
-  ancienneFonctionOuvrir(id);
-  if(id === 'labo') {
-    remplirSelectMulti();
-  }
-};
+function executerBankersMulti() {
+  var s = document.getElementById("selectMultiTirages");
+  var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
+  if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
+  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var sel = idx.map(function(i) { return tirages[i]; });
+  
+  var pres = {}; sel.forEach(function(t) { t.boules.forEach(function(n) { pres[n] = (pres[n] || 0) + 1; }); });
+  var communs = [], autres = [];
+  for (var n in pres) { if (pres[n] === sel.length) communs.push(n); else if (pres[n] > 1) autres.push({n: n, f: pres[n]}); }
+  
+  var html = "<h4>Bankers Multi-Lignes</h4>";
+  if (communs.length > 0) { html += "<div style='background:#d4edda; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Communs (toutes lignes) :</b><br>" + communs.map(function(n){ return "<span class='ball'>" + n + "</span>"; }).join(" ") + "</div>"; } else { html += "<p><i>Aucun numéro sur toutes les lignes.</i></p>"; }
+  if (autres.length > 0) { autres.sort(function(a,b){return b.f-a.f;}); html += "<div style='background:#f8f9fa; padding:10px; border-radius:4px;'><b>Récurrents :</b><br>" + autres.map(function(x){ return "<span class='ball' style='background:#6c757d;'>" + x.n + "</span> (" + x.f + "x)"; }).join("<br>") + "</div>"; }
+  document.getElementById("resultatLaboAvance").innerHTML = html;
+}
+
+// Initialisation
+document.getElementById("date").valueAsDate = new Date();
+afficherHistorique();
 </script>
+</body>
+</html>
