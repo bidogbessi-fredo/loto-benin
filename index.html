@@ -178,8 +178,8 @@
     
     <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici...
 Exemple :
-2024-05-20;20H;Digital;05;12;44;67;89
-2024-05-20;18H;Star;02;15;28;41;74"></textarea>
+Star 11H;09/09/2026;67;76;75;55;60
+Fortune 14H;08/09/2026;54;84;32;63;5"></textarea>
     <br>
     <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer</button>
     
@@ -430,7 +430,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION PAR COPIE-COLLE ---
+// --- 5. IMPORTATION (CHIRURGICALE PAR POINT-VIRGULE) ---
 function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -447,52 +447,52 @@ function traiterTexteColle() {
   var erreurs = 0;
 
   lignes.forEach(function(ligne, index) {
-    if (!ligne.trim()) return;
+    if (!ligne.trim()) return; // Ligne vide
+    
+    // 1. On ignore l'en-tête (s'il y a les mots Date, Heure, Jeu)
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1) return;
 
-    var jeuTrouve = "";
-    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
-    else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
-    else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
-
-    if (jeuTrouve === "") { erreurs++; return; }
-
-    var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
+    // 2. Découpage chirurgical par point-virgule
+    var cols = ligne.split(";");
     
-    // Supprimer la date et l'heure
-    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
-    texteNettoye = texteNettoye.replace(regexDate, ' '); 
-    var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
-    texteNettoye = texteNettoye.replace(regexHeure, ' ');
-    texteNettoye = texteNettoye.replace(/star|fortune|digital/gi, ' ');
-
-    // Extraire les numéros
-    var nombres = [];
-    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
-    if (matchNombres) {
-        for (var i = 0; i < matchNombres.length; i++) {
-            var num = parseInt(matchNombres[i], 10);
-            if (num >= 1 && num <= 90) nombres.push(num);
-        }
-    }
-
-    // Prendre les 5 premiers
-    var boules = nombres.slice(0, 5);
-
-    if (boules.length === 5 && new Set(boules).size === 5) {
-        var dateTrouvee = "2024-01-01"; 
-        var matchDate = ligne.match(regexDate);
-        if(matchDate) dateTrouvee = matchDate[0].replace(/\./g, '/');
+    // On a besoin d'au moins 7 colonnes (JeuHeure, Date, B1, B2, B3, B4, B5)
+    if (cols.length >= 7) {
+        var jeuHeure = cols[0].trim(); 
+        var dateBrute = cols[1].trim(); 
         
+        // Trouver le jeu
+        var jeuTrouve = "";
+        if (jeuHeure.toLowerCase().indexOf("star") !== -1) jeuTrouve = "Star";
+        else if (jeuHeure.toLowerCase().indexOf("fort") !== -1) jeuTrouve = "Fortune";
+        else if (jeuHeure.toLowerCase().indexOf("dig") !== -1) jeuTrouve = "Digital";
+        
+        // Trouver l'heure
         var heureTrouvee = "00H";
-        var matchHeure = ligne.match(regexHeure);
+        var matchHeure = jeuHeure.match(/(\d{1,2})/); 
         if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+        
+        // Formater la date (JJ/MM/AAAA -> AAAA-MM-JJ)
+        var dateFormatee = dateBrute;
+        if (dateBrute.indexOf("/") !== -1) {
+            var p = dateBrute.split("/");
+            if(p.length === 3) dateFormatee = p[2] + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
+        }
 
-        tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
-        ajoutes++;
+        // Extraire les 5 boules
+        var boules = [
+            parseInt(cols[2], 10), parseInt(cols[3], 10), parseInt(cols[4], 10), parseInt(cols[5], 10), parseInt(cols[6], 10)
+        ];
+
+        // Vérifier et ajouter
+        if (jeuTrouve !== "" && !boules.some(isNaN)) {
+            tiragesActuels.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
+            ajoutes++;
+        } else {
+            erreurs++;
+        }
     } else {
-        erreurs++; 
+        erreurs++;
     }
   });
 
@@ -500,12 +500,12 @@ function traiterTexteColle() {
     sauver(tiragesActuels); 
     msg.style.color = "green"; 
     msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
-    document.getElementById("texteAImporter").value = ""; // Vider le cadre
+    document.getElementById("texteAImporter").value = ""; 
     afficherHistorique(); 
     alert("Importation réussie ! Allez voir l'historique.");
   } else { 
     msg.style.color = "red"; 
-    msg.textContent = "❌ Échec. Aucun numéro valide trouvé dans le texte."; 
+    msg.textContent = "❌ Échec. Aucun numéro valide trouvé. Vérifiez que les lignes sont bien séparées par des points-virgules."; 
   }
 }
 
