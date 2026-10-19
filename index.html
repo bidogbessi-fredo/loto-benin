@@ -364,7 +364,13 @@ function afficherCombine() {
     var tiragesDuJour = parDate[dateStr];
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
-    var dateFormatee = isNaN(dateObj) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // Sécurité pour l'affichage de la date
+    var dateFormatee = dateStr;
+    if (!isNaN(dateObj.getTime())) {
+        dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    
     var html = "<div class='combo-header'>📅 " + dateFormatee + "</div>";
 
     function trouverTirage(jeu, heure) { return tiragesDuJour.find(function(t) { return t.jeu === jeu && t.heure === heure; }); }
@@ -440,7 +446,6 @@ function traiterTexteColle() {
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("column") !== -1) return;
 
     // 2. Détection du séparateur principal
-    // Si la ligne contient un point-virgule, on l'utilise. Sinon on utilise l'espace ou le tiret.
     var cols = [];
     if (ligne.indexOf(";") !== -1) {
         cols = ligne.split(";");
@@ -458,21 +463,27 @@ function traiterTexteColle() {
         var jeuHeure = cols[0].trim(); 
         var dateBrute = cols[1].trim(); 
         
-        // Si c'est le format bizarre, jeuHeure contient "Inconnu", on cherche le jeu dans la ligne
         if (jeuHeure === "Inconnu") jeuHeure = ligne;
 
         // Trouver le jeu
-        var jeuTrouve = "Star"; // Par défaut
+        var jeuTrouve = "Star";
         if (jeuHeure.toLowerCase().indexOf("digital") !== -1 || jeuHeure.toLowerCase().indexOf("dig") !== -1) jeuTrouve = "Digital";
         else if (jeuHeure.toLowerCase().indexOf("fortune") !== -1 || jeuHeure.toLowerCase().indexOf("fort") !== -1) jeuTrouve = "Fortune";
-        else if (/\b(jeu|ven|lun|mar)\b/i.test(jeuHeure)) jeuTrouve = "Fortune"; // Logique Jours
+        else if (/\b(jeu|ven|lun|mar)\b/i.test(jeuHeure)) jeuTrouve = "Fortune"; 
         else if (/\b(mer|sam|dom)\b/i.test(jeuHeure)) jeuTrouve = "Star";
         
-        // Trouver l'heure
+        // Trouver l'heure (on force 00H pour le Digital si c'est introuvable)
         var heureTrouvee = "00H";
         var matchHeure = jeuHeure.match(/(\d{1,2})[hH]/); 
-        if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
-        
+        if(matchHeure) {
+            heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+        } else if (jeuHeure.toLowerCase().indexOf("digital") !== -1) {
+             // Si c'est écrit "Digital" sans heure, on cherche un nombre 00, 08 ou 20 dans le texte
+             if (jeuHeure.indexOf("20") !== -1) heureTrouvee = "20H";
+             else if (jeuHeure.indexOf("08") !== -1 || jeuHeure.indexOf("8") !== -1) heureTrouvee = "08H";
+             else heureTrouvee = "00H";
+        }
+
         // Formater la date
         var dateFormatee = dateBrute;
         if (dateBrute.indexOf("/") !== -1) {
@@ -488,7 +499,7 @@ function traiterTexteColle() {
             parseInt(cols[2], 10), parseInt(cols[3], 10), parseInt(cols[4], 10), parseInt(cols[5], 10), parseInt(cols[6], 10)
         ];
 
-        if (jeuTrouve !== "" && !boules.some(isNaN)) {
+        if (jeuTrouve !== "" && !boules.some(isNaN) && dateFormatee.indexOf("-") !== -1) {
             tiragesActuels.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
             ajoutes++;
         } else {
