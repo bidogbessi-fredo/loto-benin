@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Loto Bénin - Pro Dashboard Complet</title>
+<title>Loto Bénin - Pro Dashboard</title>
 <style>
   :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
@@ -184,8 +184,7 @@
       <input type="file" id="fileInput" accept=".csv" onchange="importerCSV(event)">
     </div>
     <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px;">
-      <b>Format conseillé (mais l'IA s'adapte à tout) :</b><br>
-      <code>Date ; Heure ; Jeu ; B1 ; B2 ; B3 ; B4 ; B5</code>
+      <b>L'IA lit n'importe quel format.</b> Elle cherche le mot Star/Fortune/Digital, ignore la date, l'heure, et extrait les 5 premiers numéros valides.
     </div>
     <div class="msg" id="importMessage" style="font-size: 16px;"></div>
   </div>
@@ -312,13 +311,11 @@ function modifierTirage(i) {
   var t = charger();
   var tirage = t[i];
   
-  // On demande les nouvelles valeurs
   var nouvelleDate = prompt("Modifier la Date (AAAA-MM-JJ) :", tirage.date);
-  if (nouvelleDate === null) return; // Annulé
+  if (nouvelleDate === null) return;
   
   var nouveauJeu = prompt("Modifier le Jeu (Star, Fortune, Digital) :", tirage.jeu);
   if (nouveauJeu === null) return;
-  // Correction de la casse
   if(nouveauJeu.toLowerCase().indexOf("star") !== -1) nouveauJeu = "Star";
   else if(nouveauJeu.toLowerCase().indexOf("fort") !== -1) nouveauJeu = "Fortune";
   else if(nouveauJeu.toLowerCase().indexOf("dig") !== -1) nouveauJeu = "Digital";
@@ -337,7 +334,6 @@ function modifierTirage(i) {
     return;
   }
 
-  // Application des modifications
   t[i] = { date: nouvelleDate, jeu: nouveauJeu, heure: nouvelleHeure, boules: boulesArray };
   sauver(t);
   afficherHistorique();
@@ -437,14 +433,14 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION INTELLIGENTE CORRIGÉE ---
+// --- 5. IMPORTATION ULTRA-IA INFAILLIBLE ---
 function importerCSV(event) {
   var file = event.target.files[0]; 
   if (!file) return;
   
   var reader = new FileReader(); 
   var msg = document.getElementById("importMessage"); 
-  msg.textContent = "Analyse chirurgicale du fichier..."; 
+  msg.textContent = "Lecture du fichier..."; 
   msg.style.color = "blue";
   
   reader.onload = function(e) {
@@ -455,71 +451,60 @@ function importerCSV(event) {
     var erreurs = 0;
 
     lignes.forEach(function(ligne, index) {
+      // 1. Nettoyage de base : on ignore les lignes vides et l'en-tête
       if (!ligne.trim()) return;
-      
-      var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
-      var ligneMinuscule = texteNettoye.toLowerCase();
-
-      // Ignorer l'en-tête
+      var ligneMinuscule = ligne.toLowerCase();
       if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1 || ligneMinuscule.indexOf("b1") !== -1) return;
 
-      // Trouver le JEU
+      // 2. Trouver le JEU
       var jeuTrouve = "";
       if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
       else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
       else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
 
-      if (jeuTrouve === "") { erreurs++; return; }
+      if (jeuTrouve === "") { erreurs++; return; } // Si pas de jeu, on ignore cette ligne
 
-      // Trouver la DATE
-      var dateTrouvee = "";
-      var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
-      var matchDate = ligne.match(regexDate);
-      if (matchDate) {
-          dateTrouvee = matchDate[0].replace(/\./g, '/');
-          if (dateTrouvee.indexOf("/") !== -1) { 
-            var p = dateTrouvee.split("/"); 
-            if (p.length === 3) {
-              if(p[0].length === 4) dateTrouvee = p[0] + "-" + p[1].padStart(2, '0') + "-" + p[2].padStart(2, '0');
-              else {
-                  var annee = p[2].length === 2 ? "20" + p[2] : p[2];
-                  dateTrouvee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
-              }
-            }
-          }
-      } else {
-          var today = new Date();
-          dateTrouvee = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
-      }
-
-      // Trouver l'HEURE
-      var heureTrouvee = "00H";
-      var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
-      var matchHeure = ligne.match(regexHeure);
-      if (matchHeure) {
-          var hVal = parseInt(matchHeure[1], 10);
-          if(hVal >= 0 && hVal <= 23) heureTrouvee = String(hVal).padStart(2, '0') + "H";
-      }
-
-      // LA CORRECTION : Retirer la date et l'heure du texte pour ne pas confondre avec les boules
-      var texteSansDateHeure = texteNettoye.replace(regexDate, '').replace(regexHeure, '');
+      // 3. Nettoyage radical pour isoler les boules
+      var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
       
+      // On cherche et on SUPPRIME la date et l'heure du texte pour ne pas les compter comme des boules
+      var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
+      texteNettoye = texteNettoye.replace(regexDate, ' '); 
+      
+      var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
+      texteNettoye = texteNettoye.replace(regexHeure, ' ');
+      
+      // On enlève aussi les noms des jeux pour ne pas qu'ils gênent
+      texteNettoye = texteNettoye.replace(/star|fortune|digital/gi, ' ');
+
+      // 4. Extraire TOUS les nombres restants
       var nombres = [];
       var regexNombres = /\b\d{1,2}\b/g;
-      var matchNombres = texteSansDateHeure.match(regexNombres);
+      var matchNombres = texteNettoye.match(regexNombres);
       
       if (matchNombres) {
           for (var i = 0; i < matchNombres.length; i++) {
               var num = parseInt(matchNombres[i], 10);
-              if (num >= 1 && num <= 90) nombres.push(num);
+              // On ne garde que les numéros entre 1 et 90
+              if (num >= 1 && num <= 90) {
+                  nombres.push(num);
+              }
           }
       }
 
-      // On garde les 5 DERNIERS numéros trouvés (les boules sont à la fin)
-      var boules = nombres.slice(-5);
+      // 5. On prend les 5 PREMIERS nombres trouvés
+      var boules = nombres.slice(0, 5);
 
-      // Vérification
+      // 6. Vérification finale
       if (boules.length === 5 && new Set(boules).size === 5) {
+          var dateTrouvee = "2024-01-01"; 
+          var matchDate = ligne.match(regexDate);
+          if(matchDate) dateTrouvee = matchDate[0].replace(/\./g, '/');
+          
+          var heureTrouvee = "00H";
+          var matchHeure = ligne.match(regexHeure);
+          if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+
           tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
           ajoutes++;
       } else {
@@ -530,11 +515,11 @@ function importerCSV(event) {
     if (ajoutes > 0) { 
       sauver(tiragesActuels); 
       msg.style.color = "green"; 
-      msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés avec précision. (" + erreurs + " erreur(s))"; 
+      msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
       afficherHistorique(); 
     } else { 
       msg.style.color = "red"; 
-      msg.textContent = "❌ Échec. Aucun tirage valide trouvé."; 
+      msg.textContent = "❌ Échec. L'IA n'a pas trouvé 5 numéros valides sur les lignes."; 
     }
     
     document.getElementById("fileInput").value = "";
