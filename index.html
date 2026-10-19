@@ -235,7 +235,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-// INITIALISATION SUPABASE
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
 const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -244,7 +243,7 @@ var donneesCloud = [];
 
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
-  statusEl.textContent = "⏳ Téléchargement des données...";
+  statusEl.textContent = "⏳ Téléchargement...";
   
   let { data, error } = await supabaseClient.from('tirages').select('*');
     
@@ -308,23 +307,18 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  var existe = donneesCloud.some(function(t) { return t.date === date && t.jeu === jeu && t.heure === heure; });
-  if (existe) { msg.style.color = "red"; msg.textContent = "⚠️ Ce tirage existe déjà."; return; }
-
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules) }]);
   if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
 
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé sur le Cloud !";
+  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !";
   await rafraichirDonnees();
 });
 
 async function supprimer(i) {
-  if (!confirm("Supprimer ce tirage sur le Cloud ?")) return;
+  if (!confirm("Supprimer ce tirage ?")) return;
   var tirage = donneesCloud[i];
-  if (tirage.id) {
-      await supabaseClient.from('tirages').delete().eq('id', tirage.id);
-  }
+  if (tirage.id) { await supabaseClient.from('tirages').delete().eq('id', tirage.id); }
   await rafraichirDonnees();
 }
 
@@ -338,9 +332,7 @@ function afficherHistorique() {
   document.getElementById("nbTotal").textContent = donneesCloud.length;
   var corps = document.getElementById("corps"); corps.innerHTML = "";
 
-  if (donneesCloud.length === 0) {
-      corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return;
-  }
+  if (donneesCloud.length === 0) { corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return; }
 
   var tri = donneesCloud.map(function (t, i) { return { t: t, i: i }; });
   tri.sort(function (a, b) { return b.t.date.localeCompare(a.t.date) || (a.t.heure || "").localeCompare(b.t.heure || ""); });
@@ -369,7 +361,7 @@ function afficherCombine() {
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
     
-    // Sécurité : si la date est invalide (ex: 2026-61-78), on l'affiche telle quelle, sinon on formate
+    // Sécurité : si la date est invalide (ex: 2090-88-05), on l'affiche quand même mais on formate
     var dateFormatee = dateStr;
     if (!isNaN(dateObj.getTime())) {
         dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -425,7 +417,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- IMPORTATION VERS LE CLOUD (AVEC VALIDATION STRICTE DES DATES) ---
+// --- IMPORTATION VERS LE CLOUD (VALIDATION STRICTE) ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -447,22 +439,17 @@ async function traiterTexteColle() {
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
 
-    // On cherche la date 
-    var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
+    // 🔥 REGEX STRICTE : Cherche JJ/MM/AA ou JJ/MM/AAAA
+    // Exige que le jour soit entre 1 et 31, le mois entre 1 et 12.
+    var regexDate = /\b(0?[1-9]|[12]\d|3[01])[\/\.-](0?[1-9]|1[0-2])[\/\.-](\d{2}|\d{4})\b/;
     var matchDate = ligne.match(regexDate);
     
-    if (!matchDate) { erreurs++; return; } 
+    if (!matchDate) { erreurs++; return; } // Si pas de date valide, on jette !
     
-    var jour = parseInt(matchDate[1], 10);
-    var mois = parseInt(matchDate[2], 10);
+    var jour = matchDate[1];
+    var mois = matchDate[2];
     var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
-
-    // 🔥 VALIDATION STRICTE : Si le jour > 31 ou mois > 12, la date est fausse, on rejette !
-    if (jour < 1 || jour > 31 || mois < 1 || mois > 12) {
-        erreurs++; return; // Le fameux bug 2026-61-78 est bloqué ici
-    }
-
-    var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
+    var dateFormatee = annee + "-" + mois.padStart(2, '0') + "-" + jour.padStart(2, '0');
 
     var jeuTrouve = "Star"; 
     var heureTrouvee = "00H";
@@ -490,19 +477,12 @@ async function traiterTexteColle() {
         }
     }
 
-    // On prend les 5 premiers ou les 5 derniers selon ce qui est trouvé
     var boules = nombres.slice(0, 5);
     if (boules.length < 5) boules = nombres.slice(-5);
 
     if (boules.length === 5 && new Set(boules).size === 5) {
-        var existeDeja = donneesCloud.some(function(t) {
-            return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve;
-        });
-
-        // Vérifier aussi les doublons dans le fichier lui-même (pour ne pas faire planter Supabase)
-        var existeDansFichier = aInserer.some(function(t) {
-            return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve;
-        });
+        var existeDeja = donneesCloud.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
+        var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
 
         if (!existeDeja && !existeDansFichier) {
             aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules) });
@@ -515,7 +495,7 @@ async function traiterTexteColle() {
   });
 
   if (aInserer.length > 0) {
-      // Envoi par paquets de 100 pour éviter de surcharger Supabase (Erreur 413)
+      // Envoi par paquets de 100
       var taillePaquet = 100;
       var succes = true;
       
@@ -532,13 +512,13 @@ async function traiterTexteColle() {
       
       if (succes) {
           msg.style.color = "green"; 
-          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates invalides)."; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates introuvables)."; 
           document.getElementById("texteAImporter").value = ""; 
           await rafraichirDonnees();
       }
   } else {
       msg.style.color = "orange"; 
-      msg.textContent = "⚠️ Aucun nouveau tirage valide à ajouter (" + doublons + " doublons, " + erreurs + " rejets).";
+      msg.textContent = "⚠️ Aucun nouveau tirage valide (" + doublons + " doublons, " + erreurs + " rejets).";
   }
 }
 
