@@ -170,7 +170,7 @@
   </div>
 </div>
 
-<!-- ====== ONGLET 5 : IMPORTATION (COPIER-COLLER) ====== -->
+<!-- ====== ONGLET 5 : IMPORTATION ====== -->
 <div id="onglet-import" class="tab-content">
   <div class="card">
     <h2>📁 Importer des anciens résultats</h2>
@@ -190,13 +190,10 @@
     <h2>🧪 Laboratoire d'Analyse Avancée</h2>
     
     <div class="lab-grid">
-      <!-- COLONNE GAUCHE : SELECTION -->
       <div>
         <div class="lab-box">
           <h3>1. Analyse d'un seul tirage</h3>
-          <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;">
-            <!-- Rempli par JS -->
-          </select>
+          <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
           <div style="margin-top: 10px;">
             <button onclick="faireTurning()">Miroir / Turning</button>
             <button onclick="faireAddition()">Somme (+)</button>
@@ -207,9 +204,7 @@
         <div class="lab-box" style="margin-top: 20px;">
           <h3>2. Multi-Draws (Points 15 à 19)</h3>
           <p style="font-size: 13px;">Sélectionnez 2 à 5 tirages (Ctrl+Clic).</p>
-          <select id="selectMultiTirages" multiple style="width: 100%; height: 150px;">
-            <!-- Rempli par JS -->
-          </select>
+          <select id="selectMultiTirages" multiple style="width: 100%; height: 150px;"></select>
           <div style="margin-top: 10px;">
             <button onclick="executerAdditions()" style="background-color: #2980b9;">➕ Additionner</button>
             <button onclick="executerBankersMulti()" style="background-color: #f39c12;">🏦 Bankers Communs</button>
@@ -217,19 +212,13 @@
         </div>
       </div>
 
-      <!-- COLONNE DROITE : RESULTATS -->
       <div>
         <div class="lab-box" style="height: 100%;">
           <h3>Résultats & Analyses</h3>
-          
-          <div id="resultatLaboAvance" style="min-height: 150px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; font-weight: normal;">
-            <i>En attente...</i>
-          </div>
-
+          <div id="resultatLaboAvance" style="min-height: 150px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; font-weight: normal;"><i>En attente...</i></div>
           <h4>📍 Analyse par Position</h4>
           <button onclick="analyserPositions()" class="secondary" style="width: 100%;">Générer le tableau</button>
           <div id="resultatPositions" style="margin-top: 15px; overflow-x: auto; font-weight: normal;"></div>
-          
           <h4 style="margin-top: 20px;">🏦 Détection de Banker (Créneau)</h4>
           <div style="display: flex; gap: 10px; align-items: center;">
             <select id="creneauBanker" style="flex: 1;">
@@ -427,7 +416,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION INTELLIGENTE ET MULTI-FORMAT ---
+// --- 5. IMPORTATION INTELLIGENTE (LOGIQUE JOURS DE LA SEMAINE) ---
 function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -444,22 +433,13 @@ function traiterTexteColle() {
   var erreurs = 0;
 
   lignes.forEach(function(ligne, index) {
-    if (!ligne.trim()) return; // Ligne vide
+    if (!ligne.trim()) return; 
     
-    // 1. Ignorer l'en-tête (s'il y a les mots Date, Heure, Jeu)
     var ligneMinuscule = ligne.toLowerCase();
-    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1) return;
+    // Ignorer les en-têtes comme "*BENIN 2026*"
+    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("heure") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
 
-    // 2. Nettoyage de base
-    var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
-
-    // 3. Trouver le JEU (s'il est écrit textuellement)
-    var jeuTrouve = "";
-    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
-    else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
-    else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
-
-    // 4. Trouver la DATE (cherche 20/10/2026 ou 2026-10-20)
+    // 1. Trouver la DATE (ex: 01/01/26)
     var dateTrouvee = "";
     var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
     var matchDate = ligne.match(regexDate);
@@ -468,32 +448,40 @@ function traiterTexteColle() {
         if (dateTrouvee.indexOf("/") !== -1) { 
           var p = dateTrouvee.split("/"); 
           if (p.length === 3) {
-            if(p[0].length === 4) dateTrouvee = p[0] + "-" + p[1].padStart(2, '0') + "-" + p[2].padStart(2, '0');
-            else {
-                var annee = p[2].length === 2 ? "20" + p[2] : p[2];
-                dateTrouvee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
-            }
+            var annee = p[2].length === 2 ? "20" + p[2] : p[2];
+            dateTrouvee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
           }
         }
-    } else {
-        var today = new Date();
-        dateTrouvee = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
-    }
+    } else { erreurs++; return; }
 
-    // 5. Trouver l'HEURE (ex: 20H, 08h, 20:00)
-    var heureTrouvee = "00H";
-    var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
-    var matchHeure = ligne.match(regexHeure);
-    if (matchHeure) {
-        var hVal = parseInt(matchHeure[1], 10);
-        if(hVal >= 0 && hVal <= 23) heureTrouvee = String(hVal).padStart(2, '0') + "H";
-    }
-
-    // 6. Isolation des boules (On supprime la date, l'heure et les noms de jeux du texte)
-    var texteSansDateHeure = texteNettoye.replace(regexDate, ' ').replace(regexHeure, ' ').replace(/star|fortune|digital/gi, ' ');
+    // 2. Logique des JOURS DE LA SEMAINE
+    var jeuTrouve = "";
+    var jourDetecte = "";
     
+    // Détection des abréviations
+    if (/\b(mer)\b/i.test(ligne) || ligneMinuscule.indexOf("mercredi") !== -1) { jourDetecte = "Mercredi"; jeuTrouve = "Star"; }
+    else if (/\b(sam)\b/i.test(ligne) || ligneMinuscule.indexOf("samedi") !== -1) { jourDetecte = "Samedi"; jeuTrouve = "Star"; }
+    else if (/\b(dom)\b/i.test(ligne) || ligneMinuscule.indexOf("dimanche") !== -1) { jourDetecte = "Dimanche"; jeuTrouve = "Star"; }
+    else if (/\b(lun)\b/i.test(ligne) || ligneMinuscule.indexOf("lundi") !== -1) { jourDetecte = "Lundi"; jeuTrouve = "Fortune"; }
+    else if (/\b(mar)\b/i.test(ligne) || ligneMinuscule.indexOf("mardi") !== -1) { jourDetecte = "Mardi"; jeuTrouve = "Fortune"; }
+    else if (/\b(jeu)\b/i.test(ligne) || ligneMinuscule.indexOf("jeudi") !== -1) { jourDetecte = "Jeudi"; jeuTrouve = "Fortune"; }
+    else if (/\b(ven)\b/i.test(ligne) || ligneMinuscule.indexOf("vendredi") !== -1) { jourDetecte = "Vendredi"; jeuTrouve = "Fortune"; }
+
+    // Si le jeu est écrit explicitement (Star, Fortune, Digital), ça écrase la détection du jour
+    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
+    else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
+    else if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
+
+    if (jeuTrouve === "") jeuTrouve = "Star"; // Sécurité par défaut
+
+    // 3. Nettoyer le texte pour extraire les boules
+    var texteNettoye = ligne.replace(regexDate, ' ')
+                           .replace(/\b(mer|sam|dom|lun|mar|jeu|ven)\b/gi, ' ')
+                           .replace(/mercredi|samedi|dimanche|lundi|mardi|jeudi|vendredi|star|fortune|digital/gi, ' ')
+                           .replace(/[\(\)\[\]\*]/g, ' ');
+
     var nombres = [];
-    var matchNombres = texteSansDateHeure.match(/\b\d{1,2}\b/g);
+    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
     if (matchNombres) {
         for (var i = 0; i < matchNombres.length; i++) {
             var num = parseInt(matchNombres[i], 10);
@@ -501,17 +489,11 @@ function traiterTexteColle() {
         }
     }
 
-    // 7. On prend les 5 DERNIERS nombres de la ligne (car les boules sont à la fin)
-    var boules = nombres.slice(-5);
+    // 4. Prendre les 5 premiers nombres
+    var boules = nombres.slice(0, 5);
+    var heureTrouvee = "00H"; // Pas d'heure dans ce format
 
-    // 8. Si on a 5 boules et qu'on a un jeu (écrit ou déduit par défaut), on ajoute
     if (boules.length === 5 && new Set(boules).size === 5) {
-        // Si le jeu n'était pas écrit (ex: juste "20H 12 34..."), on devine selon l'heure
-        if (jeuTrouve === "") {
-            if (heureTrouvee === "00H" || heureTrouvee === "08H" || heureTrouvee === "20H") jeuTrouve = "Digital";
-            else jeuTrouve = "Star"; // Par défaut pour 11H, 14H, 18H
-        }
-
         tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
         ajoutes++;
     } else {
@@ -522,19 +504,18 @@ function traiterTexteColle() {
   if (ajoutes > 0) { 
     sauver(tiragesActuels); 
     msg.style.color = "green"; 
-    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
-    document.getElementById("texteAImporter").value = ""; // Vider le cadre
+    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés (Jours reconnus : Star/Fortune). (" + erreurs + " ligne(s) ignorée(s))"; 
+    document.getElementById("texteAImporter").value = ""; 
     afficherHistorique(); 
     alert("Importation réussie !");
   } else { 
     msg.style.color = "red"; 
-    msg.textContent = "❌ Échec. L'IA n'a pas réussi à extraire 5 numéros valides par ligne."; 
+    msg.textContent = "❌ Échec. Aucun numéro valide trouvé. Vérifiez les dates."; 
   }
 }
 
 // --- 6. LABORATOIRE ---
 var tirageActifLabo = null;
-
 function remplirSelecteurTirage() {
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
@@ -542,33 +523,28 @@ function remplirSelecteurTirage() {
   tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " - " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
   analyserTirageLabo();
 }
-
 function remplirSelectMulti() {
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = "";
   if (tirages.length === 0) { s2.innerHTML = "<option>Aucun tirage</option>"; return; }
   tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
 }
-
 function analyserTirageLabo() {
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var idx = document.getElementById("selectTirageLabo").value;
   if(idx !== "" && tirages[idx]) { tirageActifLabo = tirages[idx]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageActifLabo.boules.join(" - "); }
 }
-
 function faireTurning() {
   if(!tirageActifLabo) return;
   var res = tirageActifLabo.boules.map(function(n) { var s = n.toString(); if(s.length === 1) s = "0" + s; var inv = parseInt(s.split('').reverse().join(''), 10); return (inv > 90 || inv === 0) ? n : inv; });
   document.getElementById("resultatOperations").innerHTML = "<b>Turning :</b><br>Base : " + tirageActifLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#8e44ad;'>" + res.join(" - ") + "</span>";
 }
-
 function faireAddition() {
   if(!tirageActifLabo) return;
   var somme = tirageActifLabo.boules.reduce(function(a, b) { return a + b; }, 0);
   var reduit = somme; while(reduit > 90) { reduit -= 90; }
   document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#8e44ad;'>" + reduit + "</span>";
 }
-
 function analyserPositions() {
   var tirages = charger(); if(tirages.length === 0) return;
   var stats = [{}, {}, {}, {}, {}];
@@ -580,7 +556,6 @@ function analyserPositions() {
   });
   document.getElementById("resultatPositions").innerHTML = html + "</table>";
 }
-
 function chercherBanker() {
   var val = document.getElementById("creneauBanker").value.split("-");
   var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
@@ -590,7 +565,6 @@ function chercherBanker() {
   var top = Object.keys(freq).map(function(n){ return {n: parseInt(n), v: freq[n]}; }).sort(function(a,b){return b.v-a.v;}).slice(0, 3);
   document.getElementById("resultatBanker").innerHTML = "<b>Top Bankers (" + filtres.length + " tirages) :</b><br>" + top.map(function(x){ return "<span class='ball'>" + x.n + "</span> " + x.v + " fois"; }).join("<br>");
 }
-
 function executerAdditions() {
   var s = document.getElementById("selectMultiTirages");
   var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
@@ -598,29 +572,24 @@ function executerAdditions() {
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var sel = idx.map(function(i) { return tirages[i]; });
   var html = "<h4>Addition de " + sel.length + " Draws</h4><ul style='font-size:12px;'>" + sel.map(function(t){ return "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join("-") + "</li>"; }).join("") + "</ul>";
-  
   var sommeGlobale = 0; sel.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
   var reduitGlobal = sommeGlobale; while(reduitGlobal > 90) reduitGlobal -= 90; if(reduitGlobal === 0) reduitGlobal = 90;
   html += "<div style='background:#eef5ef; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Somme Globale :</b> " + sommeGlobale + " -> <span class='ball'>" + reduitGlobal + "</span></div>";
-  
   var addPos = [0,0,0,0,0]; sel.forEach(function(t) { for(var i=0; i<5; i++) addPos[i] += t.boules[i]; });
   var grille = []; var htmlB = "";
   addPos.forEach(function(s) { var r = s; while(r > 90) r -= 90; if(r === 0) r = 90; grille.push(r); htmlB += "<span class='ball'>" + r + "</span> "; });
   html += "<div style='background:#fff3cd; padding:10px; border-radius:4px;'><b>Par Position :</b><br>" + htmlB + "</div>";
   document.getElementById("resultatLaboAvance").innerHTML = html;
 }
-
 function executerBankersMulti() {
   var s = document.getElementById("selectMultiTirages");
   var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
   if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
   var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
   var sel = idx.map(function(i) { return tirages[i]; });
-  
   var pres = {}; sel.forEach(function(t) { t.boules.forEach(function(n) { pres[n] = (pres[n] || 0) + 1; }); });
   var communs = [], autres = [];
   for (var n in pres) { if (pres[n] === sel.length) communs.push(n); else if (pres[n] > 1) autres.push({n: n, f: pres[n]}); }
-  
   var html = "<h4>Bankers Multi-Lignes</h4>";
   if (communs.length > 0) { html += "<div style='background:#d4edda; padding:10px; margin-bottom:10px; border-radius:4px;'><b>Communs (toutes lignes) :</b><br>" + communs.map(function(n){ return "<span class='ball'>" + n + "</span>"; }).join(" ") + "</div>"; } else { html += "<p><i>Aucun numéro sur toutes les lignes.</i></p>"; }
   if (autres.length > 0) { autres.sort(function(a,b){return b.f-a.f;}); html += "<div style='background:#f8f9fa; padding:10px; border-radius:4px;'><b>Récurrents :</b><br>" + autres.map(function(x){ return "<span class='ball' style='background:#6c757d;'>" + x.n + "</span> (" + x.f + "x)"; }).join("<br>") + "</div>"; }
