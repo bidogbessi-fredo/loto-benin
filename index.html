@@ -176,10 +176,7 @@
     <h2>📁 Importer des anciens résultats</h2>
     <p style="color:#555;">Ouvrez votre fichier CSV avec le <b>Bloc-notes</b>, copiez tout le texte (Ctrl+A puis Ctrl+C), et collez-le dans le cadre ci-dessous.</p>
     
-    <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici...
-Exemple :
-Star 11H;09/09/2026;67;76;75;55;60
-Fortune 14H;08/09/2026;54;84;32;63;5"></textarea>
+    <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici..."></textarea>
     <br>
     <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer</button>
     
@@ -430,7 +427,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION (CHIRURGICALE PAR POINT-VIRGULE) ---
+// --- 5. IMPORTATION INTELLIGENTE ET MULTI-FORMAT ---
 function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -449,50 +446,76 @@ function traiterTexteColle() {
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; // Ligne vide
     
-    // 1. On ignore l'en-tête (s'il y a les mots Date, Heure, Jeu)
+    // 1. Ignorer l'en-tête (s'il y a les mots Date, Heure, Jeu)
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1) return;
 
-    // 2. Découpage chirurgical par point-virgule
-    var cols = ligne.split(";");
-    
-    // On a besoin d'au moins 7 colonnes (JeuHeure, Date, B1, B2, B3, B4, B5)
-    if (cols.length >= 7) {
-        var jeuHeure = cols[0].trim(); 
-        var dateBrute = cols[1].trim(); 
-        
-        // Trouver le jeu
-        var jeuTrouve = "";
-        if (jeuHeure.toLowerCase().indexOf("star") !== -1) jeuTrouve = "Star";
-        else if (jeuHeure.toLowerCase().indexOf("fort") !== -1) jeuTrouve = "Fortune";
-        else if (jeuHeure.toLowerCase().indexOf("dig") !== -1) jeuTrouve = "Digital";
-        
-        // Trouver l'heure
-        var heureTrouvee = "00H";
-        var matchHeure = jeuHeure.match(/(\d{1,2})/); 
-        if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
-        
-        // Formater la date (JJ/MM/AAAA -> AAAA-MM-JJ)
-        var dateFormatee = dateBrute;
-        if (dateBrute.indexOf("/") !== -1) {
-            var p = dateBrute.split("/");
-            if(p.length === 3) dateFormatee = p[2] + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
-        }
+    // 2. Nettoyage de base
+    var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
 
-        // Extraire les 5 boules
-        var boules = [
-            parseInt(cols[2], 10), parseInt(cols[3], 10), parseInt(cols[4], 10), parseInt(cols[5], 10), parseInt(cols[6], 10)
-        ];
+    // 3. Trouver le JEU (s'il est écrit textuellement)
+    var jeuTrouve = "";
+    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
+    else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
+    else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
 
-        // Vérifier et ajouter
-        if (jeuTrouve !== "" && !boules.some(isNaN)) {
-            tiragesActuels.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
-            ajoutes++;
-        } else {
-            erreurs++;
+    // 4. Trouver la DATE (cherche 20/10/2026 ou 2026-10-20)
+    var dateTrouvee = "";
+    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
+    var matchDate = ligne.match(regexDate);
+    if (matchDate) {
+        dateTrouvee = matchDate[0].replace(/\./g, '/');
+        if (dateTrouvee.indexOf("/") !== -1) { 
+          var p = dateTrouvee.split("/"); 
+          if (p.length === 3) {
+            if(p[0].length === 4) dateTrouvee = p[0] + "-" + p[1].padStart(2, '0') + "-" + p[2].padStart(2, '0');
+            else {
+                var annee = p[2].length === 2 ? "20" + p[2] : p[2];
+                dateTrouvee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
+            }
+          }
         }
     } else {
-        erreurs++;
+        var today = new Date();
+        dateTrouvee = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
+    }
+
+    // 5. Trouver l'HEURE (ex: 20H, 08h, 20:00)
+    var heureTrouvee = "00H";
+    var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
+    var matchHeure = ligne.match(regexHeure);
+    if (matchHeure) {
+        var hVal = parseInt(matchHeure[1], 10);
+        if(hVal >= 0 && hVal <= 23) heureTrouvee = String(hVal).padStart(2, '0') + "H";
+    }
+
+    // 6. Isolation des boules (On supprime la date, l'heure et les noms de jeux du texte)
+    var texteSansDateHeure = texteNettoye.replace(regexDate, ' ').replace(regexHeure, ' ').replace(/star|fortune|digital/gi, ' ');
+    
+    var nombres = [];
+    var matchNombres = texteSansDateHeure.match(/\b\d{1,2}\b/g);
+    if (matchNombres) {
+        for (var i = 0; i < matchNombres.length; i++) {
+            var num = parseInt(matchNombres[i], 10);
+            if (num >= 1 && num <= 90) nombres.push(num);
+        }
+    }
+
+    // 7. On prend les 5 DERNIERS nombres de la ligne (car les boules sont à la fin)
+    var boules = nombres.slice(-5);
+
+    // 8. Si on a 5 boules et qu'on a un jeu (écrit ou déduit par défaut), on ajoute
+    if (boules.length === 5 && new Set(boules).size === 5) {
+        // Si le jeu n'était pas écrit (ex: juste "20H 12 34..."), on devine selon l'heure
+        if (jeuTrouve === "") {
+            if (heureTrouvee === "00H" || heureTrouvee === "08H" || heureTrouvee === "20H") jeuTrouve = "Digital";
+            else jeuTrouve = "Star"; // Par défaut pour 11H, 14H, 18H
+        }
+
+        tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
+        ajoutes++;
+    } else {
+        erreurs++; 
     }
   });
 
@@ -500,12 +523,12 @@ function traiterTexteColle() {
     sauver(tiragesActuels); 
     msg.style.color = "green"; 
     msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
-    document.getElementById("texteAImporter").value = ""; 
+    document.getElementById("texteAImporter").value = ""; // Vider le cadre
     afficherHistorique(); 
-    alert("Importation réussie ! Allez voir l'historique.");
+    alert("Importation réussie !");
   } else { 
     msg.style.color = "red"; 
-    msg.textContent = "❌ Échec. Aucun numéro valide trouvé. Vérifiez que les lignes sont bien séparées par des points-virgules."; 
+    msg.textContent = "❌ Échec. L'IA n'a pas réussi à extraire 5 numéros valides par ligne."; 
   }
 }
 
