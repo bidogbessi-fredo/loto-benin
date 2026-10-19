@@ -240,38 +240,29 @@ const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
 const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-var CLE = "lotoBeninPro"; // Utilisé uniquement pour l'import temporaire
-
-// Variable globale qui va contenir les données téléchargées depuis le Cloud
 var donneesCloud = [];
 
-// NOUVELLE FONCTION CHARGER (Depuis Supabase)
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
-  statusEl.textContent = "⏳ Téléchargement des données depuis le Cloud...";
+  statusEl.textContent = "⏳ Téléchargement des données...";
   
-  let { data, error } = await supabaseClient
-    .from('tirages')
-    .select('*');
+  let { data, error } = await supabaseClient.from('tirages').select('*');
     
   if (error) {
-    console.error("Erreur Supabase:", error);
-    statusEl.textContent = "❌ Erreur de connexion à la base de données.";
+    statusEl.textContent = "❌ Erreur de connexion.";
     statusEl.style.color = "red";
     return [];
   }
   
-  statusEl.textContent = "✅ Connecté à la base de données en ligne ! (" + data.length + " tirages)";
+  statusEl.textContent = "✅ Connecté au Cloud ! (" + data.length + " tirages)";
   statusEl.style.color = "green";
   
-  // On formate les données pour qu'elles correspondent à ce que le site attend
   donneesCloud = data.map(function(item) {
       return {
-          id: item.id, // On garde l'ID pour pouvoir supprimer/modifier
+          id: item.id,
           date: item.date,
           jeu: item.jeu,
           heure: item.heure,
-          // On s'assure que les boules redeviennent un tableau de nombres
           boules: typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules
       };
   });
@@ -279,15 +270,12 @@ async function chargerDepuisCloud() {
   return donneesCloud;
 }
 
-// NOUVELLE FONCTION SAUVER (Vers Supabase)
-async function sauverVersCloud(tiragesComplets) {
-  // Cette fonction sera gérée au cas par cas (ajout, modif, suppression) dans les boutons
-}
-
-// Rafraichir l'interface
 async function rafraichirDonnees() {
   await chargerDepuisCloud();
   afficherHistorique();
+  if(document.getElementById('onglet-combine').classList.contains('active')) afficherCombine();
+  if(document.getElementById('onglet-analyseJeu').classList.contains('active')) afficherAnalyseJeu();
+  if(document.getElementById('onglet-analyseCrenea').classList.contains('active')) afficherAnalyseCreneau();
 }
 
 function ouvrirOnglet(id) {
@@ -302,11 +290,10 @@ function ouvrirOnglet(id) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// --- 1. SAISIE & GESTION ---
+// --- SAISIE ---
 document.getElementById("btnAjouter").addEventListener("click", async function () {
   var msg = document.getElementById("message");
-  msg.textContent = "Envoi vers le Cloud...";
-  msg.style.color = "blue";
+  msg.textContent = "Envoi..."; msg.style.color = "blue";
   
   var date = document.getElementById("date").value;
   var jeu = document.getElementById("jeuSaisie").value;
@@ -321,53 +308,30 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  // Vérification anti-doublon locale
   var existe = donneesCloud.some(function(t) { return t.date === date && t.jeu === jeu && t.heure === heure; });
-  if (existe) { msg.style.color = "red"; msg.textContent = "⚠️ Ce tirage existe déjà dans la base."; return; }
+  if (existe) { msg.style.color = "red"; msg.textContent = "⚠️ Ce tirage existe déjà."; return; }
 
-  // Envoi vers Supabase
-  let { data, error } = await supabaseClient
-    .from('tirages')
-    .insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules) }]);
-
-  if (error) {
-    console.error(error);
-    msg.style.color = "red"; msg.textContent = "❌ Erreur lors de l'enregistrement sur le Cloud.";
-    return;
-  }
+  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules) }]);
+  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
 
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Tirage sauvegardé sur le Cloud !";
-  
-  await rafraichirDonnees(); // On recharge depuis le cloud pour être sûr
+  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé sur le Cloud !";
+  await rafraichirDonnees();
 });
 
 async function supprimer(i) {
   if (!confirm("Supprimer ce tirage sur le Cloud ?")) return;
   var tirage = donneesCloud[i];
-  
   if (tirage.id) {
-      let { error } = await supabaseClient.from('tirages').delete().eq('id', tirage.id);
-      if(error) { alert("Erreur de suppression : " + error.message); return; }
+      await supabaseClient.from('tirages').delete().eq('id', tirage.id);
   }
-  
   await rafraichirDonnees();
 }
 
 async function toutEffacer() {
-  if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment supprimer TOUS les tirages du Cloud ? Cette action est irréversible.")) return;
-  
-  // Pour supprimer tout, on demande à Supabase de supprimer toutes les lignes (neq id 0)
-  let { error } = await supabaseClient.from('tirages').delete().neq('id', 0);
-  if(error) { alert("Erreur : " + error.message); return; }
-  
+  if (!confirm("⚠️ Supprimer TOUS les tirages du Cloud ?")) return;
+  await supabaseClient.from('tirages').delete().neq('id', 0);
   await rafraichirDonnees();
-}
-
-function modifierTirage(i) {
-  // La modification manuelle sur le cloud demande beaucoup plus de code (update).
-  // Pour l'instant, on affiche un message.
-  alert("La modification directe en ligne sera disponible dans la prochaine mise à jour. Pour l'instant, supprimez et recréez le tirage.");
 }
 
 function afficherHistorique() {
@@ -375,32 +339,23 @@ function afficherHistorique() {
   var corps = document.getElementById("corps"); corps.innerHTML = "";
 
   if (donneesCloud.length === 0) {
-      corps.innerHTML = "<tr><td colspan='5'>Aucun tirage dans la base de données.</td></tr>";
-      return;
+      corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return;
   }
 
   var tri = donneesCloud.map(function (t, i) { return { t: t, i: i }; });
-  tri.sort(function (a, b) { 
-    var dc = b.t.date.localeCompare(a.t.date);
-    if(dc !== 0) return dc;
-    return (a.t.heure || "").localeCompare(b.t.heure || "");
-  });
+  tri.sort(function (a, b) { return b.t.date.localeCompare(a.t.date) || (a.t.heure || "").localeCompare(b.t.heure || ""); });
 
   tri.forEach(function (obj) {
     var tr = document.createElement("tr");
     var html = "<td>" + obj.t.date + "</td><td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
     var cb = obj.t.jeu === 'Star' ? 'star' : (obj.t.jeu === 'Fortune' ? 'fortune' : 'digital');
     obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
-    
-    html += "</td><td style='display:flex; gap:5px; justify-content:center;'>";
-    html += "<button onclick='supprimer(" + obj.i + ")' class='danger' style='padding: 5px 10px;' title='Supprimer'>X</button>";
-    html += "</td>";
-    
+    html += "</td><td><button onclick='supprimer(" + obj.i + ")' class='danger' style='padding: 5px 10px;'>X</button></td>";
     tr.innerHTML = html; corps.appendChild(tr);
   });
 }
 
-// --- 2. VUE COMBINÉE ---
+// --- VUE COMBINÉE ---
 function afficherCombine() {
   var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
   if (donneesCloud.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
@@ -414,6 +369,7 @@ function afficherCombine() {
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
     
+    // Sécurité : si la date est invalide (ex: 2026-61-78), on l'affiche telle quelle, sinon on formate
     var dateFormatee = dateStr;
     if (!isNaN(dateObj.getTime())) {
         dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -439,7 +395,7 @@ function afficherCombine() {
   });
 }
 
-// --- 3. ANALYSE JEU ---
+// --- ANALYSES ---
 function afficherAnalyseJeu() {
   var jeuActif = document.getElementById("jeuAnalyse").value;
   var tirages = donneesCloud.filter(function(t) { return t.jeu === jeuActif; });
@@ -453,7 +409,6 @@ function afficherAnalyseJeu() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 4. ANALYSE CRÉNEAU ---
 function afficherAnalyseCreneau() {
   var val = document.getElementById("creneauAnalyse").value.split("-");
   var filtres = donneesCloud.filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
@@ -470,7 +425,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION VERS LE CLOUD ---
+// --- IMPORTATION VERS LE CLOUD (AVEC VALIDATION STRICTE DES DATES) ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -492,16 +447,22 @@ async function traiterTexteColle() {
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
 
-    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})/;
+    // On cherche la date 
+    var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
     var matchDate = ligne.match(regexDate);
     
     if (!matchDate) { erreurs++; return; } 
     
-    var dateBrute = matchDate[0];
-    var p = dateBrute.split(/[\/\.-]/); 
-    if(p.length !== 3) { erreurs++; return; }
-    var annee = p[2].length === 2 ? "20" + p[2] : p[2];
-    var dateFormatee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
+    var jour = parseInt(matchDate[1], 10);
+    var mois = parseInt(matchDate[2], 10);
+    var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
+
+    // 🔥 VALIDATION STRICTE : Si le jour > 31 ou mois > 12, la date est fausse, on rejette !
+    if (jour < 1 || jour > 31 || mois < 1 || mois > 12) {
+        erreurs++; return; // Le fameux bug 2026-61-78 est bloqué ici
+    }
+
+    var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
 
     var jeuTrouve = "Star"; 
     var heureTrouvee = "00H";
@@ -518,7 +479,7 @@ async function traiterTexteColle() {
         else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
     }
 
-    var texteNettoye = ligne.replace(dateBrute, ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
+    var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
     
     var nombres = [];
     var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
@@ -529,6 +490,7 @@ async function traiterTexteColle() {
         }
     }
 
+    // On prend les 5 premiers ou les 5 derniers selon ce qui est trouvé
     var boules = nombres.slice(0, 5);
     if (boules.length < 5) boules = nombres.slice(-5);
 
@@ -537,7 +499,12 @@ async function traiterTexteColle() {
             return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve;
         });
 
-        if (!existeDeja) {
+        // Vérifier aussi les doublons dans le fichier lui-même (pour ne pas faire planter Supabase)
+        var existeDansFichier = aInserer.some(function(t) {
+            return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve;
+        });
+
+        if (!existeDeja && !existeDansFichier) {
             aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules) });
         } else {
             doublons++;
@@ -548,25 +515,34 @@ async function traiterTexteColle() {
   });
 
   if (aInserer.length > 0) {
-      // Envoi massif vers Supabase
-      let { error } = await supabaseClient.from('tirages').insert(aInserer);
+      // Envoi par paquets de 100 pour éviter de surcharger Supabase (Erreur 413)
+      var taillePaquet = 100;
+      var succes = true;
       
-      if (error) {
-          console.error(error);
-          msg.style.color = "red"; msg.textContent = "❌ Erreur d'envoi vers le Cloud : " + error.message;
-      } else {
+      for (var i = 0; i < aInserer.length; i += taillePaquet) {
+          var paquet = aInserer.slice(i, i + taillePaquet);
+          let { error } = await supabaseClient.from('tirages').insert(paquet);
+          if (error) {
+              console.error(error);
+              msg.style.color = "red"; msg.textContent = "❌ Erreur d'envoi Cloud : " + error.message;
+              succes = false;
+              break;
+          }
+      }
+      
+      if (succes) {
           msg.style.color = "green"; 
-          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés sur le Cloud, " + doublons + " doublons ignorés, " + erreurs + " rejetés."; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates invalides)."; 
           document.getElementById("texteAImporter").value = ""; 
           await rafraichirDonnees();
       }
   } else {
       msg.style.color = "orange"; 
-      msg.textContent = "⚠️ Aucun nouveau tirage à ajouter (" + doublons + " doublons).";
+      msg.textContent = "⚠️ Aucun nouveau tirage valide à ajouter (" + doublons + " doublons, " + erreurs + " rejets).";
   }
 }
 
-// --- 6. LABORATOIRE ---
+// --- LABORATOIRE ---
 var tirageActifLabo = null;
 function remplirSelecteurTirage() {
   var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
