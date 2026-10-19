@@ -8,8 +8,8 @@
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
   h1, h2, h3 { color: var(--primary); }
   .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-  input, button, select { padding: 10px; font-size: 15px; margin: 4px 2px; border-radius: 6px; border: 1px solid #ccc; outline: none; }
-  input:focus, select:focus { border-color: var(--primary); }
+  input, button, select, textarea { padding: 10px; font-size: 15px; margin: 4px 2px; border-radius: 6px; border: 1px solid #ccc; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
   input[type=number] { width: 65px; text-align: center; font-weight: bold; }
   button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
   button:hover { background: #144a22; }
@@ -51,11 +51,6 @@
   .combo-source { width: 250px; font-size: 13px; color: #777; font-style: italic; }
   .combo-nums { flex: 1; }
   .highlight-star-fortune { background-color: #fff8e1; border-left: 4px solid #f39c12; padding-left: 10px; border-radius: 4px; }
-
-  /* Zone d'importation */
-  .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 30px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.2s; margin-bottom: 15px; }
-  .drop-zone:hover { border-color: var(--primary); background: #eef5ef; }
-  .drop-zone input[type="file"] { display: none; }
 
   /* Styles spécifiques au Laboratoire */
   .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -175,18 +170,20 @@
   </div>
 </div>
 
-<!-- ====== ONGLET 5 : IMPORTATION ====== -->
+<!-- ====== ONGLET 5 : IMPORTATION (COPIER-COLLER) ====== -->
 <div id="onglet-import" class="tab-content">
   <div class="card">
-    <h2>📁 Importer des anciens résultats (CSV)</h2>
-    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
-      <p>📄 Cliquez ici ou glissez-déposez votre fichier CSV</p>
-      <input type="file" id="fileInput" accept=".csv" onchange="importerCSV(event)">
-    </div>
-    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px;">
-      <b>L'IA lit n'importe quel format.</b> Elle cherche le mot Star/Fortune/Digital, ignore la date, l'heure, et extrait les 5 premiers numéros valides.
-    </div>
-    <div class="msg" id="importMessage" style="font-size: 16px;"></div>
+    <h2>📁 Importer des anciens résultats</h2>
+    <p style="color:#555;">Ouvrez votre fichier CSV avec le <b>Bloc-notes</b>, copiez tout le texte (Ctrl+A puis Ctrl+C), et collez-le dans le cadre ci-dessous.</p>
+    
+    <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici...
+Exemple :
+2024-05-20;20H;Digital;05;12;44;67;89
+2024-05-20;18H;Star;02;15;28;41;74"></textarea>
+    <br>
+    <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer</button>
+    
+    <div class="msg" id="importMessage" style="font-size: 16px; margin-top: 15px;"></div>
   </div>
 </div>
 
@@ -433,99 +430,83 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION ULTRA-IA INFAILLIBLE ---
-function importerCSV(event) {
-  var file = event.target.files[0]; 
-  if (!file) return;
+// --- 5. IMPORTATION PAR COPIE-COLLE ---
+function traiterTexteColle() {
+  var texte = document.getElementById("texteAImporter").value;
+  var msg = document.getElementById("importMessage");
   
-  var reader = new FileReader(); 
-  var msg = document.getElementById("importMessage"); 
-  msg.textContent = "Lecture du fichier..."; 
-  msg.style.color = "blue";
-  
-  reader.onload = function(e) {
-    var content = e.target.result;
-    var lignes = content.split(/\r?\n/); 
-    var tiragesActuels = charger(); 
-    var ajoutes = 0; 
-    var erreurs = 0;
+  if (!texte.trim()) {
+    msg.style.color = "red";
+    msg.textContent = "❌ Le cadre est vide. Collez vos données d'abord.";
+    return;
+  }
 
-    lignes.forEach(function(ligne, index) {
-      // 1. Nettoyage de base : on ignore les lignes vides et l'en-tête
-      if (!ligne.trim()) return;
-      var ligneMinuscule = ligne.toLowerCase();
-      if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1 || ligneMinuscule.indexOf("b1") !== -1) return;
+  var lignes = texte.split(/\r?\n/); 
+  var tiragesActuels = charger(); 
+  var ajoutes = 0; 
+  var erreurs = 0;
 
-      // 2. Trouver le JEU
-      var jeuTrouve = "";
-      if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
-      else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
-      else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
+  lignes.forEach(function(ligne, index) {
+    if (!ligne.trim()) return;
+    var ligneMinuscule = ligne.toLowerCase();
+    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("heure") !== -1) return;
 
-      if (jeuTrouve === "") { erreurs++; return; } // Si pas de jeu, on ignore cette ligne
+    var jeuTrouve = "";
+    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
+    else if (ligneMinuscule.indexOf("fortune") !== -1 || ligneMinuscule.indexOf("fort") !== -1) jeuTrouve = "Fortune";
+    else if (ligneMinuscule.indexOf("digital") !== -1 || ligneMinuscule.indexOf("dig") !== -1) jeuTrouve = "Digital";
 
-      // 3. Nettoyage radical pour isoler les boules
-      var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
-      
-      // On cherche et on SUPPRIME la date et l'heure du texte pour ne pas les compter comme des boules
-      var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
-      texteNettoye = texteNettoye.replace(regexDate, ' '); 
-      
-      var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
-      texteNettoye = texteNettoye.replace(regexHeure, ' ');
-      
-      // On enlève aussi les noms des jeux pour ne pas qu'ils gênent
-      texteNettoye = texteNettoye.replace(/star|fortune|digital/gi, ' ');
+    if (jeuTrouve === "") { erreurs++; return; }
 
-      // 4. Extraire TOUS les nombres restants
-      var nombres = [];
-      var regexNombres = /\b\d{1,2}\b/g;
-      var matchNombres = texteNettoye.match(regexNombres);
-      
-      if (matchNombres) {
-          for (var i = 0; i < matchNombres.length; i++) {
-              var num = parseInt(matchNombres[i], 10);
-              // On ne garde que les numéros entre 1 et 90
-              if (num >= 1 && num <= 90) {
-                  nombres.push(num);
-              }
-          }
-      }
-
-      // 5. On prend les 5 PREMIERS nombres trouvés
-      var boules = nombres.slice(0, 5);
-
-      // 6. Vérification finale
-      if (boules.length === 5 && new Set(boules).size === 5) {
-          var dateTrouvee = "2024-01-01"; 
-          var matchDate = ligne.match(regexDate);
-          if(matchDate) dateTrouvee = matchDate[0].replace(/\./g, '/');
-          
-          var heureTrouvee = "00H";
-          var matchHeure = ligne.match(regexHeure);
-          if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
-
-          tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
-          ajoutes++;
-      } else {
-          erreurs++; 
-      }
-    });
-
-    if (ajoutes > 0) { 
-      sauver(tiragesActuels); 
-      msg.style.color = "green"; 
-      msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
-      afficherHistorique(); 
-    } else { 
-      msg.style.color = "red"; 
-      msg.textContent = "❌ Échec. L'IA n'a pas trouvé 5 numéros valides sur les lignes."; 
-    }
+    var texteNettoye = ligne.replace(/[;,\t|]/g, ' ');
     
-    document.getElementById("fileInput").value = "";
-  };
-  
-  reader.readAsText(file, "UTF-8");
+    // Supprimer la date et l'heure
+    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
+    texteNettoye = texteNettoye.replace(regexDate, ' '); 
+    var regexHeure = /(\d{1,2})\s*[hH:]\s*(\d{0,2})/g;
+    texteNettoye = texteNettoye.replace(regexHeure, ' ');
+    texteNettoye = texteNettoye.replace(/star|fortune|digital/gi, ' ');
+
+    // Extraire les numéros
+    var nombres = [];
+    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
+    if (matchNombres) {
+        for (var i = 0; i < matchNombres.length; i++) {
+            var num = parseInt(matchNombres[i], 10);
+            if (num >= 1 && num <= 90) nombres.push(num);
+        }
+    }
+
+    // Prendre les 5 premiers
+    var boules = nombres.slice(0, 5);
+
+    if (boules.length === 5 && new Set(boules).size === 5) {
+        var dateTrouvee = "2024-01-01"; 
+        var matchDate = ligne.match(regexDate);
+        if(matchDate) dateTrouvee = matchDate[0].replace(/\./g, '/');
+        
+        var heureTrouvee = "00H";
+        var matchHeure = ligne.match(regexHeure);
+        if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+
+        tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
+        ajoutes++;
+    } else {
+        erreurs++; 
+    }
+  });
+
+  if (ajoutes > 0) { 
+    sauver(tiragesActuels); 
+    msg.style.color = "green"; 
+    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
+    document.getElementById("texteAImporter").value = ""; // Vider le cadre
+    afficherHistorique(); 
+    alert("Importation réussie ! Allez voir l'historique.");
+  } else { 
+    msg.style.color = "red"; 
+    msg.textContent = "❌ Échec. Aucun numéro valide trouvé dans le texte."; 
+  }
 }
 
 // --- 6. LABORATOIRE ---
