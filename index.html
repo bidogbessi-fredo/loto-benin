@@ -174,7 +174,7 @@
 <div id="onglet-import" class="tab-content">
   <div class="card">
     <h2>📁 Importer des anciens résultats</h2>
-    <p style="color:#555;">Ouvrez votre fichier CSV avec le <b>Bloc-notes</b>, copiez tout le texte (Ctrl+A puis Ctrl+C), et collez-le dans le cadre ci-dessous.</p>
+    <p style="color:#555;">Copiez tout le texte de votre fichier (Ctrl+A puis Ctrl+C), et collez-le dans le cadre ci-dessous.</p>
     
     <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici..."></textarea>
     <br>
@@ -416,7 +416,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION INTELLIGENTE (LOGIQUE JOURS DE LA SEMAINE) ---
+// --- 5. IMPORTATION CHIRURGICALE (MULTI-FORMAT) ---
 function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -433,84 +433,82 @@ function traiterTexteColle() {
   var erreurs = 0;
 
   lignes.forEach(function(ligne, index) {
-    if (!ligne.trim()) return; 
+    if (!ligne.trim()) return; // Ligne vide
     
+    // 1. Ignorer l'en-tête (Column1, Date, etc.)
     var ligneMinuscule = ligne.toLowerCase();
-    // Ignorer les en-têtes comme "*BENIN 2026*"
-    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("heure") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
+    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("column") !== -1) return;
 
-    // 1. Trouver la DATE (ex: 01/01/26)
-    var dateTrouvee = "";
-    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})|(\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
-    var matchDate = ligne.match(regexDate);
-    if (matchDate) {
-        dateTrouvee = matchDate[0].replace(/\./g, '/');
-        if (dateTrouvee.indexOf("/") !== -1) { 
-          var p = dateTrouvee.split("/"); 
-          if (p.length === 3) {
-            var annee = p[2].length === 2 ? "20" + p[2] : p[2];
-            dateTrouvee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0'); 
-          }
-        }
-    } else { erreurs++; return; }
-
-    // 2. Logique des JOURS DE LA SEMAINE
-    var jeuTrouve = "";
-    var jourDetecte = "";
-    
-    // Détection des abréviations
-    if (/\b(mer)\b/i.test(ligne) || ligneMinuscule.indexOf("mercredi") !== -1) { jourDetecte = "Mercredi"; jeuTrouve = "Star"; }
-    else if (/\b(sam)\b/i.test(ligne) || ligneMinuscule.indexOf("samedi") !== -1) { jourDetecte = "Samedi"; jeuTrouve = "Star"; }
-    else if (/\b(dom)\b/i.test(ligne) || ligneMinuscule.indexOf("dimanche") !== -1) { jourDetecte = "Dimanche"; jeuTrouve = "Star"; }
-    else if (/\b(lun)\b/i.test(ligne) || ligneMinuscule.indexOf("lundi") !== -1) { jourDetecte = "Lundi"; jeuTrouve = "Fortune"; }
-    else if (/\b(mar)\b/i.test(ligne) || ligneMinuscule.indexOf("mardi") !== -1) { jourDetecte = "Mardi"; jeuTrouve = "Fortune"; }
-    else if (/\b(jeu)\b/i.test(ligne) || ligneMinuscule.indexOf("jeudi") !== -1) { jourDetecte = "Jeudi"; jeuTrouve = "Fortune"; }
-    else if (/\b(ven)\b/i.test(ligne) || ligneMinuscule.indexOf("vendredi") !== -1) { jourDetecte = "Vendredi"; jeuTrouve = "Fortune"; }
-
-    // Si le jeu est écrit explicitement (Star, Fortune, Digital), ça écrase la détection du jour
-    if (ligneMinuscule.indexOf("star") !== -1) jeuTrouve = "Star";
-    else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
-    else if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
-
-    if (jeuTrouve === "") jeuTrouve = "Star"; // Sécurité par défaut
-
-    // 3. Nettoyer le texte pour extraire les boules
-    var texteNettoye = ligne.replace(regexDate, ' ')
-                           .replace(/\b(mer|sam|dom|lun|mar|jeu|ven)\b/gi, ' ')
-                           .replace(/mercredi|samedi|dimanche|lundi|mardi|jeudi|vendredi|star|fortune|digital/gi, ' ')
-                           .replace(/[\(\)\[\]\*]/g, ' ');
-
-    var nombres = [];
-    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
-    if (matchNombres) {
-        for (var i = 0; i < matchNombres.length; i++) {
-            var num = parseInt(matchNombres[i], 10);
-            if (num >= 1 && num <= 90) nombres.push(num);
-        }
+    // 2. Détection du séparateur principal
+    // Si la ligne contient un point-virgule, on l'utilise. Sinon on utilise l'espace ou le tiret.
+    var cols = [];
+    if (ligne.indexOf(";") !== -1) {
+        cols = ligne.split(";");
+    } else {
+        // Méthode de secours pour le format "03-30-69-50-47 (01/01/26) Jeu"
+        var matchDate = ligne.match(/(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})/);
+        var dateStr = matchDate ? matchDate[0] : "";
+        var reste = ligne.replace(dateStr, ' ');
+        var numMatch = reste.match(/\b\d{1,2}\b/g);
+        var boulesSecours = numMatch ? numMatch.map(Number).filter(function(n){return n>=1 && n<=90;}).slice(0,5) : [];
+        cols = ["Inconnu", dateStr, ...boulesSecours]; // On simule une structure
     }
 
-    // 4. Prendre les 5 premiers nombres
-    var boules = nombres.slice(0, 5);
-    var heureTrouvee = "00H"; // Pas d'heure dans ce format
+    if (cols.length >= 7) {
+        var jeuHeure = cols[0].trim(); 
+        var dateBrute = cols[1].trim(); 
+        
+        // Si c'est le format bizarre, jeuHeure contient "Inconnu", on cherche le jeu dans la ligne
+        if (jeuHeure === "Inconnu") jeuHeure = ligne;
 
-    if (boules.length === 5 && new Set(boules).size === 5) {
-        tiragesActuels.push({ date: dateTrouvee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
-        ajoutes++;
+        // Trouver le jeu
+        var jeuTrouve = "Star"; // Par défaut
+        if (jeuHeure.toLowerCase().indexOf("digital") !== -1 || jeuHeure.toLowerCase().indexOf("dig") !== -1) jeuTrouve = "Digital";
+        else if (jeuHeure.toLowerCase().indexOf("fortune") !== -1 || jeuHeure.toLowerCase().indexOf("fort") !== -1) jeuTrouve = "Fortune";
+        else if (/\b(jeu|ven|lun|mar)\b/i.test(jeuHeure)) jeuTrouve = "Fortune"; // Logique Jours
+        else if (/\b(mer|sam|dom)\b/i.test(jeuHeure)) jeuTrouve = "Star";
+        
+        // Trouver l'heure
+        var heureTrouvee = "00H";
+        var matchHeure = jeuHeure.match(/(\d{1,2})[hH]/); 
+        if(matchHeure) heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+        
+        // Formater la date
+        var dateFormatee = dateBrute;
+        if (dateBrute.indexOf("/") !== -1) {
+            var p = dateBrute.split("/");
+            if(p.length === 3) {
+                var annee = p[2].length === 2 ? "20" + p[2] : p[2];
+                dateFormatee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
+            }
+        }
+
+        // Extraire les 5 boules (colonnes 2 à 6)
+        var boules = [
+            parseInt(cols[2], 10), parseInt(cols[3], 10), parseInt(cols[4], 10), parseInt(cols[5], 10), parseInt(cols[6], 10)
+        ];
+
+        if (jeuTrouve !== "" && !boules.some(isNaN)) {
+            tiragesActuels.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
+            ajoutes++;
+        } else {
+            erreurs++;
+        }
     } else {
-        erreurs++; 
+        erreurs++;
     }
   });
 
   if (ajoutes > 0) { 
     sauver(tiragesActuels); 
     msg.style.color = "green"; 
-    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés (Jours reconnus : Star/Fortune). (" + erreurs + " ligne(s) ignorée(s))"; 
+    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
     document.getElementById("texteAImporter").value = ""; 
     afficherHistorique(); 
     alert("Importation réussie !");
   } else { 
     msg.style.color = "red"; 
-    msg.textContent = "❌ Échec. Aucun numéro valide trouvé. Vérifiez les dates."; 
+    msg.textContent = "❌ Échec. Vérifiez que votre texte contient bien des points-virgules et des dates."; 
   }
 }
 
