@@ -361,7 +361,6 @@ function afficherCombine() {
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
     
-    // Sécurité : si la date est invalide (ex: 2090-88-05), on l'affiche quand même mais on formate
     var dateFormatee = dateStr;
     if (!isNaN(dateObj.getTime())) {
         dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -417,7 +416,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- IMPORTATION VERS LE CLOUD (VALIDATION STRICTE) ---
+// --- IMPORTATION VERS LE CLOUD (FILTRE ANNEE AUTOMATIQUE) ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -433,23 +432,34 @@ async function traiterTexteColle() {
   var doublons = 0;
   var erreurs = 0;
 
+  // 🔥 L'ANNEE ACTUELLE EST CALCULEE AUTOMATIQUEMENT
+  var anneeActuelle = new Date().getFullYear();
+  // On accepte l'année actuelle et l'année prochaine (pour les tirages de fin d'année)
+  var anneeMaxAcceptee = anneeActuelle + 1;
+  var anneeMinAcceptee = 2020; // Le digital a commencé vers 2020-2023
+
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; 
     
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
 
-    // 🔥 REGEX STRICTE : Cherche JJ/MM/AA ou JJ/MM/AAAA
-    // Exige que le jour soit entre 1 et 31, le mois entre 1 et 12.
-    var regexDate = /\b(0?[1-9]|[12]\d|3[01])[\/\.-](0?[1-9]|1[0-2])[\/\.-](\d{2}|\d{4})\b/;
+    var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
     var matchDate = ligne.match(regexDate);
     
-    if (!matchDate) { erreurs++; return; } // Si pas de date valide, on jette !
+    if (!matchDate) { erreurs++; return; } 
     
-    var jour = matchDate[1];
-    var mois = matchDate[2];
+    var jour = parseInt(matchDate[1], 10);
+    var mois = parseInt(matchDate[2], 10);
     var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
-    var dateFormatee = annee + "-" + mois.padStart(2, '0') + "-" + jour.padStart(2, '0');
+    var anneeInt = parseInt(annee, 10);
+
+    // 🔥 VALIDATION : Jour <= 31, Mois <= 12, et Année entre anneeMin et anneeMax
+    if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) {
+        erreurs++; return;
+    }
+
+    var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
 
     var jeuTrouve = "Star"; 
     var heureTrouvee = "00H";
@@ -495,7 +505,6 @@ async function traiterTexteColle() {
   });
 
   if (aInserer.length > 0) {
-      // Envoi par paquets de 100
       var taillePaquet = 100;
       var succes = true;
       
@@ -512,7 +521,7 @@ async function traiterTexteColle() {
       
       if (succes) {
           msg.style.color = "green"; 
-          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates introuvables)."; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates invalides)."; 
           document.getElementById("texteAImporter").value = ""; 
           await rafraichirDonnees();
       }
