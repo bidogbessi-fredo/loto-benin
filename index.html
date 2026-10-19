@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Loto Bénin - Pro Dashboard</title>
+<title>Loto Bénin - Pro Cloud</title>
 <style>
   :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
@@ -19,7 +19,6 @@
   button.warning { background: #f39c12; color: white; }
   button.warning:hover { background: #d68910; }
   
-  /* Navigation par onglets */
   .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
   .tab-btn { background: none; color: #555; border: none; font-size: 15px; padding: 10px 15px; cursor: pointer; border-radius: 6px 6px 0 0; font-weight: bold;}
   .tab-btn.active { background: var(--primary); color: white; }
@@ -35,14 +34,12 @@
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
   
-  /* Grille de stats */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 15px;}
   .box { padding: 10px; text-align: center; border-radius: 6px; font-size: 13px; border: 1px solid #eee; background: #fafafa; }
   .box b { font-size: 16px; color: #333; }
   .hot { background: #ffebee; border-color: #ffcdd2; }
   .cold { background: #e3f2fd; border-color: #bbdefb; }
   
-  /* Styles pour la vue combinée */
   .combo-day { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
   .combo-header { font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
   .combo-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
@@ -52,7 +49,6 @@
   .combo-nums { flex: 1; }
   .highlight-star-fortune { background-color: #fff8e1; border-left: 4px solid #f39c12; padding-left: 10px; border-radius: 4px; }
 
-  /* Styles spécifiques au Laboratoire */
   .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .lab-box { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; }
   .result-box { margin-top: 15px; padding: 10px; background: #eef5ef; border-left: 4px solid var(--primary); border-radius: 4px; font-weight: bold; }
@@ -62,9 +58,9 @@
 </head>
 <body>
 
-<h1>🎰 Loto Bénin - Pro Dashboard</h1>
+<h1>🎰 Loto Bénin - Pro Cloud (En Ligne)</h1>
+<p id="statusCloud" style="font-weight: bold; color: orange;">⏳ Connexion à la base de données en ligne...</p>
 
-<!-- Onglets -->
 <div class="tabs">
   <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Saisie</button>
   <button class="tab-btn" onclick="ouvrirOnglet('combine')">🔀 Vue Combinée</button>
@@ -102,7 +98,7 @@
       <label>B3 <input type="number" id="b3" min="1" max="90"></label>
       <label>B4 <input type="number" id="b4" min="1" max="90"></label>
       <label>B5 <input type="number" id="b5" min="1" max="90"></label>
-      <button id="btnAjouter">Ajouter</button>
+      <button id="btnAjouter">Ajouter sur le Cloud</button>
     </div>
     <div class="msg" id="message"></div>
   </div>
@@ -110,12 +106,12 @@
   <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h2>📜 Historique complet (<span id="nbTotal">0</span>)</h2>
-      <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer</button>
+      <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer (Cloud)</button>
     </div>
     <div style="max-height: 400px; overflow-y: auto;">
       <table>
         <thead><tr><th>Date</th><th>Heure</th><th>Jeu</th><th>Boules</th><th>Actions</th></tr></thead>
-        <tbody id="corps"></tbody>
+        <tbody id="corps"><tr><td colspan="5">Chargement...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -174,11 +170,11 @@
 <div id="onglet-import" class="tab-content">
   <div class="card">
     <h2>📁 Importer des anciens résultats</h2>
-    <p style="color:#555;">Copiez tout le texte de votre fichier (Ctrl+A puis Ctrl+C), et collez-le dans le cadre ci-dessous.</p>
+    <p style="color:#555;">Collez vos données. Elles seront envoyées directement sur le Cloud.</p>
     
     <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici..."></textarea>
     <br>
-    <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer</button>
+    <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer sur le Cloud</button>
     
     <div class="msg" id="importMessage" style="font-size: 16px; margin-top: 15px;"></div>
   </div>
@@ -235,10 +231,64 @@
   </div>
 </div>
 
+<!-- INTEGRATION DE LA LIBRAIRIE SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-var CLE = "lotoBeninPro";
-function charger() { return JSON.parse(localStorage.getItem(CLE)) || []; }
-function sauver(t) { localStorage.setItem(CLE, JSON.stringify(t)); }
+// INITIALISATION SUPABASE
+const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
+const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+var CLE = "lotoBeninPro"; // Utilisé uniquement pour l'import temporaire
+
+// Variable globale qui va contenir les données téléchargées depuis le Cloud
+var donneesCloud = [];
+
+// NOUVELLE FONCTION CHARGER (Depuis Supabase)
+async function chargerDepuisCloud() {
+  var statusEl = document.getElementById("statusCloud");
+  statusEl.textContent = "⏳ Téléchargement des données depuis le Cloud...";
+  
+  let { data, error } = await supabaseClient
+    .from('tirages')
+    .select('*');
+    
+  if (error) {
+    console.error("Erreur Supabase:", error);
+    statusEl.textContent = "❌ Erreur de connexion à la base de données.";
+    statusEl.style.color = "red";
+    return [];
+  }
+  
+  statusEl.textContent = "✅ Connecté à la base de données en ligne ! (" + data.length + " tirages)";
+  statusEl.style.color = "green";
+  
+  // On formate les données pour qu'elles correspondent à ce que le site attend
+  donneesCloud = data.map(function(item) {
+      return {
+          id: item.id, // On garde l'ID pour pouvoir supprimer/modifier
+          date: item.date,
+          jeu: item.jeu,
+          heure: item.heure,
+          // On s'assure que les boules redeviennent un tableau de nombres
+          boules: typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules
+      };
+  });
+  
+  return donneesCloud;
+}
+
+// NOUVELLE FONCTION SAUVER (Vers Supabase)
+async function sauverVersCloud(tiragesComplets) {
+  // Cette fonction sera gérée au cas par cas (ajout, modif, suppression) dans les boutons
+}
+
+// Rafraichir l'interface
+async function rafraichirDonnees() {
+  await chargerDepuisCloud();
+  afficherHistorique();
+}
 
 function ouvrirOnglet(id) {
   document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
@@ -253,9 +303,11 @@ function ouvrirOnglet(id) {
 }
 
 // --- 1. SAISIE & GESTION ---
-document.getElementById("btnAjouter").addEventListener("click", function () {
+document.getElementById("btnAjouter").addEventListener("click", async function () {
   var msg = document.getElementById("message");
-  msg.textContent = "";
+  msg.textContent = "Envoi vers le Cloud...";
+  msg.style.color = "blue";
+  
   var date = document.getElementById("date").value;
   var jeu = document.getElementById("jeuSaisie").value;
   var heure = document.getElementById("heureSaisie").value;
@@ -269,66 +321,65 @@ document.getElementById("btnAjouter").addEventListener("click", function () {
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  var tirages = charger();
-  tirages.push({ date: date, jeu: jeu, heure: heure, boules: boules });
-  sauver(tirages);
+  // Vérification anti-doublon locale
+  var existe = donneesCloud.some(function(t) { return t.date === date && t.jeu === jeu && t.heure === heure; });
+  if (existe) { msg.style.color = "red"; msg.textContent = "⚠️ Ce tirage existe déjà dans la base."; return; }
 
-  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Tirage ajouté !";
-  afficherHistorique();
-});
+  // Envoi vers Supabase
+  let { data, error } = await supabaseClient
+    .from('tirages')
+    .insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules) }]);
 
-function supprimer(i) {
-  if (!confirm("Supprimer ce tirage ?")) return;
-  var t = charger(); t.splice(i, 1); sauver(t);
-  afficherHistorique();
-}
-
-function toutEffacer() {
-  if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment supprimer TOUS les tirages ? Cette action est irréversible.")) return;
-  localStorage.removeItem(CLE);
-  afficherHistorique();
-}
-
-function modifierTirage(i) {
-  var t = charger();
-  var tirage = t[i];
-  
-  var nouvelleDate = prompt("Modifier la Date (AAAA-MM-JJ) :", tirage.date);
-  if (nouvelleDate === null) return;
-  
-  var nouveauJeu = prompt("Modifier le Jeu (Star, Fortune, Digital) :", tirage.jeu);
-  if (nouveauJeu === null) return;
-  if(nouveauJeu.toLowerCase().indexOf("star") !== -1) nouveauJeu = "Star";
-  else if(nouveauJeu.toLowerCase().indexOf("fort") !== -1) nouveauJeu = "Fortune";
-  else if(nouveauJeu.toLowerCase().indexOf("dig") !== -1) nouveauJeu = "Digital";
-  else { alert("Jeu non reconnu. Modification annulée."); return; }
-
-  var nouvelleHeure = prompt("Modifier l'Heure (00H, 08H, 11H, 14H, 18H, 20H) :", tirage.heure);
-  if (nouvelleHeure === null) return;
-  if(nouvelleHeure.indexOf("H") === -1) nouvelleHeure += "H";
-
-  var nouvellesBoules = prompt("Modifier les 5 boules (séparées par des espaces) :", tirage.boules.join(" "));
-  if (nouvellesBoules === null) return;
-  
-  var boulesArray = nouvellesBoules.split(/[\s,]+/).map(function(n) { return parseInt(n, 10); });
-  if (boulesArray.length !== 5 || boulesArray.some(function(n){ return isNaN(n) || n < 1 || n > 90; }) || new Set(boulesArray).size !== 5) {
-    alert("Erreur : Il faut exactement 5 numéros différents entre 1 et 90. Modification annulée.");
+  if (error) {
+    console.error(error);
+    msg.style.color = "red"; msg.textContent = "❌ Erreur lors de l'enregistrement sur le Cloud.";
     return;
   }
 
-  t[i] = { date: nouvelleDate, jeu: nouveauJeu, heure: nouvelleHeure, boules: boulesArray };
-  sauver(t);
-  afficherHistorique();
-  alert("✅ Tirage modifié avec succès !");
+  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
+  msg.style.color = "green"; msg.textContent = "✅ Tirage sauvegardé sur le Cloud !";
+  
+  await rafraichirDonnees(); // On recharge depuis le cloud pour être sûr
+});
+
+async function supprimer(i) {
+  if (!confirm("Supprimer ce tirage sur le Cloud ?")) return;
+  var tirage = donneesCloud[i];
+  
+  if (tirage.id) {
+      let { error } = await supabaseClient.from('tirages').delete().eq('id', tirage.id);
+      if(error) { alert("Erreur de suppression : " + error.message); return; }
+  }
+  
+  await rafraichirDonnees();
+}
+
+async function toutEffacer() {
+  if (!confirm("⚠️ ATTENTION : Voulez-vous vraiment supprimer TOUS les tirages du Cloud ? Cette action est irréversible.")) return;
+  
+  // Pour supprimer tout, on demande à Supabase de supprimer toutes les lignes (neq id 0)
+  let { error } = await supabaseClient.from('tirages').delete().neq('id', 0);
+  if(error) { alert("Erreur : " + error.message); return; }
+  
+  await rafraichirDonnees();
+}
+
+function modifierTirage(i) {
+  // La modification manuelle sur le cloud demande beaucoup plus de code (update).
+  // Pour l'instant, on affiche un message.
+  alert("La modification directe en ligne sera disponible dans la prochaine mise à jour. Pour l'instant, supprimez et recréez le tirage.");
 }
 
 function afficherHistorique() {
-  var tirages = charger();
-  document.getElementById("nbTotal").textContent = tirages.length;
+  document.getElementById("nbTotal").textContent = donneesCloud.length;
   var corps = document.getElementById("corps"); corps.innerHTML = "";
 
-  var tri = tirages.map(function (t, i) { return { t: t, i: i }; });
+  if (donneesCloud.length === 0) {
+      corps.innerHTML = "<tr><td colspan='5'>Aucun tirage dans la base de données.</td></tr>";
+      return;
+  }
+
+  var tri = donneesCloud.map(function (t, i) { return { t: t, i: i }; });
   tri.sort(function (a, b) { 
     var dc = b.t.date.localeCompare(a.t.date);
     if(dc !== 0) return dc;
@@ -342,7 +393,6 @@ function afficherHistorique() {
     obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
     
     html += "</td><td style='display:flex; gap:5px; justify-content:center;'>";
-    html += "<button onclick='modifierTirage(" + obj.i + ")' class='warning' style='padding: 5px 10px;' title='Modifier'>✏️</button>";
     html += "<button onclick='supprimer(" + obj.i + ")' class='danger' style='padding: 5px 10px;' title='Supprimer'>X</button>";
     html += "</td>";
     
@@ -352,12 +402,11 @@ function afficherHistorique() {
 
 // --- 2. VUE COMBINÉE ---
 function afficherCombine() {
-  var tirages = charger();
   var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
-  if (tirages.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
+  if (donneesCloud.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
 
   var parDate = {};
-  tirages.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
+  donneesCloud.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
   var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); });
 
   datesTriees.forEach(function(dateStr) {
@@ -365,7 +414,6 @@ function afficherCombine() {
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
     
-    // Sécurité pour l'affichage de la date
     var dateFormatee = dateStr;
     if (!isNaN(dateObj.getTime())) {
         dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -394,7 +442,7 @@ function afficherCombine() {
 // --- 3. ANALYSE JEU ---
 function afficherAnalyseJeu() {
   var jeuActif = document.getElementById("jeuAnalyse").value;
-  var tirages = charger().filter(function(t) { return t.jeu === jeuActif; });
+  var tirages = donneesCloud.filter(function(t) { return t.jeu === jeuActif; });
   var freq = {}, ecarts = {};
   for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
   tirages.forEach(function(obj) { obj.boules.forEach(function(n) { freq[n]++; }); });
@@ -408,7 +456,7 @@ function afficherAnalyseJeu() {
 // --- 4. ANALYSE CRÉNEAU ---
 function afficherAnalyseCreneau() {
   var val = document.getElementById("creneauAnalyse").value.split("-");
-  var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
+  var filtres = donneesCloud.filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
   document.getElementById("infoNbCreneau").textContent = filtres.length + " tirage(s).";
   var freq = {}, ecarts = {};
   for (var n = 1; n <= 90; n++) { freq[n] = 0; ecarts[n] = 0; }
@@ -422,124 +470,119 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- 5. IMPORTATION CHIRURGICALE (MULTI-FORMAT) ---
-function traiterTexteColle() {
+// --- 5. IMPORTATION VERS LE CLOUD ---
+async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
   
   if (!texte.trim()) {
-    msg.style.color = "red";
-    msg.textContent = "❌ Le cadre est vide. Collez vos données d'abord.";
-    return;
+    msg.style.color = "red"; msg.textContent = "❌ Le cadre est vide."; return;
   }
 
+  msg.style.color = "blue"; msg.textContent = "⏳ Analyse et envoi vers le Cloud en cours (patientez)...";
+
   var lignes = texte.split(/\r?\n/); 
-  var tiragesActuels = charger(); 
-  var ajoutes = 0; 
+  var aInserer = []; 
+  var doublons = 0;
   var erreurs = 0;
 
   lignes.forEach(function(ligne, index) {
-    if (!ligne.trim()) return; // Ligne vide
+    if (!ligne.trim()) return; 
     
-    // 1. Ignorer l'en-tête (Column1, Date, etc.)
     var ligneMinuscule = ligne.toLowerCase();
-    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("jeu") !== -1 || ligneMinuscule.indexOf("column") !== -1) return;
+    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
 
-    // 2. Détection du séparateur principal
-    var cols = [];
-    if (ligne.indexOf(";") !== -1) {
-        cols = ligne.split(";");
-    } else {
-        // Méthode de secours pour le format "03-30-69-50-47 (01/01/26) Jeu"
-        var matchDate = ligne.match(/(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})/);
-        var dateStr = matchDate ? matchDate[0] : "";
-        var reste = ligne.replace(dateStr, ' ');
-        var numMatch = reste.match(/\b\d{1,2}\b/g);
-        var boulesSecours = numMatch ? numMatch.map(Number).filter(function(n){return n>=1 && n<=90;}).slice(0,5) : [];
-        cols = ["Inconnu", dateStr, ...boulesSecours]; // On simule une structure
+    var regexDate = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})/;
+    var matchDate = ligne.match(regexDate);
+    
+    if (!matchDate) { erreurs++; return; } 
+    
+    var dateBrute = matchDate[0];
+    var p = dateBrute.split(/[\/\.-]/); 
+    if(p.length !== 3) { erreurs++; return; }
+    var annee = p[2].length === 2 ? "20" + p[2] : p[2];
+    var dateFormatee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
+
+    var jeuTrouve = "Star"; 
+    var heureTrouvee = "00H";
+    
+    if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
+    else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
+    else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
+    
+    var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
+    if (matchHeure) {
+        heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+    } else if (ligneMinuscule.indexOf("digital") !== -1) {
+        if (ligne.indexOf("20") !== -1) heureTrouvee = "20H";
+        else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
     }
 
-    if (cols.length >= 7) {
-        var jeuHeure = cols[0].trim(); 
-        var dateBrute = cols[1].trim(); 
-        
-        if (jeuHeure === "Inconnu") jeuHeure = ligne;
-
-        // Trouver le jeu
-        var jeuTrouve = "Star";
-        if (jeuHeure.toLowerCase().indexOf("digital") !== -1 || jeuHeure.toLowerCase().indexOf("dig") !== -1) jeuTrouve = "Digital";
-        else if (jeuHeure.toLowerCase().indexOf("fortune") !== -1 || jeuHeure.toLowerCase().indexOf("fort") !== -1) jeuTrouve = "Fortune";
-        else if (/\b(jeu|ven|lun|mar)\b/i.test(jeuHeure)) jeuTrouve = "Fortune"; 
-        else if (/\b(mer|sam|dom)\b/i.test(jeuHeure)) jeuTrouve = "Star";
-        
-        // Trouver l'heure (on force 00H pour le Digital si c'est introuvable)
-        var heureTrouvee = "00H";
-        var matchHeure = jeuHeure.match(/(\d{1,2})[hH]/); 
-        if(matchHeure) {
-            heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
-        } else if (jeuHeure.toLowerCase().indexOf("digital") !== -1) {
-             // Si c'est écrit "Digital" sans heure, on cherche un nombre 00, 08 ou 20 dans le texte
-             if (jeuHeure.indexOf("20") !== -1) heureTrouvee = "20H";
-             else if (jeuHeure.indexOf("08") !== -1 || jeuHeure.indexOf("8") !== -1) heureTrouvee = "08H";
-             else heureTrouvee = "00H";
+    var texteNettoye = ligne.replace(dateBrute, ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
+    
+    var nombres = [];
+    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
+    if (matchNombres) {
+        for (var i = 0; i < matchNombres.length; i++) {
+            var num = parseInt(matchNombres[i], 10);
+            if (num >= 1 && num <= 90) nombres.push(num);
         }
+    }
 
-        // Formater la date
-        var dateFormatee = dateBrute;
-        if (dateBrute.indexOf("/") !== -1) {
-            var p = dateBrute.split("/");
-            if(p.length === 3) {
-                var annee = p[2].length === 2 ? "20" + p[2] : p[2];
-                dateFormatee = annee + "-" + p[1].padStart(2, '0') + "-" + p[0].padStart(2, '0');
-            }
-        }
+    var boules = nombres.slice(0, 5);
+    if (boules.length < 5) boules = nombres.slice(-5);
 
-        // Extraire les 5 boules (colonnes 2 à 6)
-        var boules = [
-            parseInt(cols[2], 10), parseInt(cols[3], 10), parseInt(cols[4], 10), parseInt(cols[5], 10), parseInt(cols[6], 10)
-        ];
+    if (boules.length === 5 && new Set(boules).size === 5) {
+        var existeDeja = donneesCloud.some(function(t) {
+            return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve;
+        });
 
-        if (jeuTrouve !== "" && !boules.some(isNaN) && dateFormatee.indexOf("-") !== -1) {
-            tiragesActuels.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: boules }); 
-            ajoutes++;
+        if (!existeDeja) {
+            aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules) });
         } else {
-            erreurs++;
+            doublons++;
         }
     } else {
         erreurs++;
     }
   });
 
-  if (ajoutes > 0) { 
-    sauver(tiragesActuels); 
-    msg.style.color = "green"; 
-    msg.textContent = "✅ Succès ! " + ajoutes + " tirages importés. (" + erreurs + " ligne(s) ignorée(s))"; 
-    document.getElementById("texteAImporter").value = ""; 
-    afficherHistorique(); 
-    alert("Importation réussie !");
-  } else { 
-    msg.style.color = "red"; 
-    msg.textContent = "❌ Échec. Vérifiez que votre texte contient bien des points-virgules et des dates."; 
+  if (aInserer.length > 0) {
+      // Envoi massif vers Supabase
+      let { error } = await supabaseClient.from('tirages').insert(aInserer);
+      
+      if (error) {
+          console.error(error);
+          msg.style.color = "red"; msg.textContent = "❌ Erreur d'envoi vers le Cloud : " + error.message;
+      } else {
+          msg.style.color = "green"; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés sur le Cloud, " + doublons + " doublons ignorés, " + erreurs + " rejetés."; 
+          document.getElementById("texteAImporter").value = ""; 
+          await rafraichirDonnees();
+      }
+  } else {
+      msg.style.color = "orange"; 
+      msg.textContent = "⚠️ Aucun nouveau tirage à ajouter (" + doublons + " doublons).";
   }
 }
 
 // --- 6. LABORATOIRE ---
 var tirageActifLabo = null;
 function remplirSelecteurTirage() {
-  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
   if (tirages.length === 0) { s1.innerHTML = "<option>Aucun tirage</option>"; return; }
   tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " - " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
   analyserTirageLabo();
 }
 function remplirSelectMulti() {
-  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = "";
   if (tirages.length === 0) { s2.innerHTML = "<option>Aucun tirage</option>"; return; }
   tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
 }
 function analyserTirageLabo() {
-  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var idx = document.getElementById("selectTirageLabo").value;
   if(idx !== "" && tirages[idx]) { tirageActifLabo = tirages[idx]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageActifLabo.boules.join(" - "); }
 }
@@ -555,7 +598,7 @@ function faireAddition() {
   document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#8e44ad;'>" + reduit + "</span>";
 }
 function analyserPositions() {
-  var tirages = charger(); if(tirages.length === 0) return;
+  var tirages = donneesCloud; if(tirages.length === 0) return;
   var stats = [{}, {}, {}, {}, {}];
   tirages.forEach(function(t) { t.boules.forEach(function(n, i) { if(i<5) stats[i][n] = (stats[i][n] || 0) + 1; }); });
   var html = "<table class='pos-table'><tr><th>Pos</th><th>Top 3</th></tr>";
@@ -567,7 +610,7 @@ function analyserPositions() {
 }
 function chercherBanker() {
   var val = document.getElementById("creneauBanker").value.split("-");
-  var filtres = charger().filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
+  var filtres = donneesCloud.filter(function(t) { return t.jeu === val[0] && t.heure === val[1]; });
   filtres.sort(function(a, b) { return b.date.localeCompare(a.date); }); filtres = filtres.slice(0, 15);
   if(filtres.length === 0) { document.getElementById("resultatBanker").textContent = "Pas de données."; return; }
   var freq = {}; filtres.forEach(function(t) { t.boules.forEach(function(n) { freq[n] = (freq[n] || 0) + 1; }); });
@@ -578,7 +621,7 @@ function executerAdditions() {
   var s = document.getElementById("selectMultiTirages");
   var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
   if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
-  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var sel = idx.map(function(i) { return tirages[i]; });
   var html = "<h4>Addition de " + sel.length + " Draws</h4><ul style='font-size:12px;'>" + sel.map(function(t){ return "<li>" + t.jeu + " " + t.heure + " : " + t.boules.join("-") + "</li>"; }).join("") + "</ul>";
   var sommeGlobale = 0; sel.forEach(function(t) { t.boules.forEach(function(n) { sommeGlobale += n; }); });
@@ -594,7 +637,7 @@ function executerBankersMulti() {
   var s = document.getElementById("selectMultiTirages");
   var idx = Array.from(s.selectedOptions).map(function(opt) { return parseInt(opt.value); });
   if (idx.length < 2) { document.getElementById("resultatLaboAvance").innerHTML = "<span style='color:red;'>Sélectionnez au moins 2 tirages.</span>"; return; }
-  var tirages = charger(); tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var sel = idx.map(function(i) { return tirages[i]; });
   var pres = {}; sel.forEach(function(t) { t.boules.forEach(function(n) { pres[n] = (pres[n] || 0) + 1; }); });
   var communs = [], autres = [];
@@ -605,9 +648,9 @@ function executerBankersMulti() {
   document.getElementById("resultatLaboAvance").innerHTML = html;
 }
 
-// Initialisation
+// Initialisation au chargement de la page
 document.getElementById("date").valueAsDate = new Date();
-afficherHistorique();
+rafraichirDonnees();
 </script>
 </body>
 </html>
