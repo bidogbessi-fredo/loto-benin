@@ -33,6 +33,8 @@
   .ball.star { background: #f39c12; }
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
+  .t-info { font-size: 13px; color: #d32f2f; font-weight: bold; margin-left: 5px; }
+  .n-info { font-size: 12px; color: #777; margin-left: 10px; }
   
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 15px;}
   .box { padding: 10px; text-align: center; border-radius: 6px; font-size: 13px; border: 1px solid #eee; background: #fafafa; }
@@ -46,7 +48,7 @@
   .combo-row:last-child { border-bottom: none; }
   .combo-time { width: 100px; font-weight: bold; color: #555; }
   .combo-source { width: 250px; font-size: 13px; color: #777; font-style: italic; }
-  .combo-nums { flex: 1; }
+  .combo-nums { flex: 1; display: flex; align-items: center; }
   .highlight-star-fortune { background-color: #fff8e1; border-left: 4px solid #f39c12; padding-left: 10px; border-radius: 4px; }
 
   .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -241,6 +243,11 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
 
+// Fonction utilitaire pour calculer la somme (T)
+function calculerSomme(boules) {
+    return boules.reduce(function(a, b) { return a + b; }, 0);
+}
+
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
   statusEl.textContent = "⏳ Téléchargement...";
@@ -257,12 +264,15 @@ async function chargerDepuisCloud() {
   statusEl.style.color = "green";
   
   donneesCloud = data.map(function(item) {
+      var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
       return {
           id: item.id,
           date: item.date,
           jeu: item.jeu,
           heure: item.heure,
-          boules: typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules
+          boules: boulesArray,
+          somme: calculerSomme(boulesArray),
+          numTirage: item.numero_tirage || "N/A" // S'il n'y a pas de numéro, on met N/A
       };
   });
   
@@ -307,7 +317,8 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules) }]);
+  // On ajoute un numéro de tirage fictif (ex: T-12345) ou on le laisse vide
+  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Manuel" }]);
   if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
 
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
@@ -339,9 +350,17 @@ function afficherHistorique() {
 
   tri.forEach(function (obj) {
     var tr = document.createElement("tr");
-    var html = "<td>" + obj.t.date + "</td><td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
+    
+    // On affiche la date et le numéro de tirage
+    var html = "<td>" + obj.t.date + "<br><span class='n-info'>N° " + obj.t.numTirage + "</span></td>";
+    html += "<td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
+    
     var cb = obj.t.jeu === 'Star' ? 'star' : (obj.t.jeu === 'Fortune' ? 'fortune' : 'digital');
     obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
+    
+    // On affiche la Somme (T=) juste après les boules
+    html += "<br><span class='t-info'>(T= " + obj.t.somme + ")</span>";
+    
     html += "</td><td><button onclick='supprimer(" + obj.i + ")' class='danger' style='padding: 5px 10px;'>X</button></td>";
     tr.innerHTML = html; corps.appendChild(tr);
   });
@@ -372,7 +391,16 @@ function afficherCombine() {
     function genBoules(tirage) {
       if (!tirage) return "<span style='color:#ccc;'>-</span>";
       var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
-      var s = ""; tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); return s;
+      var s = ""; 
+      tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); 
+      
+      // Ajout de la somme dans la vue combinée
+      s += " <span class='t-info'>(T= " + tirage.somme + ")</span>";
+      // Ajout du numéro de tirage s'il existe
+      if(tirage.numTirage !== "N/A" && tirage.numTirage !== "Manuel") {
+          s += " <span class='n-info'>N° " + tirage.numTirage + "</span>";
+      }
+      return s;
     }
 
     var t00 = trouverTirage('Digital', '00H'); html += "<div class='combo-row'><div class='combo-time'>00H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t00) + "</div></div>";
@@ -416,7 +444,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- IMPORTATION VERS LE CLOUD (FILTRE ANNEE AUTOMATIQUE) ---
+// --- IMPORTATION VERS LE CLOUD ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -432,11 +460,9 @@ async function traiterTexteColle() {
   var doublons = 0;
   var erreurs = 0;
 
-  // 🔥 L'ANNEE ACTUELLE EST CALCULEE AUTOMATIQUEMENT
   var anneeActuelle = new Date().getFullYear();
-  // On accepte l'année actuelle et l'année prochaine (pour les tirages de fin d'année)
   var anneeMaxAcceptee = anneeActuelle + 1;
-  var anneeMinAcceptee = 2020; // Le digital a commencé vers 2020-2023
+  var anneeMinAcceptee = 2020; 
 
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; 
@@ -454,12 +480,18 @@ async function traiterTexteColle() {
     var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
     var anneeInt = parseInt(annee, 10);
 
-    // 🔥 VALIDATION : Jour <= 31, Mois <= 12, et Année entre anneeMin et anneeMax
     if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) {
         erreurs++; return;
     }
 
     var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
+
+    // 🔥 EXTRACTION DU NUMÉRO DE TIRAGE (ex: N°68, N°748)
+    var numTirageTrouve = "N/A";
+    var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
+    if (matchNumTirage) {
+        numTirageTrouve = matchNumTirage[1];
+    }
 
     var jeuTrouve = "Star"; 
     var heureTrouvee = "00H";
@@ -477,6 +509,9 @@ async function traiterTexteColle() {
     }
 
     var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
+    if (numTirageTrouve !== "N/A") {
+        texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' '); // On enlève le N° pour ne pas confondre avec une boule
+    }
     
     var nombres = [];
     var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
@@ -495,7 +530,13 @@ async function traiterTexteColle() {
         var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
 
         if (!existeDeja && !existeDansFichier) {
-            aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules) });
+            aInserer.push({ 
+                date: dateFormatee, 
+                heure: heureTrouvee, 
+                jeu: jeuTrouve, 
+                boules: JSON.stringify(boules),
+                numero_tirage: numTirageTrouve // On sauvegarde le numéro trouvé !
+            });
         } else {
             doublons++;
         }
@@ -521,7 +562,7 @@ async function traiterTexteColle() {
       
       if (succes) {
           msg.style.color = "green"; 
-          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés (dates invalides)."; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés."; 
           document.getElementById("texteAImporter").value = ""; 
           await rafraichirDonnees();
       }
