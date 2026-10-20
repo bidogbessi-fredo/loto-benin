@@ -33,7 +33,10 @@
   .ball.star { background: #f39c12; }
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
-  .ball.match { background: #f1c40f !important; color: #333; box-shadow: 0 0 5px #f1c40f; }
+  
+  /* Highlighting class for matches and turning */
+  .ball.match { background: #f1c40f !important; color: #333; box-shadow: 0 0 5px #f1c40f; border: 2px solid #c0392b; }
+  
   .t-info { font-size: 13px; color: #d32f2f; font-weight: bold; margin-left: 5px; }
   .n-info { font-size: 12px; color: #777; margin-left: 10px; }
   
@@ -65,10 +68,10 @@
   
   /* Styles Comparateur */
   .comp-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; }
-  .comp-col { flex: 1; min-width: 300px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
-  .comp-table { width: 100%; font-size: 13px; }
-  .comp-table td { padding: 5px; border: 1px solid #eee; text-align: center;}
-  .comp-table th { padding: 5px; border: 1px solid #eee; background: #f8f9fa;}
+  .comp-col { flex: 1; min-width: 350px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+  .comp-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .comp-table td { padding: 6px; border: 1px solid #eee; text-align: center;}
+  .comp-table th { padding: 6px; border: 1px solid #eee; background: #f8f9fa;}
 </style>
 </head>
 <body>
@@ -186,19 +189,22 @@
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
     <h2>⚖️ Comparateur par Numéro de Tirage</h2>
-    <p style="color:#555;">Comparez une plage de tirages (ex: 2 tirages avant, 2 après) avec une autre plage basée sur un numéro de référence.</p>
+    <p style="color:#555;">Comparez une plage de tirages avec une autre. Les numéros identiques <b>ou leur Turning (Miroir)</b> seront surlignés en jaune.</p>
     
     <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
       <div style="flex: 1; min-width: 300px; background: #f0f8ff; padding: 15px; border-radius: 8px; border: 1px solid #b3d4ec;">
         <h3 style="color: #2980b9; margin-top: 0;">Plage 1 (Référence)</h3>
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-            <label>Tirage N° : <input type="number" id="refNum1" value="6162" style="width: 100px;"></label>
-            <label>Avant/Après : 
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+            <label>Tirage N° : <input type="number" id="refNum1" value="6162" style="width: 90px;"></label>
+            <label>Plage : 
                 <select id="refRange1">
-                    <option value="0">Exactement (0 ligne)</option>
-                    <option value="1">1 ligne avant/après</option>
-                    <option value="2" selected>2 lignes avant/après</option>
-                    <option value="3">3 lignes avant/après</option>
+                    <option value="5">5 lignes</option>
+                    <option value="10">10 lignes</option>
+                    <option value="15">15 lignes</option>
+                    <option value="20">20 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="40">40 lignes</option>
+                    <option value="50">50 lignes</option>
                 </select>
             </label>
         </div>
@@ -206,14 +212,17 @@
       
       <div style="flex: 1; min-width: 300px; background: #fdf5e6; padding: 15px; border-radius: 8px; border: 1px solid #eccfb3;">
         <h3 style="color: #d35400; margin-top: 0;">Plage 2 (À comparer)</h3>
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-            <label>Tirage N° : <input type="number" id="refNum2" value="6171" style="width: 100px;"></label>
-            <label>Avant/Après : 
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+            <label>Tirage N° : <input type="number" id="refNum2" value="6171" style="width: 90px;"></label>
+            <label>Plage : 
                 <select id="refRange2">
-                    <option value="0">Exactement (0 ligne)</option>
-                    <option value="1">1 ligne avant/après</option>
-                    <option value="2" selected>2 lignes avant/après</option>
-                    <option value="3">3 lignes avant/après</option>
+                    <option value="5">5 lignes</option>
+                    <option value="10">10 lignes</option>
+                    <option value="15">15 lignes</option>
+                    <option value="20">20 lignes</option>
+                    <option value="30" selected>30 lignes</option>
+                    <option value="40">40 lignes</option>
+                    <option value="50">50 lignes</option>
                 </select>
             </label>
         </div>
@@ -349,6 +358,14 @@ var donneesCloud = [];
 
 function calculerSomme(boules) {
     return boules.reduce(function(a, b) { return a + b; }, 0);
+}
+
+// Fonction pour calculer le Turning (Miroir)
+function getTurning(num) {
+    var s = num.toString().padStart(2, '0'); // 5 devient "05"
+    var inv = parseInt(s.split('').reverse().join(''), 10); // "50" devient 50
+    // Si le résultat est hors des normes (0 ou >90), on retourne le numéro de base
+    return (inv === 0 || inv > 90) ? num : inv;
 }
 
 async function chargerDepuisCloud() {
@@ -517,21 +534,12 @@ function executerComparateurParNumero() {
     var ref2 = parseInt(document.getElementById("refNum2").value, 10);
     var range2 = parseInt(document.getElementById("refRange2").value, 10);
 
-    // On cherche les index dans le tableau global (qui est trié du plus récent au plus ancien)
-    // Attention, le tableau donneesCloud a le plus récent à l'index 0.
-    // Le numéro global le plus grand est donc à l'index 0.
-    
     function getPlage(refNum, range) {
         var plage = [];
-        // On cherche l'index correspondant au numéro global de référence
         var startIndex = donneesCloud.findIndex(function(t) { return t.numGlobal === refNum; });
         
-        if (startIndex === -1) return null; // Numéro non trouvé
+        if (startIndex === -1) return null; 
 
-        // On veut les tirages AVANT (numéros plus petits, donc index plus grands) et APRÈS (index plus petits)
-        // Ex: Si ref = 10, on veut 8, 9, 10, 11, 12.
-        
-        // On va du plus petit index au plus grand index (du plus récent au plus ancien)
         var minIdx = Math.max(0, startIndex - range);
         var maxIdx = Math.min(donneesCloud.length - 1, startIndex + range);
         
@@ -539,7 +547,6 @@ function executerComparateurParNumero() {
             plage.push(donneesCloud[i]);
         }
         
-        // On inverse pour afficher dans l'ordre chronologique (ex: 8 en haut, 12 en bas)
         plage.sort(function(a, b) { return a.numGlobal - b.numGlobal; });
         return plage;
     }
@@ -549,20 +556,37 @@ function executerComparateurParNumero() {
     var resDiv = document.getElementById("resultatComparaison");
 
     if (!plage1 || !plage2) {
-        resDiv.innerHTML = "<p style='color:red; font-weight:bold;'>L'un des numéros de tirage n'a pas été trouvé dans la base.</p>";
+        resDiv.innerHTML = "<p style='color:red; font-weight:bold; padding: 10px;'>L'un des numéros de tirage n'a pas été trouvé dans la base.</p>";
         return;
     }
 
-    // On prépare la coloration des numéros qui matchent
-    function buildTable(plage, titre, couleur, matchBoules) {
+    // On crée une liste de tous les numéros et de leurs turnings pour chaque plage
+    var allNumsAndTurnings1 = [];
+    plage1.forEach(function(t) { 
+        t.boules.forEach(function(n) {
+            allNumsAndTurnings1.push(n);
+            allNumsAndTurnings1.push(getTurning(n));
+        });
+    });
+
+    var allNumsAndTurnings2 = [];
+    plage2.forEach(function(t) { 
+        t.boules.forEach(function(n) {
+            allNumsAndTurnings2.push(n);
+            allNumsAndTurnings2.push(getTurning(n));
+        });
+    });
+
+    function buildTable(plage, titre, couleur, matchList) {
         var html = "<div class='comp-col' style='border-top: 4px solid " + couleur + ";'>";
         html += "<h3 style='text-align:center; color:" + couleur + ";'>" + titre + "</h3>";
-        html += "<table class='comp-table'><tr><th>Tirage</th><th>Numéros</th></tr>";
+        html += "<table class='comp-table'><tr><th>N° Tirage</th><th>Numéros</th></tr>";
         
         plage.forEach(function(t) {
-            html += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
+            html += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + " " + t.heure + "</small></td><td>";
             t.boules.forEach(function(n) { 
-                var estMatch = matchBoules.indexOf(n) !== -1;
+                // On vérifie si le numéro (ou son turning) est présent dans la liste opposée
+                var estMatch = matchList.indexOf(n) !== -1;
                 var cls = estMatch ? "ball match" : "ball";
                 html += "<span class='" + cls + "'>" + n + "</span>"; 
             });
@@ -573,16 +597,8 @@ function executerComparateurParNumero() {
         return html;
     }
 
-    // On extrait TOUS les numéros de la plage 1 pour les surligner dans la plage 2
-    var tousNumsPlage1 = [];
-    plage1.forEach(function(t) { tousNumsPlage1 = tousNumsPlage1.concat(t.boules); });
-
-    // On extrait TOUS les numéros de la plage 2 pour les surligner dans la plage 1
-    var tousNumsPlage2 = [];
-    plage2.forEach(function(t) { tousNumsPlage2 = tousNumsPlage2.concat(t.boules); });
-
-    var htmlTotal = buildTable(plage1, "Plage 1 (Réf: N°"+ref1+")", "#2980b9", tousNumsPlage2);
-    htmlTotal += buildTable(plage2, "Plage 2 (Réf: N°"+ref2+")", "#d35400", tousNumsPlage1);
+    var htmlTotal = buildTable(plage1, "Plage 1 (Réf: N°"+ref1+")", "#2980b9", allNumsAndTurnings2);
+    htmlTotal += buildTable(plage2, "Plage 2 (Réf: N°"+ref2+")", "#d35400", allNumsAndTurnings1);
 
     resDiv.innerHTML = htmlTotal;
 }
@@ -836,8 +852,8 @@ function executerBankersMulti() {
 document.getElementById("date").valueAsDate = new Date();
 // On met des dates par défaut dans le comparateur
 if(donneesCloud.length > 0) {
-    document.getElementById("refNum1").value = donneesCloud[donneesCloud.length-5].numGlobal; // Un ancien tirage
-    document.getElementById("refNum2").value = donneesCloud[2].numGlobal; // Un récent
+    document.getElementById("refNum1").value = donneesCloud[donneesCloud.length-5].numGlobal; 
+    document.getElementById("refNum2").value = donneesCloud[2].numGlobal; 
 }
 rafraichirDonnees();
 </script>
