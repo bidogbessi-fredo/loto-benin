@@ -43,21 +43,21 @@
       font-weight: bold; margin: 0 2px; font-size: 13px;
   }
   
-  /* BOULE QUI MATCHE EXACTEMENT (Verte) */
+  /* BOULE QUI MATCHE EXACTEMENT SUR TOUTES LES PLAGES (Verte) */
   .comp-ball.match-exact { 
       background: #2ecc71 !important; color: #fff !important; 
       border: 3px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
       transform: scale(1.25); z-index: 10; margin: 0 4px;
   }
   
-  /* BOULE QUI MATCHE PAR TURNING (Violette) */
+  /* BOULE QUI MATCHE PAR TURNING SUR TOUTES LES PLAGES (Violette) */
   .comp-ball.match-turning { 
       background: #9b59b6 !important; color: #fff !important; 
       border: 3px solid #8e44ad; box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
       transform: scale(1.25); z-index: 10; margin: 0 4px;
   }
   
-  /* BOULE QUI MATCHE DANS 3 PLAGES OU PLUS (Or) */
+  /* BOULE QUI MATCHE EN EXACT ET TURNING SUR TOUTES LES PLAGES (Or) */
   .comp-ball.match-multi { 
       background: #f1c40f !important; color: #111 !important; 
       border: 3px solid #d35400; box-shadow: 0 0 15px rgba(241, 196, 15, 1);
@@ -224,8 +224,8 @@
 <!-- ====== ONGLET 5 : COMPARATEUR MULTI-PLAGES ====== -->
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
-    <h2>⚖️ Comparateur Multi-Plages</h2>
-    <p style="color:#555;">Ajoutez jusqu'à 5 plages. L'application comparera les numéros ligne par ligne.</p>
+    <h2>⚖️ Comparateur Multi-Plages (Rigueur Absolue)</h2>
+    <p style="color:#555;">Les boules ne seront colorées que si elles sont présentes sur <b>TOUTES les plages</b> simultanément à la même ligne.</p>
     
     <div id="plages-config" class="plages-config">
         <!-- Les champs seront générés par JS -->
@@ -237,10 +237,10 @@
     </div>
 
     <div class="legend">
-        <div class="legend-item"><span class="comp-ball"></span> Pas de match</div>
-        <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact</div>
-        <div class="legend-item"><span class="comp-ball match-turning"></span> Turning (Miroir)</div>
-        <div class="legend-item"><span class="comp-ball match-multi"></span> 3 plages ou +</div>
+        <div class="legend-item"><span class="comp-ball"></span> Pas de match partout</div>
+        <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact Partout</div>
+        <div class="legend-item"><span class="comp-ball match-turning"></span> Turning Partout</div>
+        <div class="legend-item"><span class="comp-ball match-multi"></span> Exact + Turning Partout</div>
     </div>
 
     <div id="resultatComparaison" class="comp-container">
@@ -538,7 +538,7 @@ function afficherCombine() {
   });
 }
 
-// --- COMPARATEUR MULTI-PLAGES ---
+// --- COMPARATEUR MULTI-PLAGES (RIGUEUR ABSOLUE) ---
 var nombrePlages = 0;
 
 function ajouterPlage() {
@@ -552,7 +552,6 @@ function ajouterPlage() {
     div.className = "plage-box";
     div.id = "plage-container-" + nombrePlages;
     
-    // Couleur de bordure en fonction du numéro de plage
     var colors = ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"];
     var couleur = colors[(nombrePlages - 1) % 5];
     div.style.borderTop = "4px solid " + couleur;
@@ -585,10 +584,9 @@ function supprimerPlage(id) {
 function executerComparateurMulti() {
     var plages = [];
     
-    // On récupère toutes les plages configurées
     for (var i = 1; i <= nombrePlages; i++) {
         var container = document.getElementById("plage-container-" + i);
-        if (!container) continue; // Si elle a été supprimée
+        if (!container) continue; 
         
         var refNum = parseInt(document.getElementById("refNum" + i).value, 10);
         var range = parseInt(document.getElementById("refRange" + i).value, 10);
@@ -619,12 +617,12 @@ function executerComparateurMulti() {
         return;
     }
 
-    // On détermine la longueur max pour boucler sur toutes les lignes
     var maxLines = 0;
     plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
 
-    // On prépare les tableaux HTML
     var htmlTotal = "";
+    
+    // Pour chaque plage, on va générer son tableau HTML
     plages.forEach(function(p) {
         htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>Plage " + p.id + "</h3><table class='comp-table'><tr><th>Tirage</th><th>Numéros</th></tr>";
         
@@ -636,24 +634,39 @@ function executerComparateurMulti() {
                 htmlTotal += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
                 
                 t.boules.forEach(function(n) {
-                    // On compte dans combien d'autres plages ce numéro (ou son turning) apparaît sur la même ligne
-                    var matchCount = 0;
-                    var isTurningOnly = false;
-                    
+                    // On vérifie si ce numéro (ou son turning) existe dans TOUTES les autres plages à la ligne 'l'
+                    var matchExactCount = 0;
+                    var matchTurningCount = 0;
+                    var allPlagesMatch = true;
+
                     plages.forEach(function(otherP) {
                         if (otherP.id === p.id) return; // On ne se compare pas à soi-même
+                        
                         var otherT = otherP.data[l];
                         if (otherT) {
-                            if (otherT.boules.includes(n)) matchCount++;
-                            else if (otherT.boules.includes(getTurning(n))) { matchCount++; isTurningOnly = true; }
+                            var hasExact = otherT.boules.includes(n);
+                            var hasTurning = otherT.boules.includes(getTurning(n));
+                            
+                            if (hasExact) matchExactCount++;
+                            else if (hasTurning) matchTurningCount++;
+                            else allPlagesMatch = false; // Si une seule plage ne l'a pas, on annule
+                        } else {
+                            allPlagesMatch = false;
                         }
                     });
 
                     var cls = "comp-ball";
-                    if (matchCount >= 2) cls += " match-multi"; // Si présent dans 2 autres plages (donc 3 au total)
-                    else if (matchCount === 1) {
-                        if (isTurningOnly) cls += " match-turning";
-                        else cls += " match-exact";
+                    
+                    if (allPlagesMatch) {
+                        // Le numéro est présent sur TOUTES les plages.
+                        // On détermine la couleur selon si c'est exact ou turning
+                        if (matchExactCount === plages.length - 1) {
+                            cls += " match-exact"; // Exact partout
+                        } else if (matchTurningCount === plages.length - 1) {
+                            cls += " match-turning"; // Turning partout
+                        } else {
+                            cls += " match-multi"; // Mélange d'exact et de turning partout
+                        }
                     }
 
                     htmlTotal += "<span class='" + cls + "'>" + n + "</span>";
@@ -916,7 +929,6 @@ function executerBankersMulti() {
 // Initialisation au chargement de la page
 document.getElementById("date").valueAsDate = new Date();
 rafraichirDonnees().then(function() {
-    // On ajoute 2 plages par défaut
     ajouterPlage();
     ajouterPlage();
     if(donneesCloud.length > 0) {
