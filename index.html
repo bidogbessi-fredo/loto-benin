@@ -30,25 +30,76 @@
   th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
   .msg { font-weight: bold; margin-top: 10px; font-size: 14px; }
   
-  .ball { display: inline-block; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 1px; font-size: 13px;}
+  .ball { display: inline-block; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 2px; font-size: 14px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);}
   .ball.star { background: #f39c12; }
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
   .ball.hot { background: #e74c3c; }
   .ball.cold { background: #3498db; }
   
-  /* Styles pour le cockpit et les nouveaux modules */
+  /* BOULE DU COMPARATEUR (Cliquable) */
+  .comp-ball {
+      display: inline-block; width: 34px; height: 34px; line-height: 34px; border-radius: 50%;
+      background: #dcdde1; color: #7f8c8d; 
+      font-weight: bold; margin: 0 2px; font-size: 14px; cursor: pointer; user-select: none;
+      transition: transform 0.1s, background-color 0.2s; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+  }
+  .comp-ball:active { transform: scale(0.9); }
+  
+  .comp-ball.match-exact { 
+      background: #2ecc71 !important; color: #fff !important; 
+      border: 3px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+      transform: scale(1.25); z-index: 10; margin: 0 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  }
+  .comp-ball.match-turning { 
+      background: #9b59b6 !important; color: #fff !important; 
+      border: 3px solid #8e44ad; box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
+      transform: scale(1.25); z-index: 10; margin: 0 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  }
+  .comp-ball.match-multi { 
+      background: #f1c40f !important; color: #111 !important; 
+      border: 3px solid #d35400; box-shadow: 0 0 15px rgba(241, 196, 15, 1);
+      transform: scale(1.35); z-index: 10; margin: 0 5px; text-shadow: none;
+  }
+  
+  .t-info { font-size: 13px; color: #d32f2f; font-weight: bold; margin-left: 5px; }
+  .n-info { font-size: 12px; color: #777; margin-left: 10px; }
+  
+  .combo-day { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .combo-header { font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+  .combo-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
+  .combo-row:last-child { border-bottom: none; }
+  .combo-time { width: 100px; font-weight: bold; color: #555; }
+  .combo-nums { flex: 1; display: flex; align-items: center; }
+
+  .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .lab-box { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; }
+  .result-box { margin-top: 15px; padding: 10px; background: #eef5ef; border-left: 4px solid var(--primary); border-radius: 4px; font-weight: bold; }
+  
+  .comp-container { display: flex; gap: 15px; margin-top: 20px; overflow-x: auto; }
+  .comp-col { flex: 1; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+  .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
+  .comp-table td { padding: 6px; border: 1px solid #eee; text-align: center;}
+  .comp-table th { padding: 6px; border: 1px solid #eee; background: #f8f9fa;}
+  
+  .plages-config { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+  .plage-box { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 200px;}
+  .plage-box label { font-size: 13px; font-weight: bold; }
+  
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px; flex-wrap: wrap;}
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  
+  .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 8px; flex-wrap: wrap;}
+  .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; }
+  .color-btn:active { transform: scale(0.9); }
+  .color-btn.active { border-color: #333; transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+
+  /* Styles pour le Cockpit */
   .cockpit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-  .cockpit-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  .cockpit-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   .cockpit-card h4 { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
   .stat-list { list-style: none; padding: 0; margin: 0; }
   .stat-list li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
-  
-  .form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 6px;}
-  .form-row label { font-size: 13px; font-weight: bold; color: #555; }
-  
-  .search-results { margin-top: 20px; max-height: 500px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-  .search-results table { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -59,7 +110,7 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Saisie</button>
   <button class="tab-btn" onclick="ouvrirOnglet('cockpit')" style="background-color: #e67e22;">🚀 Cockpit</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('recherche')" style="background-color: #c0392b;">🔬 Recherche de Motifs</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('recherche')" style="background-color: #c0392b;">🔬 Recherche</button>
   <button class="tab-btn" onclick="ouvrirOnglet('combine')">🔀 Vue Combinée</button>
   <button class="tab-btn" onclick="ouvrirOnglet('comparateur')" style="background-color: #16a085;">⚖️ Comparateur</button>
   <button class="tab-btn" onclick="ouvrirOnglet('labo')" style="background-color: #8e44ad;">🧪 Laboratoire</button>
@@ -96,7 +147,6 @@
     </div>
   </div>
   
-  <!-- Importation intégrée ici pour gagner de la place -->
   <div class="card">
     <h2>📁 Importer des résultats</h2>
     <p style="color:#555; font-size:13px;">Collez vos données brutes (CSV, texte).</p>
@@ -132,7 +182,7 @@
 
     <div class="cockpit-card" style="margin-top: 20px;">
         <h4>🧪 Simulateur (Backtesting)</h4>
-        <div class="form-row">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
             <label>Stratégie :</label>
             <select id="simStrategie"><option value="chauds">Top 5 Chauds</option><option value="froids">Top 5 Retards</option></select>
             <label>sur les <input type="number" id="simFenetre" value="10" min="5" max="50" style="width:60px;"> derniers tirages</label>
@@ -143,61 +193,49 @@
   </div>
 </div>
 
-<!-- ====== ONGLET 3 : RECHERCHE DE MOTIFS ====== -->
+<!-- ====== ONGLET 3 : RECHERCHE ====== -->
 <div id="onglet-recherche" class="tab-content">
   <div class="card">
-    <h2>🔬 Recherche de Motifs</h2>
-
-    <!-- MODULE A : Boules dans le même résultat -->
+    <h2>🔬 Recherche</h2>
     <div class="cockpit-card">
         <h4>A. Boules dans le même résultat</h4>
-        <div class="form-row">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
             <label>Boules (séparées par espace) :</label>
             <input type="text" id="searchA_boules" placeholder="Ex: 12 45 67" style="width: 200px;">
             <label><input type="checkbox" id="searchA_pos"> Avec position exacte</label>
             <button onclick="rechercherA()">Chercher</button>
         </div>
-        <div id="resultatsA" class="search-results" style="display:none;"></div>
+        <div id="resultatsA" style="display:none; margin-top:10px;"></div>
     </div>
-
-    <!-- MODULE B : Boules dans plusieurs résultats (séquence) -->
     <div class="cockpit-card">
-        <h4>B. Boules dans plusieurs résultats consécutifs</h4>
-        <p style="font-size:12px; color:#777;">Trouve la séquence A -> B. Ex: La boule 12 sort au tirage N, puis la boule 45 sort au tirage N+1.</p>
-        <div class="form-row">
+        <h4>B. Boules dans plusieurs résultats</h4>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
             <label>Tirage 1 contient :</label>
             <input type="number" id="searchB_b1" placeholder="Ex: 12" style="width:70px;">
             <label>Puis le tirage suivant contient :</label>
             <input type="number" id="searchB_b2" placeholder="Ex: 45" style="width:70px;">
             <button onclick="rechercherB()">Chercher</button>
         </div>
-        <div id="resultatsB" class="search-results" style="display:none;"></div>
+        <div id="resultatsB" style="display:none; margin-top:10px;"></div>
     </div>
-
-    <!-- MODULE C : Superposition -->
     <div class="cockpit-card">
-        <h4>C. Superposition (Numéros communs)</h4>
-        <p style="font-size:12px; color:#777;">Trouve les numéros qui se répètent entre le tirage de référence et le tirage suivant.</p>
-        <div class="form-row">
+        <h4>C. Superposition</h4>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
             <label>Numéro de tirage de référence :</label>
             <input type="number" id="searchC_ref" placeholder="Ex: 1000" style="width:100px;">
             <button onclick="rechercherC()">Chercher</button>
         </div>
-        <div id="resultatsC" class="search-results" style="display:none;"></div>
+        <div id="resultatsC" style="display:none; margin-top:10px;"></div>
     </div>
-
-    <!-- MODULE D : Écart entre résultats -->
     <div class="cockpit-card">
         <h4>D. Écart identique entre les boules</h4>
-        <p style="font-size:12px; color:#777;">Trouve les tirages où les numéros ont la même distance (ex: 1, 11, 21, 31, 41 -> écart de 10).</p>
-        <div class="form-row">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
             <label>Écart recherché :</label>
             <input type="number" id="searchD_ecart" placeholder="Ex: 10" style="width:70px;">
             <button onclick="rechercherD()">Chercher</button>
         </div>
-        <div id="resultatsD" class="search-results" style="display:none;"></div>
+        <div id="resultatsD" style="display:none; margin-top:10px;"></div>
     </div>
-
   </div>
 </div>
 
@@ -213,12 +251,27 @@
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
     <h2>⚖️ Comparateur Multi-Plages</h2>
-    <div id="plages-config" class="plages-config" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
+    <div id="plages-config" class="plages-config"></div>
     <div style="margin-top: 15px; display: flex; gap: 10px;">
         <button onclick="ajouterPlage()" class="info" style="background-color: #2980b9;">➕ Ajouter une plage</button>
         <button onclick="executerComparateurMulti()" style="flex: 1; background-color: #16a085;">🔍 Comparer</button>
     </div>
-    <div id="resultatComparaison" style="display: flex; gap: 15px; margin-top: 20px; overflow-x: auto;"></div>
+    
+    <!-- PALETTE -->
+    <div class="palette">
+        <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
+        <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></div>
+        <div class="color-btn" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></div>
+        <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></div>
+        <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></div>
+        <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></div>
+        
+        <span style="font-weight:bold; margin-left:10px; margin-right:5px;">Gomme :</span>
+        <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</div>
+        <button onclick="resetColors()" class="danger" style="margin-left: 10px; font-size: 12px; padding: 5px;">Réinitialiser</button>
+    </div>
+
+    <div id="resultatComparaison" class="comp-container"></div>
   </div>
 </div>
 
@@ -226,16 +279,16 @@
 <div id="onglet-labo" class="tab-content">
   <div class="card">
     <h2>🧪 Laboratoire d'Analyse</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="lab-grid">
       <div class="lab-box">
         <h3>1. Analyse d'un tirage</h3>
         <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
         <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
-          <button onclick="faireTurning()" style="flex:1;">Miroir</button>
-          <button onclick="faireAddition()" style="flex:1;">Somme (+)</button>
-          <button onclick="faireTheosophie()" style="flex:1; background-color: #e67e22;">🔢 Théosophie</button>
+          <button onclick="faireTurning()" style="flex:1; font-size:13px;">Miroir</button>
+          <button onclick="faireAddition()" style="flex:1; font-size:13px;">Somme (+)</button>
+          <button onclick="faireTheosophie()" style="flex:1; background-color: #e67e22; font-size:13px;">🔢 Théosophie</button>
         </div>
-        <div id="resultatOperations" class="result-box" style="font-weight: normal; margin-top:10px; background:#eef5ef; padding:10px;">Sélectionnez un tirage.</div>
+        <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
       </div>
       <div class="lab-box">
         <h3>2. Multi-Draws</h3>
@@ -259,27 +312,47 @@ const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
+var couleurActive = '#e74c3c';
 
-// --- INITIALISATION ---
+// --- CHARGEMENT CORRIGÉ POUR TOUTES LES DONNÉES (>1000) ---
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
-  statusEl.textContent = "⏳ Téléchargement...";
+  statusEl.textContent = "⏳ Téléchargement de toutes les données...";
   
-  let { data, error } = await supabaseClient.from('tirages').select('*').order('date', { ascending: true }).order('heure', { ascending: true });
-    
-  if (error) {
-    statusEl.textContent = "❌ Erreur de connexion.";
-    statusEl.style.color = "red";
-    return [];
+  let tousLesTirages = [];
+  let page = 0;
+  let parPage = 1000;
+  let enCours = true;
+
+  while (enCours) {
+    let { data, error } = await supabaseClient
+      .from('tirages')
+      .select('*')
+      .order('date', { ascending: true })
+      .order('heure', { ascending: true })
+      .range(page * parPage, (page + 1) * parPage - 1);
+
+    if (error) {
+      statusEl.textContent = "❌ Erreur de connexion.";
+      statusEl.style.color = "red";
+      return [];
+    }
+
+    if (data.length > 0) {
+      tousLesTirages = tousLesTirages.concat(data);
+      page++;
+    } else {
+      enCours = false; // Plus de données à charger
+    }
   }
   
-  statusEl.textContent = "✅ Connecté au Cloud ! (" + data.length + " tirages)";
+  statusEl.textContent = "✅ Connecté au Cloud ! (" + tousLesTirages.length + " tirages)";
   statusEl.style.color = "green";
   
   var compteurGlobal = 0;
   var compteursJeux = { "Star": 0, "Fortune": 0, "Digital": 0 };
 
-  donneesCloud = data.map(function(item) {
+  donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
       compteurGlobal++;
       if (compteursJeux[item.jeu] !== undefined) { compteursJeux[item.jeu]++; } else { compteursJeux[item.jeu] = 1; }
@@ -321,127 +394,77 @@ function getTurning(num) {
     return (inv === 0 || inv > 90) ? num : inv;
 }
 
-function afficherListeResultats(containerId, resultats, titre) {
-    var div = document.getElementById(containerId);
-    if (resultats.length === 0) {
-        div.innerHTML = "<p style='color:red; font-weight:bold;'>Aucun tirage trouvé pour ces critères.</p>";
-        div.style.display = "block";
-        return;
-    }
-    var html = "<h4>" + titre + " (" + resultats.length + " trouvés)</h4>";
-    html += "<table><tr><th>Date</th><th>Jeu</th><th>Numéros</th></tr>";
-    resultats.slice(0, 50).forEach(function(t) { // On limite à 50 résultats pour la performance
-        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-        html += "<tr><td>" + t.date + "</td><td>" + t.jeu + " " + t.heure + "</td><td>";
-        t.boules.forEach(function(n) { html += "<span class='ball " + c + "'>" + n + "</span>"; });
-        html += "</td></tr>";
+function resetColors() {
+    document.querySelectorAll('.comp-ball').forEach(function(b) {
+        b.style.backgroundColor = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+        b.style.boxShadow = '';
     });
-    html += "</table>";
-    if (resultats.length > 50) html += "<p><i>Seuls les 50 premiers résultats sont affichés.</i></p>";
-    div.innerHTML = html;
-    div.style.display = "block";
 }
 
-// --- RECHERCHE A : Boules dans le même résultat ---
-function rechercherA() {
-    var input = document.getElementById("searchA_boules").value.trim();
-    if (!input) return;
-    var boulesCibles = input.split(/[\s,]+/).map(Number);
-    var avecPosition = document.getElementById("searchA_pos").checked;
-
-    var resultats = donneesCloud.filter(function(t) {
-        if (avecPosition) {
-            // Vérification stricte (la séquence exacte doit être présente)
-            var strBoules = t.boules.join(",");
-            var strCibles = boulesCibles.join(",");
-            return strBoules.includes(strCibles);
-        } else {
-            // Vérification de présence (peu importe l'ordre)
-            return boulesCibles.every(function(b) { return t.boules.includes(b); });
-        }
-    });
-
-    afficherListeResultats("resultatsA", resultats, "Tirages contenant : " + boulesCibles.join(", "));
+function changerCouleur(element, couleur) {
+    document.querySelectorAll('.color-btn').forEach(function(btn) { btn.classList.remove('active'); });
+    element.classList.add('active');
+    couleurActive = couleur === 'annuler' ? 'annuler' : couleur;
 }
 
-// --- RECHERCHE B : Boules dans plusieurs résultats (séquence) ---
-function rechercherB() {
-    var b1 = parseInt(document.getElementById("searchB_b1").value, 10);
-    var b2 = parseInt(document.getElementById("searchB_b2").value, 10);
-    if (isNaN(b1) || isNaN(b2)) return;
-
-    var resultats = [];
-    // On parcourt de l'historique le plus ancien au plus récent pour trouver les séquences
-    var chrono = donneesCloud.slice().reverse();
-    
-    for (var i = 0; i < chrono.length - 1; i++) {
-        var t1 = chrono[i];
-        var t2 = chrono[i+1];
-        if (t1.boules.includes(b1) && t2.boules.includes(b2)) {
-            resultats.push(t1); // On affiche le tirage de départ
-        }
-    }
-
-    afficherListeResultats("resultatsB", resultats, "Séquences trouvées (Départ avec " + b1 + ")");
-}
-
-// --- RECHERCHE C : Superposition ---
-function rechercherC() {
-    var refNum = parseInt(document.getElementById("searchC_ref").value, 10);
-    if (isNaN(refNum)) return;
-
-    var chrono = donneesCloud.slice().reverse(); // Du plus ancien au plus récent
-    var indexRef = chrono.findIndex(function(t) { return t.numGlobal === refNum; });
-    
-    if (indexRef === -1 || indexRef === chrono.length - 1) {
-        alert("Tirage de référence introuvable ou c'est le dernier tirage.");
-        return;
-    }
-
-    var t1 = chrono[indexRef];
-    var t2 = chrono[indexRef + 1];
-    var communs = t1.boules.filter(function(n) { return t2.boules.includes(n); });
-
-    var div = document.getElementById("resultatsC");
-    div.style.display = "block";
-    
-    if (communs.length === 0) {
-        div.innerHTML = "<p>Aucun numéro en commun entre le tirage N°" + t1.numGlobal + " et N°" + t2.numGlobal + ".</p>";
+function colorierBoule(bouleElement) {
+    if (couleurActive === 'annuler') {
+        bouleElement.style.backgroundColor = ''; bouleElement.style.color = '';
+        bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = '';
     } else {
-        var html = "<h4>Superposition entre N°" + t1.numGlobal + " et N°" + t2.numGlobal + "</h4>";
-        html += "<div style='display:flex; gap:20px; margin-top:10px;'>";
-        html += "<div><b>N°" + t1.numGlobal + " :</b><br>";
-        t1.boules.forEach(function(n) { html += "<span class='ball " + (communs.includes(n) ? 'hot' : '') + "'>" + n + "</span>"; });
-        html += "</div><div><b>N°" + t2.numGlobal + " :</b><br>";
-        t2.boules.forEach(function(n) { html += "<span class='ball " + (communs.includes(n) ? 'hot' : '') + "'>" + n + "</span>"; });
-        html += "</div></div>";
-        html += "<p><b>Numéros communs :</b> " + communs.join(", ") + "</p>";
-        div.innerHTML = html;
+        bouleElement.style.backgroundColor = couleurActive; 
+        bouleElement.style.color = '#fff';
+        bouleElement.style.borderColor = '#333'; 
+        bouleElement.style.boxShadow = '0 0 8px ' + couleurActive;
+        // Pour s'assurer que le texte reste lisible
+        bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
     }
 }
 
-// --- RECHERCHE D : Écart entre résultats ---
-function rechercherD() {
-    var ecart = parseInt(document.getElementById("searchD_ecart").value, 10);
-    if (isNaN(ecart)) return;
+// --- SAISIE ---
+document.getElementById("btnAjouter").addEventListener("click", async function () {
+  var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "blue";
+  var date = document.getElementById("date").value;
+  var jeu = document.getElementById("jeuSaisie").value;
+  var heure = document.getElementById("heureSaisie").value;
+  var boules = [];
+  for (var i = 1; i <= 5; i++) {
+    var v = parseInt(document.getElementById("b" + i).value, 10);
+    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
+    boules.push(v);
+  }
+  if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
+  if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
+  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
+  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur."; return; }
+  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
+  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
+});
 
-    var resultats = donneesCloud.filter(function(t) {
-        // On trie les boules et on vérifie si chaque écart entre deux boules consécutives est le même
-        var b = t.boules.slice().sort(function(a,b){return a-b;});
-        for (var i = 0; i < b.length - 1; i++) {
-            if (b[i+1] - b[i] !== ecart) return false;
-        }
-        return true;
-    });
+async function supprimer(i) { if (!confirm("Supprimer ?")) return; var t = donneesCloud[i]; if (t.id) { await supabaseClient.from('tirages').delete().eq('id', t.id); } await rafraichirDonnees(); }
+async function toutEffacer() { if (!confirm("⚠️ Tout supprimer ?")) return; await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); }
 
-    afficherListeResultats("resultatsD", resultats, "Tirages avec un écart constant de " + ecart);
+function afficherHistorique() {
+  document.getElementById("nbTotal").textContent = donneesCloud.length;
+  var corps = document.getElementById("corps"); corps.innerHTML = "";
+  if (donneesCloud.length === 0) { corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return; }
+  donneesCloud.forEach(function (t, i) {
+    var tr = document.createElement("tr");
+    var html = "<td>" + t.date + "<br><span class='n-info'>Glob: N°" + t.numGlobal + "</span></td>";
+    html += "<td>" + t.heure + "</td><td><b>" + t.jeu + "</b></td><td>";
+    var cb = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+    t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
+    html += "</td><td><button onclick='supprimer(" + i + ")' class='danger' style='padding: 5px 10px;'>X</button></td>";
+    tr.innerHTML = html; corps.appendChild(tr);
+  });
 }
 
 // --- COCKPIT & SIMULATION ---
 function actualiserCockpit() {
     var jeu = document.getElementById("cockpitJeu").value;
     var heure = document.getElementById("cockpitHeure").value;
-    
     var filtres = donneesCloud.filter(function(t) { return t.jeu === jeu && (heure === "all" || t.heure === heure); });
     
     if (filtres.length === 0) {
@@ -549,44 +572,77 @@ function lancerSimulation() {
     div.style.display = "block"; div.innerHTML = html;
 }
 
-// --- FONCTIONS EXISTANTES (Saisie, Historique, Laboratoire, etc.) ---
-document.getElementById("btnAjouter").addEventListener("click", async function () {
-  var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "blue";
-  var date = document.getElementById("date").value;
-  var jeu = document.getElementById("jeuSaisie").value;
-  var heure = document.getElementById("heureSaisie").value;
-  var boules = [];
-  for (var i = 1; i <= 5; i++) {
-    var v = parseInt(document.getElementById("b" + i).value, 10);
-    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
-    boules.push(v);
-  }
-  if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
-  if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
-  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
-  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur."; return; }
-  for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
-});
-
-async function supprimer(i) { if (!confirm("Supprimer ?")) return; var t = donneesCloud[i]; if (t.id) { await supabaseClient.from('tirages').delete().eq('id', t.id); } await rafraichirDonnees(); }
-async function toutEffacer() { if (!confirm("⚠️ Tout supprimer ?")) return; await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); }
-
-function afficherHistorique() {
-  document.getElementById("nbTotal").textContent = donneesCloud.length;
-  var corps = document.getElementById("corps"); corps.innerHTML = "";
-  if (donneesCloud.length === 0) { corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return; }
-  donneesCloud.forEach(function (t, i) {
-    var tr = document.createElement("tr");
-    var html = "<td>" + t.date + "<br><span class='n-info'>Glob: N°" + t.numGlobal + "</span></td>";
-    html += "<td>" + t.heure + "</td><td><b>" + t.jeu + "</b></td><td>";
-    var cb = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-    t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
-    html += "</td><td><button onclick='supprimer(" + i + ")' class='danger' style='padding: 5px 10px;'>X</button></td>";
-    tr.innerHTML = html; corps.appendChild(tr);
-  });
+// --- RECHERCHE ---
+function afficherListeResultats(containerId, resultats, titre) {
+    var div = document.getElementById(containerId);
+    if (resultats.length === 0) { div.innerHTML = "<p style='color:red;'>Aucun tirage trouvé.</p>"; div.style.display = "block"; return; }
+    var html = "<h4>" + titre + " (" + resultats.length + " trouvés)</h4><table><tr><th>Date</th><th>Jeu</th><th>Numéros</th></tr>";
+    resultats.slice(0, 50).forEach(function(t) {
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        html += "<tr><td>" + t.date + "</td><td>" + t.jeu + " " + t.heure + "</td><td>";
+        t.boules.forEach(function(n) { html += "<span class='ball " + c + "'>" + n + "</span>"; });
+        html += "</td></tr>";
+    });
+    html += "</table>";
+    if (resultats.length > 50) html += "<p><i>Seuls les 50 premiers résultats sont affichés.</i></p>";
+    div.innerHTML = html; div.style.display = "block";
 }
 
+function rechercherA() {
+    var input = document.getElementById("searchA_boules").value.trim();
+    if (!input) return;
+    var boulesCibles = input.split(/[\s,]+/).map(Number);
+    var avecPosition = document.getElementById("searchA_pos").checked;
+    var resultats = donneesCloud.filter(function(t) {
+        if (avecPosition) { return t.boules.join(",").includes(boulesCibles.join(",")); } 
+        else { return boulesCibles.every(function(b) { return t.boules.includes(b); }); }
+    });
+    afficherListeResultats("resultatsA", resultats, "Tirages contenant : " + boulesCibles.join(", "));
+}
+
+function rechercherB() {
+    var b1 = parseInt(document.getElementById("searchB_b1").value, 10);
+    var b2 = parseInt(document.getElementById("searchB_b2").value, 10);
+    if (isNaN(b1) || isNaN(b2)) return;
+    var resultats = [];
+    var chrono = donneesCloud.slice().reverse();
+    for (var i = 0; i < chrono.length - 1; i++) {
+        if (chrono[i].boules.includes(b1) && chrono[i+1].boules.includes(b2)) { resultats.push(chrono[i]); }
+    }
+    afficherListeResultats("resultatsB", resultats, "Séquences trouvées (Départ avec " + b1 + ")");
+}
+
+function rechercherC() {
+    var refNum = parseInt(document.getElementById("searchC_ref").value, 10);
+    if (isNaN(refNum)) return;
+    var chrono = donneesCloud.slice().reverse();
+    var indexRef = chrono.findIndex(function(t) { return t.numGlobal === refNum; });
+    if (indexRef === -1 || indexRef === chrono.length - 1) { alert("Tirage introuvable."); return; }
+    var t1 = chrono[indexRef]; var t2 = chrono[indexRef + 1];
+    var communs = t1.boules.filter(function(n) { return t2.boules.includes(n); });
+    var div = document.getElementById("resultatsC"); div.style.display = "block";
+    if (communs.length === 0) { div.innerHTML = "<p>Aucun numéro en commun.</p>"; } 
+    else {
+        var html = "<h4>Superposition entre N°" + t1.numGlobal + " et N°" + t2.numGlobal + "</h4><div style='display:flex; gap:20px; margin-top:10px;'>";
+        html += "<div><b>N°" + t1.numGlobal + " :</b><br>"; t1.boules.forEach(function(n) { html += "<span class='ball " + (communs.includes(n) ? 'hot' : '') + "'>" + n + "</span>"; }); html += "</div>";
+        html += "<div><b>N°" + t2.numGlobal + " :</b><br>"; t2.boules.forEach(function(n) { html += "<span class='ball " + (communs.includes(n) ? 'hot' : '') + "'>" + n + "</span>"; }); html += "</div></div>";
+        html += "<p><b>Numéros communs :</b> " + communs.join(", ") + "</p>";
+        div.innerHTML = html;
+    }
+}
+
+function rechercherD() {
+    var ecart = parseInt(document.getElementById("searchD_ecart").value, 10);
+    if (isNaN(ecart)) return;
+    var resultats = donneesCloud.filter(function(t) {
+        var b = t.boules.slice().sort(function(a,b){return a-b;});
+        for (var i = 0; i < b.length - 1; i++) { if (b[i+1] - b[i] !== ecart) return false; }
+        return true;
+    });
+    afficherListeResultats("resultatsD", resultats, "Tirages avec écart constant de " + ecart);
+}
+
+// --- VUE COMBINÉE ---
 function afficherCombine() {
   var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
   if (donneesCloud.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
@@ -594,23 +650,91 @@ function afficherCombine() {
   var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); });
   datesTriees.forEach(function(dateStr) {
     var tiragesDuJour = parDate[dateStr];
-    var divJour = document.createElement("div"); divJour.className = "combo-day"; divJour.style.cssText = "background:#fff; padding:15px; border-radius:8px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.05);";
+    var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
     var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     var html = "<div class='combo-header'>📅 " + dateFormatee + "</div>";
     function trouverTirage(jeu, heure) { return tiragesDuJour.find(function(t) { return t.jeu === jeu && t.heure === heure; }); }
     function genBoules(tirage) {
-      if (!tirage) return "-";
+      if (!tirage) return "<span style='color:#ccc;'>-</span>";
       var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
       var s = ""; tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); return s;
     }
-    var heures = ["00H", "08H", "11H", "14H", "18H", "20H"];
-    heures.forEach(function(h) {
-      var t = tiragesDuJour.find(function(x) { return x.heure === h; });
-      if(t) html += "<div style='display:flex; margin-bottom:5px;'><div style='width:80px;'><b>" + h + "</b></div><div>" + genBoules(t) + "</div></div>";
-    });
+    var t00 = trouverTirage('Digital', '00H'); html += "<div class='combo-row'><div class='combo-time'>00H00</div><div class='combo-nums'>" + genBoules(t00) + "</div></div>";
+    var t08 = trouverTirage('Digital', '08H'); html += "<div class='combo-row'><div class='combo-time'>08H00</div><div class='combo-nums'>" + genBoules(t08) + "</div></div>";
+    var t11 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '11H'; }); html += "<div class='combo-row'><div class='combo-time'>11H00</div><div class='combo-nums'>" + genBoules(t11) + "</div></div>";
+    var t14 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '14H'; }); html += "<div class='combo-row'><div class='combo-time'>14H00</div><div class='combo-nums'>" + genBoules(t14) + "</div></div>";
+    var t18 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '18H'; }); html += "<div class='combo-row'><div class='combo-time'>18H00</div><div class='combo-nums'>" + genBoules(t18) + "</div></div>";
+    var t20 = trouverTirage('Digital', '20H'); html += "<div class='combo-row'><div class='combo-time'>20H00</div><div class='combo-nums'>" + genBoules(t20) + "</div></div>";
     divJour.innerHTML = html; conteneur.appendChild(divJour);
   });
+}
+
+// --- COMPARATEUR MULTI-PLAGES ---
+var nombrePlages = 0;
+function ajouterPlage() {
+    if (nombrePlages >= 5) { alert("Maximum 5 plages."); return; }
+    nombrePlages++;
+    var div = document.createElement("div"); div.className = "plage-box"; div.id = "plage-container-" + nombrePlages;
+    var colors = ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"]; var couleur = colors[(nombrePlages - 1) % 5];
+    div.style.borderTop = "4px solid " + couleur;
+    div.innerHTML = `<label style="color:${couleur};">Plage ${nombrePlages}</label>
+        <div style="display:flex; gap:5px;">
+            <input type="number" id="refNum${nombrePlages}" placeholder="N° Tirage" style="width:80px;" value="${donneesCloud.length > 0 ? donneesCloud[donneesCloud.length - nombrePlages*5]?.numGlobal || "" : ""}">
+            <select id="refRange${nombrePlages}" style="flex:1;"><option value="10">10 lignes</option><option value="20">20 lignes</option><option value="30" selected>30 lignes</option><option value="40">40 lignes</option></select>
+        </div><button class="danger" style="font-size:12px; padding:5px;" onclick="supprimerPlage(${nombrePlages})">Retirer</button>`;
+    document.getElementById("plages-config").appendChild(div);
+}
+function supprimerPlage(id) { var div = document.getElementById("plage-container-" + id); if (div) { div.remove(); nombrePlages--; } }
+
+function executerComparateurMulti() {
+    var plages = [];
+    for (var i = 1; i <= nombrePlages; i++) {
+        var container = document.getElementById("plage-container-" + i); if (!container) continue; 
+        var refNum = parseInt(document.getElementById("refNum" + i).value, 10);
+        var range = parseInt(document.getElementById("refRange" + i).value, 10);
+        if (isNaN(refNum)) continue;
+        var plage = [];
+        var startIndex = donneesCloud.findIndex(function(t) { return t.numGlobal === refNum; });
+        if (startIndex === -1) { alert("Le numéro N°" + refNum + " n'existe pas."); return; }
+        var minIdx = Math.max(0, startIndex - range); var maxIdx = Math.min(donneesCloud.length - 1, startIndex + range);
+        for (var j = minIdx; j <= maxIdx; j++) { plage.push(donneesCloud[j]); }
+        plage.sort(function(a, b) { return a.numGlobal - b.numGlobal; });
+        plages.push({ id: i, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
+    }
+    if (plages.length < 2) { alert("Il faut au moins 2 plages."); return; }
+    var maxLines = 0; plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
+    var htmlTotal = "";
+    plages.forEach(function(p) {
+        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>Plage " + p.id + "</h3><table class='comp-table'><tr><th>Tirage</th><th>Numéros</th></tr>";
+        for (var l = 0; l < maxLines; l++) {
+            var t = p.data[l];
+            if (!t) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; } 
+            else {
+                htmlTotal += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
+                t.boules.forEach(function(n) {
+                    var matchExactCount = 0, matchTurningCount = 0, allPlagesMatch = true;
+                    plages.forEach(function(otherP) {
+                        if (otherP.id === p.id) return; var otherT = otherP.data[l];
+                        if (otherT) {
+                            var hasExact = otherT.boules.includes(n); var hasTurning = otherT.boules.includes(getTurning(n));
+                            if (hasExact) matchExactCount++; else if (hasTurning) matchTurningCount++; else allPlagesMatch = false; 
+                        } else { allPlagesMatch = false; }
+                    });
+                    var cls = "comp-ball";
+                    if (allPlagesMatch) {
+                        if (matchExactCount === plages.length - 1) cls += " match-exact";
+                        else if (matchTurningCount === plages.length - 1) cls += " match-turning";
+                        else cls += " match-multi";
+                    }
+                    htmlTotal += "<span class='" + cls + "' onclick='colorierBoule(this)'>" + n + "</span>";
+                });
+                htmlTotal += "</td></tr>";
+            }
+        }
+        htmlTotal += "</table></div>";
+    });
+    document.getElementById("resultatComparaison").innerHTML = htmlTotal;
 }
 
 // --- LABORATOIRE ---
@@ -625,10 +749,7 @@ function faireTheosophie() {
     });
     var totalAffiche = sommeTheo; var reductionTxt = "";
     while(totalAffiche > 90) { totalAffiche -= 90; reductionTxt += " -> " + totalAffiche; }
-    document.getElementById("resultatOperations").innerHTML = 
-        "<b>Somme Théosophique :</b><br>Détail : " + calculDetail.join(" | ") + "<br><b>Total brut : " + sommeTheo + "</b><br>" +
-        (reductionTxt !== "" ? "<span style='color:#d35400;'>Réduction : " + reductionTxt + "</span><br>" : "") +
-        "Résultat final : <span class='ball' style='background:#e67e22;'>" + totalAffiche + "</span>";
+    document.getElementById("resultatOperations").innerHTML = "<b>Somme Théosophique :</b><br>Détail : " + calculDetail.join(" | ") + "<br><b>Total brut : " + sommeTheo + "</b><br>" + (reductionTxt !== "" ? "<span style='color:#d35400;'>Réduction : " + reductionTxt + "</span><br>" : "") + "Résultat : <span class='ball' style='background:#e67e22;'>" + totalAffiche + "</span>";
 }
 function remplirSelecteurTirage() {
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
