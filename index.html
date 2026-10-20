@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Loto Bénin - Pro Cloud</title>
 <style>
+  /* ... (Le CSS reste exactement le même, pas besoin de le changer) ... */
   :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
   h1, h2, h3 { color: var(--primary); }
@@ -57,7 +58,6 @@
   .pos-table td, .pos-table th { padding: 5px; font-size: 13px; border: 1px solid #ddd; }
   select[multiple] { padding: 5px; border: 1px solid #ccc; border-radius: 6px; }
   
-  /* Nouveaux styles pour le formulaire de recherche */
   .search-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
   .search-form label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
   .search-form input, .search-form select { width: 100%; margin: 0; padding: 8px; }
@@ -178,9 +178,9 @@
 <div id="onglet-import" class="tab-content">
   <div class="card">
     <h2>📁 Importer des anciens résultats</h2>
-    <p style="color:#555;">Collez vos données. Elles seront envoyées directement sur le Cloud.</p>
+    <p style="color:#555;">Collez vos données depuis le tableau du Forecaster (L, D, Y, D1, D2, D3, D4, D5, To).</p>
     
-    <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données ici..."></textarea>
+    <textarea id="texteAImporter" rows="10" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez les lignes du tableau ici..."></textarea>
     <br>
     <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 16px; padding: 12px 20px;">🚀 Analyser et Importer sur le Cloud</button>
     
@@ -193,7 +193,6 @@
   <div class="card">
     <h2>🧪 Laboratoire d'Analyse Avancée</h2>
     
-    <!-- NOUVEAU MODULE : RECHERCHE INVERSÉE -->
     <div style="margin-bottom: 30px; border: 1px solid #8e44ad; border-radius: 8px; padding: 15px;">
       <h3 style="color: #8e44ad; margin-top: 0;">🔍 Recherche Inversée (Bankers)</h3>
       <p style="font-size: 13px; color: #555;">Trouvez les tirages passés qui correspondent à vos numéros "Bankers".</p>
@@ -238,7 +237,6 @@
 
     <hr style="border: 0; border-top: 1px solid #ddd; margin-bottom: 30px;">
 
-    <!-- ANCIENS MODULES DU LABORATOIRE -->
     <div class="lab-grid">
       <div>
         <div class="lab-box">
@@ -485,7 +483,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- IMPORTATION VERS LE CLOUD ---
+// --- IMPORTATION SPÉCIALE TABLEAU (L, D, Y, D1, D2, D3, D4, D5, To) ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -494,84 +492,65 @@ async function traiterTexteColle() {
     msg.style.color = "red"; msg.textContent = "❌ Le cadre est vide."; return;
   }
 
-  msg.style.color = "blue"; msg.textContent = "⏳ Analyse et envoi vers le Cloud en cours (patientez)...";
+  msg.style.color = "blue"; msg.textContent = "⏳ Analyse du tableau et envoi vers le Cloud...";
 
   var lignes = texte.split(/\r?\n/); 
   var aInserer = []; 
   var doublons = 0;
   var erreurs = 0;
 
-  var anneeActuelle = new Date().getFullYear();
-  var anneeMaxAcceptee = anneeActuelle + 1;
-  var anneeMinAcceptee = 2020; 
-
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; 
     
-    var ligneMinuscule = ligne.toLowerCase();
-    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
-
-    var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
-    var matchDate = ligne.match(regexDate);
+    // On découpe la ligne en colonnes (par espace, virgule ou tabulation)
+    var cols = ligne.split(/[\s,;]+/);
     
-    if (!matchDate) { erreurs++; return; } 
-    
-    var jour = parseInt(matchDate[1], 10);
-    var mois = parseInt(matchDate[2], 10);
-    var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
-    var anneeInt = parseInt(annee, 10);
+    // Il faut au moins 9 colonnes (L, D, Y, D1, D2, D3, D4, D5, To)
+    if (cols.length >= 9) {
+        var numTirage = cols[0];
+        var dateJourMois = cols[1]; // ex: 16/01
+        var annee = cols[2]; // ex: 2024
+        var b1 = parseInt(cols[3], 10);
+        var b2 = parseInt(cols[4], 10);
+        var b3 = parseInt(cols[5], 10);
+        var b4 = parseInt(cols[6], 10);
+        var b5 = parseInt(cols[7], 10);
+        var sommeTotale = parseInt(cols[8], 10);
 
-    if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) {
-        erreurs++; return;
-    }
+        // Vérification si c'est bien une ligne de données (le num de tirage doit être un nombre)
+        if (!isNaN(parseInt(numTirage, 10)) && dateJourMois.indexOf("/") !== -1) {
+            
+            var dParts = dateJourMois.split("/");
+            var jour = dParts[0].padStart(2, '0');
+            var mois = dParts[1].padStart(2, '0');
+            var dateFormatee = annee + "-" + mois + "-" + jour;
 
-    var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
+            var boules = [b1, b2, b3, b4, b5];
 
-    var numTirageTrouve = "N/A";
-    var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
-    if (matchNumTirage) numTirageTrouve = matchNumTirage[1];
+            if (boules.every(function(n) { return !isNaN(n) && n >= 1 && n <= 90; }) && new Set(boules).size === 5) {
+                // Par défaut, on met le jeu sur "Star" et l'heure sur "00H" car le tableau ne le précise pas
+                // (Vous pourrez changer le jeu dans la base de données plus tard si besoin)
+                var jeuTrouve = "Star"; 
+                var heureTrouvee = "00H"; 
 
-    var jeuTrouve = "Star"; 
-    var heureTrouvee = "00H";
-    
-    if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
-    else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
-    else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
-    
-    var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
-    if (matchHeure) {
-        heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
-    } else if (ligneMinuscule.indexOf("digital") !== -1) {
-        if (ligne.indexOf("20") !== -1) heureTrouvee = "20H";
-        else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
-    }
+                var existeDeja = donneesCloud.some(function(t) { return t.date === dateFormatee && t.numTirage === numTirage; });
+                var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.numTirage === numTirage; });
 
-    var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
-    if (numTirageTrouve !== "N/A") texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' ');
-    
-    var nombres = [];
-    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
-    if (matchNombres) {
-        for (var i = 0; i < matchNombres.length; i++) {
-            var num = parseInt(matchNombres[i], 10);
-            if (num >= 1 && num <= 90) nombres.push(num);
+                if (!existeDeja && !existeDansFichier) {
+                    aInserer.push({ 
+                        date: dateFormatee, 
+                        heure: heureTrouvee, 
+                        jeu: jeuTrouve, 
+                        boules: JSON.stringify(boules), 
+                        numero_tirage: numTirage 
+                    });
+                } else {
+                    doublons++;
+                }
+            } else {
+                erreurs++;
+            }
         }
-    }
-
-    var boules = nombres.slice(0, 5);
-    if (boules.length < 5) boules = nombres.slice(-5);
-
-    if (boules.length === 5 && new Set(boules).size === 5) {
-        var existeDeja = donneesCloud.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
-        var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
-
-        if (!existeDeja && !existeDansFichier) {
-            aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: numTirageTrouve });
-        } else {
-            doublons++;
-        }
-    } else {
-        erreurs++;
     }
   });
 
@@ -598,14 +577,13 @@ async function traiterTexteColle() {
       }
   } else {
       msg.style.color = "orange"; 
-      msg.textContent = "⚠️ Aucun nouveau tirage valide (" + doublons + " doublons, " + erreurs + " rejets).";
+      msg.textContent = "⚠️ Aucun nouveau tirage valide (" + doublons + " doublons, " + erreurs + " rejets). Vérifiez que vous avez bien collé les colonnes du tableau.";
   }
 }
 
 // --- LABORATOIRE ---
 var tirageActifLabo = null;
 
-// NOUVELLE FONCTION : RECHERCHE INVERSEE
 function executerRechercheInversee() {
     var b1 = parseInt(document.getElementById("searchBanker1").value, 10);
     var p1 = parseInt(document.getElementById("searchPos1").value, 10);
@@ -620,24 +598,15 @@ function executerRechercheInversee() {
     }
 
     var resultats = donneesCloud.filter(function(t) {
-        // Vérification Banker 1
         var match1 = false;
-        if (p1 === 0) {
-            match1 = t.boules.includes(b1);
-        } else {
-            match1 = (t.boules[p1 - 1] === b1);
-        }
+        if (p1 === 0) { match1 = t.boules.includes(b1); } 
+        else { match1 = (t.boules[p1 - 1] === b1); }
 
-        // Vérification Banker 2 (si rempli)
         var match2 = true;
         if (!isNaN(b2)) {
-            if (p2 === 0) {
-                match2 = t.boules.includes(b2);
-            } else {
-                match2 = (t.boules[p2 - 1] === b2);
-            }
+            if (p2 === 0) { match2 = t.boules.includes(b2); } 
+            else { match2 = (t.boules[p2 - 1] === b2); }
         }
-
         return match1 && match2;
     });
 
@@ -652,11 +621,11 @@ function executerRechercheInversee() {
     resultats.forEach(function(t) {
         var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
         html += "<tr style='border-bottom:1px solid #eee;'>";
-        html += "<td style='padding:5px;'>" + t.date + "</td>";
+        html += "<td style='padding:5px;'>" + t.date + "<br><small>N°" + t.numTirage + "</small></td>";
         html += "<td style='padding:5px;'>" + t.jeu + " " + t.heure + "</td>";
         html += "<td style='padding:5px;'>";
         t.boules.forEach(function(n) { 
-            var style = (n === b1 || n === b2) ? "background:#d32f2f;" : ""; // Surligne les bankers en rouge
+            var style = (n === b1 || n === b2) ? "background:#d32f2f;" : ""; // Surligne en rouge
             html += "<span class='ball " + c + "' style='" + style + "'>" + n + "</span>"; 
         });
         html += "</td>";
@@ -667,12 +636,11 @@ function executerRechercheInversee() {
     resDiv.innerHTML = html;
 }
 
-
 function remplirSelecteurTirage() {
   var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
   if (tirages.length === 0) { s1.innerHTML = "<option>Aucun tirage</option>"; return; }
-  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " - " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
+  tirages.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " (N°"+t.numTirage+") - " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
   analyserTirageLabo();
 }
 function remplirSelectMulti() {
