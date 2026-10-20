@@ -108,6 +108,15 @@
   .filtre-btn.star-digital.active { background: #f39c12; color: white; border-color: #e67e22; }
   .filtre-btn.fortune-digital { border-color: #2980b9; color: #2980b9; font-weight: bold; }
   .filtre-btn.fortune-digital.active { background: #2980b9; color: white; border-color: #21618c; }
+  
+  /* Style pour la vue par jour (le "sac") */
+  .sac-container { display: flex; flex-direction: column; gap: 10px; }
+  .sac-row { display: flex; align-items: center; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
+  .sac-num { width: 80px; font-weight: bold; font-size: 16px; color: #333; background: #f1c40f; padding: 5px; border-radius: 4px; text-align: center; margin-right: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+  .sac-date { width: 100px; font-size: 13px; color: #555; }
+  .sac-time { width: 60px; font-weight: bold; color: #2980b9; }
+  .sac-game { width: 80px; font-weight: bold; }
+  .sac-balls { flex: 1; display: flex; gap: 5px; flex-wrap: wrap;}
 </style>
 </head>
 <body>
@@ -146,11 +155,11 @@
       <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer (Cloud)</button>
     </div>
     
-    <!-- LES NOUVEAUX FILTRES -->
+    <!-- LES FILTRES -->
     <div class="filtre-btns">
         <button class="filtre-btn active" onclick="changerFiltre('tous', this)">Vue Globale (Historique)</button>
-        <button class="filtre-btn star-digital" onclick="changerFiltre('StarDigital', this)">⭐ Star + Digital (par jour)</button>
-        <button class="filtre-btn fortune-digital" onclick="changerFiltre('FortuneDigital', this)">🔵 Fortune + Digital (par jour)</button>
+        <button class="filtre-btn star-digital" onclick="changerFiltre('StarDigital', this)">⭐ Sac Star + Digital</button>
+        <button class="filtre-btn fortune-digital" onclick="changerFiltre('FortuneDigital', this)">🔵 Sac Fortune + Digital</button>
     </div>
 
     <!-- Conteneur pour le tableau (Vue Globale) -->
@@ -161,8 +170,8 @@
       </table>
     </div>
 
-    <!-- Conteneur pour les vues par jour -->
-    <div id="conteneurJour" style="display:none; max-height: 600px; overflow-y: auto;"></div>
+    <!-- Conteneur pour les vues par sac -->
+    <div id="conteneurSac" style="display:none; max-height: 600px; overflow-y: auto;"></div>
   </div>
   
   <div class="card">
@@ -313,22 +322,16 @@ async function chargerDepuisCloud() {
   statusEl.textContent = "✅ Connecté au Cloud ! (" + tousLesTirages.length + " tirages)";
   statusEl.style.color = "green";
   
-  var compteurGlobal = 0;
-  var compteursJeux = { "Star": 0, "Fortune": 0, "Digital": 0 };
-
+  // On garde l'ordre chronologique pour l'analyse, mais on n'a plus besoin du compteur global
   donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
-      compteurGlobal++;
-      if (compteursJeux[item.jeu] !== undefined) { compteursJeux[item.jeu]++; } else { compteursJeux[item.jeu] = 1; }
-
       return {
           id: item.id, date: item.date, jeu: item.jeu, heure: item.heure,
-          boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0),
-          numGlobal: compteurGlobal, numJeu: compteursJeux[item.jeu]
+          boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0)
       };
   });
   
-  donneesCloud.reverse(); 
+  donneesCloud.reverse(); // Du plus récent au plus ancien
   return donneesCloud;
 }
 
@@ -349,7 +352,7 @@ function ouvrirOnglet(id) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// --- GESTION DU FILTRE (LE NOUVEAU SYSTEME) ---
+// --- GESTION DU FILTRE ---
 function changerFiltre(filtre, bouton) {
     filtreActif = filtre;
     document.querySelectorAll('.filtre-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -357,16 +360,16 @@ function changerFiltre(filtre, bouton) {
     
     if (filtre === 'tous') {
         document.getElementById("conteneurTableau").style.display = "block";
-        document.getElementById("conteneurJour").style.display = "none";
+        document.getElementById("conteneurSac").style.display = "none";
         afficherHistorique();
     } else {
         document.getElementById("conteneurTableau").style.display = "none";
-        document.getElementById("conteneurJour").style.display = "block";
-        afficherVueParJour(filtre);
+        document.getElementById("conteneurSac").style.display = "block";
+        afficherSac(filtre);
     }
 }
 
-// --- VUE GLOBALE (TABLEAU) ---
+// --- VUE GLOBALE ---
 function afficherHistorique() {
   var corps = document.getElementById("corps"); corps.innerHTML = "";
   document.getElementById("nbTotal").textContent = donneesCloud.length;
@@ -374,7 +377,7 @@ function afficherHistorique() {
   
   donneesCloud.forEach(function (t, i) {
     var tr = document.createElement("tr");
-    var html = "<td>" + t.date + "<br><span class='n-info'>Glob: N°" + t.numGlobal + "</span><br><span class='n-info'>" + t.jeu + ": N°" + t.numJeu + "</span></td>";
+    var html = "<td>" + t.date + "</td>";
     html += "<td>" + t.heure + "</td><td><b>" + t.jeu + "</b></td><td>";
     var cb = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
     t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
@@ -384,81 +387,53 @@ function afficherHistorique() {
   });
 }
 
-// --- VUE PAR JOUR (STAR+DIGITAL ou FORTUNE+DIGITAL) ---
-function afficherVueParJour(typeFiltre) {
-    var conteneur = document.getElementById("conteneurJour");
+// --- VUE "SAC" (Numérotation Continue) ---
+function afficherSac(typeFiltre) {
+    var conteneur = document.getElementById("conteneurSac");
     conteneur.innerHTML = "";
     
-    // 1. Regrouper par date
-    var parDate = {};
-    donneesCloud.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
-    var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); }); // Du plus récent au plus ancien
-
-    var joursAffiches = 0;
-
-    datesTriees.forEach(function(dateStr) {
-        var tiragesDuJour = parDate[dateStr];
-        
-        // 2. Filtrer les tirages du jour selon le type (Star+Digital ou Fortune+Digital)
-        var tiragesFiltres = tiragesDuJour.filter(function(t) {
-            if (typeFiltre === 'StarDigital') return t.jeu === 'Digital' || t.jeu === 'Star';
-            if (typeFiltre === 'FortuneDigital') return t.jeu === 'Digital' || t.jeu === 'Fortune';
-            return false;
-        });
-
-        // Si le jour ne contient pas le jeu principal demandé (ex: pas de Star un lundi), on passe au suivant
-        var aLeJeuPrincipal = tiragesFiltres.some(function(t) { return t.jeu !== 'Digital'; });
-        if (!aLeJeuPrincipal) return;
-
-        joursAffiches++;
-
-        // 3. Trier par heure (00H -> 20H)
-        var ordreHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
-        tiragesFiltres.sort(function(a, b) {
-            return ordreHeures.indexOf(a.heure) - ordreHeures.indexOf(b.heure);
-        });
-
-        // 4. Créer la carte du jour
-        var divJour = document.createElement("div");
-        divJour.style.cssText = "background:#fff; border:2px solid #eee; border-radius:8px; margin-bottom:20px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.05);";
-        
-        var dateObj = new Date(dateStr);
-        var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
-        var titre = "<div style='font-size:18px; font-weight:bold; color:#2c3e50; margin-bottom:15px; border-bottom:2px solid #eee; padding-bottom:5px;'>📅 " + dateFormatee + "</div>";
-        
-        var htmlLignes = "";
-        tiragesFiltres.forEach(function(t) {
-            var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-            htmlLignes += "<div style='display:flex; align-items:center; padding:8px 0; border-bottom:1px dashed #eee;'>";
-            
-            // Colonne Heure
-            htmlLignes += "<div style='width:80px; font-weight:bold; color:#555;'>" + t.heure + "</div>";
-            
-            // Colonne Numéros de tirage (Global + Jeu)
-            htmlLignes += "<div style='width:180px; font-size:12px; color:#777;'>";
-            htmlLignes += "N° Glob : <b>" + t.numGlobal + "</b><br>";
-            htmlLignes += "N° " + t.jeu + " : <b>" + t.numJeu + "</b>";
-            htmlLignes += "</div>";
-            
-            // Colonne Jeu
-            htmlLignes += "<div style='width:80px; font-weight:bold; color:#333;'>" + t.jeu + "</div>";
-            
-            // Colonne Boules
-            htmlLignes += "<div style='flex:1;'>";
-            t.boules.forEach(function(n) { htmlLignes += "<span class='ball " + c + "'>" + n + "</span>"; });
-            htmlLignes += "</div>";
-            
-            htmlLignes += "</div>";
-        });
-
-        divJour.innerHTML = titre + htmlLignes;
-        conteneur.appendChild(divJour);
+    // 1. Filtrer les tirages selon le type
+    var tiragesFiltres = donneesCloud.filter(function(t) {
+        if (typeFiltre === 'StarDigital') return t.jeu === 'Star' || t.jeu === 'Digital';
+        if (typeFiltre === 'FortuneDigital') return t.jeu === 'Fortune' || t.jeu === 'Digital';
+        return false;
     });
 
-    if (joursAffiches === 0) {
-        conteneur.innerHTML = "<p style='color:#777;'>Aucune journée correspondante trouvée.</p>";
+    // 2. Trier chronologiquement (du plus ANCIEN au plus récent pour la numérotation 1 -> Infini)
+    tiragesFiltres.sort(function(a, b) {
+        var compDate = a.date.localeCompare(b.date);
+        if (compDate !== 0) return compDate;
+        
+        var ordreHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
+        return ordreHeures.indexOf(a.heure) - ordreHeures.indexOf(b.heure);
+    });
+
+    if (tiragesFiltres.length === 0) {
+        conteneur.innerHTML = "<p style='color:#777;'>Aucun tirage trouvé pour ce sac.</p>";
+        return;
     }
+
+    // 3. Afficher avec numérotation de 1 à N
+    var html = "<div class='sac-container'>";
+    
+    tiragesFiltres.forEach(function(t, index) {
+        var numeroCompilation = index + 1; // La numérotation 1, 2, 3...
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        
+        // Affichage en "carte" propre pour chaque tirage
+        html += "<div class='sac-row'>";
+        html += "<div class='sac-num'>N° " + numeroCompilation + "</div>";
+        html += "<div class='sac-date'>" + t.date + "</div>";
+        html += "<div class='sac-time'>" + t.heure + "</div>";
+        html += "<div class='sac-game'>" + t.jeu + "</div>";
+        html += "<div class='sac-balls'>";
+        t.boules.forEach(function(n) { html += "<span class='ball " + c + "'>" + n + "</span>"; });
+        html += "</div>";
+        html += "</div>";
+    });
+    
+    html += "</div>";
+    conteneur.innerHTML = html;
 }
 
 // --- SAISIE ---
@@ -620,11 +595,16 @@ function executerComparateurMulti() {
         var range = parseInt(document.getElementById("refRange" + i).value, 10);
         if (isNaN(refNum)) continue;
         var plage = [];
-        var startIndex = donneesCloud.findIndex(function(t) { return t.numGlobal === refNum; });
-        if (startIndex === -1) { alert("Le numéro N°" + refNum + " n'existe pas."); return; }
+        // Dans le comparateur, on cherche le numéro global. 
+        // On va utiliser l'index du tableau donneesCloud (du plus récent au plus ancien)
+        // Le tirage numéro 1 est à l'index (donneesCloud.length - 1)
+        // Le numéro X correspond à l'index (donneesCloud.length - X)
+        var startIndex = donneesCloud.length - refNum;
+        if (startIndex < 0 || startIndex >= donneesCloud.length) { alert("Le numéro N°" + refNum + " n'existe pas."); return; }
+        
         var minIdx = Math.max(0, startIndex - range); var maxIdx = Math.min(donneesCloud.length - 1, startIndex + range);
         for (var j = minIdx; j <= maxIdx; j++) { plage.push(donneesCloud[j]); }
-        plage.sort(function(a, b) { return a.numGlobal - b.numGlobal; });
+        plage.sort(function(a, b) { return a.id - b.id; }); // Tri par ID pour l'ordre chronologique
         plages.push({ id: i, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
     }
     if (plages.length < 2) { alert("Il faut au moins 2 plages."); return; }
@@ -636,7 +616,9 @@ function executerComparateurMulti() {
             var t = p.data[l];
             if (!t) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; } 
             else {
-                htmlTotal += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
+                // Calcul du numéro "logique" pour l'affichage
+                var logiqueNum = donneesCloud.indexOf(t) !== -1 ? donneesCloud.length - donneesCloud.indexOf(t) : "-";
+                htmlTotal += "<tr><td><b>N°" + logiqueNum + "</b><br><small>" + t.jeu + "</small></td><td>";
                 t.boules.forEach(function(n) {
                     var matchExactCount = 0, matchTurningCount = 0, allPlagesMatch = true;
                     plages.forEach(function(otherP) {
@@ -679,13 +661,13 @@ function faireTheosophie() {
 function remplirSelecteurTirage() {
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
   if (donneesCloud.length === 0) { s1.innerHTML = "<option>Aucun tirage</option>"; return; }
-  donneesCloud.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = "N°"+t.numGlobal+" - " + t.date + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
+  donneesCloud.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(opt); });
   analyserTirageLabo();
 }
 function remplirSelectMulti() {
   var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = "";
   if (donneesCloud.length === 0) { s2.innerHTML = "<option>Aucun tirage</option>"; return; }
-  donneesCloud.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = "N°"+t.numGlobal+" | " + t.date + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
+  donneesCloud.forEach(function(t, i) { var opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " -> [" + t.boules.join(", ") + "]"; s2.appendChild(opt); });
 }
 function analyserTirageLabo() {
   var idx = document.getElementById("selectTirageLabo").value;
