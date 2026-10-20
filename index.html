@@ -188,8 +188,30 @@
     <h2>🧪 Laboratoire d'Analyse Avancée</h2>
     
     <div class="lab-grid">
+      <!-- COLONNE GAUCHE -->
       <div>
-        <div class="lab-box">
+        <!-- Nouveau bloc : Étude des Totaux -->
+        <div class="lab-box" style="border: 2px solid #e74c3c; background: #fffaf0;">
+          <h3 style="color: #e74c3c; margin-top: 0;">🎯 Étude des Totaux (Somme T)</h3>
+          <p style="font-size: 13px;">Analysez les sommes pour un jeu ou un créneau spécifique.</p>
+          
+          <label><b>Choisir le créneau :</b>
+            <select id="creneauTotal" onchange="analyserTotaux()" style="width: 100%; margin-bottom: 10px;">
+              <option value="Tous">Tous les tirages</option>
+              <option value="Digital-00H">Digital 00H</option>
+              <option value="Digital-08H">Digital 08H</option>
+              <option value="Digital-20H">Digital 20H</option>
+              <option value="Star-11H">Star 11H</option>
+              <option value="Fortune-14H">Fortune 14H</option>
+            </select>
+          </label>
+          
+          <div id="resultatTotaux" style="font-weight: normal; font-size: 14px; line-height: 1.6;">
+            <i>Sélectionnez un créneau...</i>
+          </div>
+        </div>
+
+        <div class="lab-box" style="margin-top: 20px;">
           <h3>1. Analyse d'un seul tirage</h3>
           <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
           <div style="margin-top: 10px;">
@@ -210,13 +232,16 @@
         </div>
       </div>
 
+      <!-- COLONNE DROITE -->
       <div>
         <div class="lab-box" style="height: 100%;">
           <h3>Résultats & Analyses</h3>
           <div id="resultatLaboAvance" style="min-height: 150px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; font-weight: normal;"><i>En attente...</i></div>
+          
           <h4>📍 Analyse par Position</h4>
           <button onclick="analyserPositions()" class="secondary" style="width: 100%;">Générer le tableau</button>
           <div id="resultatPositions" style="margin-top: 15px; overflow-x: auto; font-weight: normal;"></div>
+          
           <h4 style="margin-top: 20px;">🏦 Détection de Banker (Créneau)</h4>
           <div style="display: flex; gap: 10px; align-items: center;">
             <select id="creneauBanker" style="flex: 1;">
@@ -272,7 +297,7 @@ async function chargerDepuisCloud() {
           heure: item.heure,
           boules: boulesArray,
           somme: calculerSomme(boulesArray),
-          numTirage: item.numero_tirage || "N/A" // S'il n'y a pas de numéro, on met N/A
+          numTirage: item.numero_tirage || "N/A"
       };
   });
   
@@ -285,6 +310,7 @@ async function rafraichirDonnees() {
   if(document.getElementById('onglet-combine').classList.contains('active')) afficherCombine();
   if(document.getElementById('onglet-analyseJeu').classList.contains('active')) afficherAnalyseJeu();
   if(document.getElementById('onglet-analyseCrenea').classList.contains('active')) afficherAnalyseCreneau();
+  if(document.getElementById('onglet-labo').classList.contains('active')) { analyserTotaux(); remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
 function ouvrirOnglet(id) {
@@ -296,7 +322,7 @@ function ouvrirOnglet(id) {
   if(id === 'combine') afficherCombine();
   if(id === 'analyseJeu') afficherAnalyseJeu();
   if(id === 'analyseCrenea') afficherAnalyseCreneau();
-  if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
+  if(id === 'labo') { analyserTotaux(); remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
 // --- SAISIE ---
@@ -317,7 +343,6 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  // On ajoute un numéro de tirage fictif (ex: T-12345) ou on le laisse vide
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Manuel" }]);
   if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
 
@@ -351,14 +376,12 @@ function afficherHistorique() {
   tri.forEach(function (obj) {
     var tr = document.createElement("tr");
     
-    // On affiche la date et le numéro de tirage
     var html = "<td>" + obj.t.date + "<br><span class='n-info'>N° " + obj.t.numTirage + "</span></td>";
     html += "<td>" + obj.t.heure + "</td><td><b>" + obj.t.jeu + "</b></td><td>";
     
     var cb = obj.t.jeu === 'Star' ? 'star' : (obj.t.jeu === 'Fortune' ? 'fortune' : 'digital');
     obj.t.boules.forEach(function (n) { html += "<span class='ball " + cb + "'>" + n + "</span>"; });
     
-    // On affiche la Somme (T=) juste après les boules
     html += "<br><span class='t-info'>(T= " + obj.t.somme + ")</span>";
     
     html += "</td><td><button onclick='supprimer(" + obj.i + ")' class='danger' style='padding: 5px 10px;'>X</button></td>";
@@ -394,9 +417,7 @@ function afficherCombine() {
       var s = ""; 
       tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); 
       
-      // Ajout de la somme dans la vue combinée
       s += " <span class='t-info'>(T= " + tirage.somme + ")</span>";
-      // Ajout du numéro de tirage s'il existe
       if(tirage.numTirage !== "N/A" && tirage.numTirage !== "Manuel") {
           s += " <span class='n-info'>N° " + tirage.numTirage + "</span>";
       }
@@ -444,6 +465,57 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
+// --- NOUVELLE FONCTION : ANALYSE DES TOTAUX ---
+function analyserTotaux() {
+  var filtre = document.getElementById("creneauTotal").value;
+  var tirages = donneesCloud;
+
+  if (filtre !== "Tous") {
+      var parts = filtre.split("-");
+      tirages = tirages.filter(function(t) { return t.jeu === parts[0] && t.heure === parts[1]; });
+  }
+
+  var div = document.getElementById("resultatTotaux");
+
+  if (tirages.length === 0) {
+      div.innerHTML = "<i>Aucune donnée pour ce créneau.</i>";
+      return;
+  }
+
+  // Trier par date pour l'analyse
+  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+  var sommes = tirages.map(function(t) { return t.somme; });
+  var sommeMin = Math.min.apply(null, sommes);
+  var sommeMax = Math.max.apply(null, sommes);
+  var sommeMoyenne = Math.round(sommes.reduce(function(a,b) { return a+b; }, 0) / sommes.length);
+
+  // Trouver le "Total Banker" (la somme la plus fréquente sur les 20 derniers tirages)
+  var derniers20 = sommes.slice(0, 20);
+  var freqTotaux = {};
+  derniers20.forEach(function(s) { freqTotaux[s] = (freqTotaux[s] || 0) + 1; });
+  
+  var totalBanker = "Aucun";
+  var maxFreq = 0;
+  for (var s in freqTotaux) {
+      if (freqTotaux[s] > maxFreq) { maxFreq = freqTotaux[s]; totalBanker = s; }
+  }
+
+  var html = "";
+  html += "<div style='margin-bottom: 5px;'><b>Total Moyen :</b> <span class='ball' style='background:#e74c3c; width:auto; padding:0 10px; border-radius:5px;'>" + sommeMoyenne + "</span></div>";
+  html += "<div style='margin-bottom: 5px;'><b>Total le plus bas :</b> " + sommeMin + "</div>";
+  html += "<div style='margin-bottom: 5px;'><b>Total le plus haut :</b> " + sommeMax + "</div>";
+  html += "<div style='margin-bottom: 5px;'><b>Total Banker (20 derniers) :</b> " + totalBanker + "</div>";
+  
+  html += "<hr style='border:0; border-top:1px solid #ddd; margin: 10px 0;'>";
+  html += "<b>Historique récent (Top 5) :</b><br>";
+  for (var i = 0; i < Math.min(5, tirages.length); i++) {
+      html += "Tirage " + tirages[i].date + " : <b style='color:#e74c3c;'>T= " + tirages[i].somme + "</b><br>";
+  }
+
+  div.innerHTML = html;
+}
+
 // --- IMPORTATION VERS LE CLOUD ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
@@ -486,7 +558,7 @@ async function traiterTexteColle() {
 
     var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
 
-    // 🔥 EXTRACTION DU NUMÉRO DE TIRAGE (ex: N°68, N°748)
+    // EXTRACTION DU NUMÉRO DE TIRAGE
     var numTirageTrouve = "N/A";
     var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
     if (matchNumTirage) {
@@ -510,7 +582,7 @@ async function traiterTexteColle() {
 
     var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
     if (numTirageTrouve !== "N/A") {
-        texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' '); // On enlève le N° pour ne pas confondre avec une boule
+        texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' ');
     }
     
     var nombres = [];
@@ -535,7 +607,7 @@ async function traiterTexteColle() {
                 heure: heureTrouvee, 
                 jeu: jeuTrouve, 
                 boules: JSON.stringify(boules),
-                numero_tirage: numTirageTrouve // On sauvegarde le numéro trouvé !
+                numero_tirage: numTirageTrouve
             });
         } else {
             doublons++;
