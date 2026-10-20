@@ -45,24 +45,23 @@
   
   /* BOULE QUI MATCHE EXACTEMENT (Verte) */
   .comp-ball.match-exact { 
-      background: #2ecc71 !important; /* Vert */
-      color: #fff !important; 
-      border: 3px solid #27ae60; 
-      box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
-      transform: scale(1.25); 
-      z-index: 10;
-      margin: 0 4px;
+      background: #2ecc71 !important; color: #fff !important; 
+      border: 3px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+      transform: scale(1.25); z-index: 10; margin: 0 4px;
   }
   
   /* BOULE QUI MATCHE PAR TURNING (Violette) */
   .comp-ball.match-turning { 
-      background: #9b59b6 !important; /* Violet */
-      color: #fff !important; 
-      border: 3px solid #8e44ad; 
-      box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
-      transform: scale(1.25); 
-      z-index: 10;
-      margin: 0 4px;
+      background: #9b59b6 !important; color: #fff !important; 
+      border: 3px solid #8e44ad; box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
+      transform: scale(1.25); z-index: 10; margin: 0 4px;
+  }
+  
+  /* BOULE QUI MATCHE DANS 3 PLAGES OU PLUS (Or) */
+  .comp-ball.match-multi { 
+      background: #f1c40f !important; color: #111 !important; 
+      border: 3px solid #d35400; box-shadow: 0 0 15px rgba(241, 196, 15, 1);
+      transform: scale(1.35); z-index: 10; margin: 0 5px;
   }
   
   .t-info { font-size: 13px; color: #d32f2f; font-weight: bold; margin-left: 5px; }
@@ -94,12 +93,17 @@
   .search-form input, .search-form select { width: 100%; margin: 0; padding: 8px; }
   .search-results-list { margin-top: 15px; max-height: 300px; overflow-y: auto; }
   
-  /* Styles Comparateur */
-  .comp-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; }
-  .comp-col { flex: 1; min-width: 380px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+  /* Styles Comparateur Multi-Plages */
+  .comp-container { display: flex; gap: 15px; margin-top: 20px; overflow-x: auto; }
+  .comp-col { flex: 1; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
   .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
-  .comp-table td { padding: 8px; border: 1px solid #eee; text-align: center;}
-  .comp-table th { padding: 8px; border: 1px solid #eee; background: #f8f9fa;}
+  .comp-table td { padding: 6px; border: 1px solid #eee; text-align: center;}
+  .comp-table th { padding: 6px; border: 1px solid #eee; background: #f8f9fa;}
+  
+  /* Formulaire de configuration des plages */
+  .plages-config { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+  .plage-box { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 200px;}
+  .plage-box label { font-size: 13px; font-weight: bold; }
   
   /* Légende */
   .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px;}
@@ -217,60 +221,30 @@
   </div>
 </div>
 
-<!-- ====== ONGLET 5 : COMPARATEUR ====== -->
+<!-- ====== ONGLET 5 : COMPARATEUR MULTI-PLAGES ====== -->
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
-    <h2>⚖️ Comparateur Ligne par Ligne</h2>
-    <p style="color:#555;">Compare deux plages. Les correspondances exactes ou les Turnings sont mis en évidence.</p>
+    <h2>⚖️ Comparateur Multi-Plages</h2>
+    <p style="color:#555;">Ajoutez jusqu'à 5 plages. L'application comparera les numéros ligne par ligne.</p>
     
-    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
-      <div style="flex: 1; min-width: 300px; background: #f0f8ff; padding: 15px; border-radius: 8px; border: 1px solid #b3d4ec;">
-        <h3 style="color: #2980b9; margin-top: 0;">Plage 1 (Référence)</h3>
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
-            <label>Tirage N° : <input type="number" id="refNum1" value="6162" style="width: 90px;"></label>
-            <label>Plage : 
-                <select id="refRange1">
-                    <option value="5">5 lignes</option>
-                    <option value="10">10 lignes</option>
-                    <option value="15">15 lignes</option>
-                    <option value="20">20 lignes</option>
-                    <option value="30" selected>30 lignes</option>
-                    <option value="40">40 lignes</option>
-                    <option value="50">50 lignes</option>
-                </select>
-            </label>
-        </div>
-      </div>
-      
-      <div style="flex: 1; min-width: 300px; background: #fdf5e6; padding: 15px; border-radius: 8px; border: 1px solid #eccfb3;">
-        <h3 style="color: #d35400; margin-top: 0;">Plage 2 (À comparer)</h3>
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
-            <label>Tirage N° : <input type="number" id="refNum2" value="6171" style="width: 90px;"></label>
-            <label>Plage : 
-                <select id="refRange2">
-                    <option value="5">5 lignes</option>
-                    <option value="10">10 lignes</option>
-                    <option value="15">15 lignes</option>
-                    <option value="20">20 lignes</option>
-                    <option value="30" selected>30 lignes</option>
-                    <option value="40">40 lignes</option>
-                    <option value="50">50 lignes</option>
-                </select>
-            </label>
-        </div>
-      </div>
+    <div id="plages-config" class="plages-config">
+        <!-- Les champs seront générés par JS -->
     </div>
     
-    <button onclick="executerComparateurParNumero()" style="margin-top: 20px; width: 100%; background-color: #16a085; font-size: 16px;">🔍 Comparer les deux plages</button>
+    <div style="margin-top: 15px; display: flex; gap: 10px;">
+        <button onclick="ajouterPlage()" class="info" style="background-color: #2980b9;">➕ Ajouter une plage (Max 5)</button>
+        <button onclick="executerComparateurMulti()" style="flex: 1; background-color: #16a085; font-size: 16px;">🔍 Lancer la comparaison croisée</button>
+    </div>
 
     <div class="legend">
         <div class="legend-item"><span class="comp-ball"></span> Pas de match</div>
         <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact</div>
         <div class="legend-item"><span class="comp-ball match-turning"></span> Turning (Miroir)</div>
+        <div class="legend-item"><span class="comp-ball match-multi"></span> 3 plages ou +</div>
     </div>
 
     <div id="resultatComparaison" class="comp-container">
-        <!-- Les deux tableaux s'afficheront ici -->
+        <!-- Les tableaux s'afficheront ici -->
     </div>
   </div>
 </div>
@@ -400,8 +374,8 @@ function calculerSomme(boules) {
 
 // Fonction pour calculer le Turning (Miroir)
 function getTurning(num) {
-    var s = num.toString().padStart(2, '0'); // 5 devient "05"
-    var inv = parseInt(s.split('').reverse().join(''), 10); // "50" devient 50
+    var s = num.toString().padStart(2, '0'); 
+    var inv = parseInt(s.split('').reverse().join(''), 10); 
     return (inv === 0 || inv > 90) ? num : inv;
 }
 
@@ -564,101 +538,134 @@ function afficherCombine() {
   });
 }
 
-// --- COMPARATEUR (LIGNE PAR LIGNE) ---
-function executerComparateurParNumero() {
-    var ref1 = parseInt(document.getElementById("refNum1").value, 10);
-    var range1 = parseInt(document.getElementById("refRange1").value, 10);
-    var ref2 = parseInt(document.getElementById("refNum2").value, 10);
-    var range2 = parseInt(document.getElementById("refRange2").value, 10);
+// --- COMPARATEUR MULTI-PLAGES ---
+var nombrePlages = 0;
 
-    function getPlage(refNum, range) {
+function ajouterPlage() {
+    if (nombrePlages >= 5) {
+        alert("Maximum 5 plages.");
+        return;
+    }
+    nombrePlages++;
+    
+    var div = document.createElement("div");
+    div.className = "plage-box";
+    div.id = "plage-container-" + nombrePlages;
+    
+    // Couleur de bordure en fonction du numéro de plage
+    var colors = ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"];
+    var couleur = colors[(nombrePlages - 1) % 5];
+    div.style.borderTop = "4px solid " + couleur;
+
+    div.innerHTML = `
+        <label style="color:${couleur};">Plage ${nombrePlages}</label>
+        <div style="display:flex; gap:5px;">
+            <input type="number" id="refNum${nombrePlages}" placeholder="N° Tirage" style="width:80px;" value="${donneesCloud.length > 0 ? donneesCloud[donneesCloud.length - nombrePlages*5]?.numGlobal || "" : ""}">
+            <select id="refRange${nombrePlages}" style="flex:1;">
+                <option value="10">10 lignes</option>
+                <option value="20">20 lignes</option>
+                <option value="30" selected>30 lignes</option>
+                <option value="40">40 lignes</option>
+            </select>
+        </div>
+        <button class="danger" style="font-size:12px; padding:5px;" onclick="supprimerPlage(${nombrePlages})">Retirer</button>
+    `;
+    
+    document.getElementById("plages-config").appendChild(div);
+}
+
+function supprimerPlage(id) {
+    var div = document.getElementById("plage-container-" + id);
+    if (div) {
+        div.remove();
+        nombrePlages--;
+    }
+}
+
+function executerComparateurMulti() {
+    var plages = [];
+    
+    // On récupère toutes les plages configurées
+    for (var i = 1; i <= nombrePlages; i++) {
+        var container = document.getElementById("plage-container-" + i);
+        if (!container) continue; // Si elle a été supprimée
+        
+        var refNum = parseInt(document.getElementById("refNum" + i).value, 10);
+        var range = parseInt(document.getElementById("refRange" + i).value, 10);
+        
+        if (isNaN(refNum)) continue;
+
         var plage = [];
         var startIndex = donneesCloud.findIndex(function(t) { return t.numGlobal === refNum; });
         
-        if (startIndex === -1) return null; 
+        if (startIndex === -1) {
+            alert("Le numéro de tirage N°" + refNum + " (Plage " + i + ") n'existe pas.");
+            return;
+        }
 
         var minIdx = Math.max(0, startIndex - range);
         var maxIdx = Math.min(donneesCloud.length - 1, startIndex + range);
         
-        for (var i = minIdx; i <= maxIdx; i++) {
-            plage.push(donneesCloud[i]);
+        for (var j = minIdx; j <= maxIdx; j++) {
+            plage.push(donneesCloud[j]);
         }
         
         plage.sort(function(a, b) { return a.numGlobal - b.numGlobal; });
-        return plage;
+        plages.push({ id: i, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
     }
 
-    var plage1 = getPlage(ref1, range1);
-    var plage2 = getPlage(ref2, range2);
-    var resDiv = document.getElementById("resultatComparaison");
-
-    if (!plage1 || !plage2) {
-        resDiv.innerHTML = "<p style='color:red; font-weight:bold; padding: 10px;'>L'un des numéros de tirage n'a pas été trouvé dans la base.</p>";
+    if (plages.length < 2) {
+        alert("Il faut configurer au moins 2 plages pour comparer.");
         return;
     }
 
-    var htmlTotal = "<div class='comp-col' style='border-top: 4px solid #2980b9;'><h3 style='text-align:center; color:#2980b9;'>Plage 1 (Réf: N°"+ref1+")</h3><table class='comp-table'><tr><th>N° Tirage</th><th>Numéros</th></tr>";
-    var htmlTotal2 = "<div class='comp-col' style='border-top: 4px solid #d35400;'><h3 style='text-align:center; color:#d35400;'>Plage 2 (Réf: N°"+ref2+")</h3><table class='comp-table'><tr><th>N° Tirage</th><th>Numéros</th></tr>";
+    // On détermine la longueur max pour boucler sur toutes les lignes
+    var maxLines = 0;
+    plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
 
-    var maxLines = Math.max(plage1.length, plage2.length);
-
-    for (var i = 0; i < maxLines; i++) {
-        var t1 = plage1[i];
-        var t2 = plage2[i];
-
-        if (!t1) {
-            htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>";
-        } else {
-            htmlTotal += "<tr><td><b>N°" + t1.numGlobal + "</b><br><small>" + t1.jeu + " " + t1.heure + "</small></td><td>";
-            t1.boules.forEach(function(n) { 
-                var estMatchExact = false;
-                var estMatchTurning = false;
-                if (t2) {
-                    if (t2.boules.includes(n)) estMatchExact = true;
-                    else {
-                        var turningN = getTurning(n);
-                        if (turningN !== n && t2.boules.includes(turningN)) estMatchTurning = true;
-                    }
-                }
+    // On prépare les tableaux HTML
+    var htmlTotal = "";
+    plages.forEach(function(p) {
+        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>Plage " + p.id + "</h3><table class='comp-table'><tr><th>Tirage</th><th>Numéros</th></tr>";
+        
+        for (var l = 0; l < maxLines; l++) {
+            var t = p.data[l];
+            if (!t) {
+                htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>";
+            } else {
+                htmlTotal += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
                 
-                var cls = "comp-ball";
-                if (estMatchExact) cls += " match-exact";
-                else if (estMatchTurning) cls += " match-turning";
+                t.boules.forEach(function(n) {
+                    // On compte dans combien d'autres plages ce numéro (ou son turning) apparaît sur la même ligne
+                    var matchCount = 0;
+                    var isTurningOnly = false;
+                    
+                    plages.forEach(function(otherP) {
+                        if (otherP.id === p.id) return; // On ne se compare pas à soi-même
+                        var otherT = otherP.data[l];
+                        if (otherT) {
+                            if (otherT.boules.includes(n)) matchCount++;
+                            else if (otherT.boules.includes(getTurning(n))) { matchCount++; isTurningOnly = true; }
+                        }
+                    });
 
-                htmlTotal += "<span class='" + cls + "'>" + n + "</span>"; 
-            });
-            htmlTotal += "</td></tr>";
-        }
-
-        if (!t2) {
-            htmlTotal2 += "<tr><td><i>-</i></td><td>-</td></tr>";
-        } else {
-            htmlTotal2 += "<tr><td><b>N°" + t2.numGlobal + "</b><br><small>" + t2.jeu + " " + t2.heure + "</small></td><td>";
-            t2.boules.forEach(function(n) { 
-                var estMatchExact = false;
-                var estMatchTurning = false;
-                if (t1) {
-                    if (t1.boules.includes(n)) estMatchExact = true;
-                    else {
-                        var turningN = getTurning(n);
-                        if (turningN !== n && t1.boules.includes(turningN)) estMatchTurning = true;
+                    var cls = "comp-ball";
+                    if (matchCount >= 2) cls += " match-multi"; // Si présent dans 2 autres plages (donc 3 au total)
+                    else if (matchCount === 1) {
+                        if (isTurningOnly) cls += " match-turning";
+                        else cls += " match-exact";
                     }
-                }
+
+                    htmlTotal += "<span class='" + cls + "'>" + n + "</span>";
+                });
                 
-                var cls = "comp-ball";
-                if (estMatchExact) cls += " match-exact";
-                else if (estMatchTurning) cls += " match-turning";
-
-                htmlTotal2 += "<span class='" + cls + "'>" + n + "</span>"; 
-            });
-            htmlTotal2 += "</td></tr>";
+                htmlTotal += "</td></tr>";
+            }
         }
-    }
+        htmlTotal += "</table></div>";
+    });
 
-    htmlTotal += "</table></div>";
-    htmlTotal2 += "</table></div>";
-
-    resDiv.innerHTML = htmlTotal + htmlTotal2;
+    document.getElementById("resultatComparaison").innerHTML = htmlTotal;
 }
 
 // --- IMPORTATION VERS LE CLOUD ---
@@ -908,12 +915,15 @@ function executerBankersMulti() {
 
 // Initialisation au chargement de la page
 document.getElementById("date").valueAsDate = new Date();
-// On met des dates par défaut dans le comparateur
-if(donneesCloud.length > 0) {
-    document.getElementById("refNum1").value = donneesCloud[donneesCloud.length-5].numGlobal; 
-    document.getElementById("refNum2").value = donneesCloud[2].numGlobal; 
-}
-rafraichirDonnees();
+rafraichirDonnees().then(function() {
+    // On ajoute 2 plages par défaut
+    ajouterPlage();
+    ajouterPlage();
+    if(donneesCloud.length > 0) {
+        document.getElementById("refNum1").value = donneesCloud[donneesCloud.length-5]?.numGlobal || 1; 
+        document.getElementById("refNum2").value = donneesCloud[2]?.numGlobal || 2; 
+    }
+});
 </script>
 </body>
 </html>
