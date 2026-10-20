@@ -36,12 +36,14 @@
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
   
-  /* BOULE DU COMPARATEUR QUI NE MATCHE PAS (GRISE) */
+  /* BOULE DU COMPARATEUR (Cliquable) */
   .comp-ball {
       display: inline-block; width: 32px; height: 32px; line-height: 32px; border-radius: 50%;
       background: #dcdde1; color: #7f8c8d; 
-      font-weight: bold; margin: 0 2px; font-size: 13px;
+      font-weight: bold; margin: 0 2px; font-size: 13px; cursor: pointer; user-select: none;
+      transition: transform 0.1s, background-color 0.2s;
   }
+  .comp-ball:active { transform: scale(0.9); }
   
   /* BOULE QUI MATCHE EXACTEMENT SUR TOUTES LES PLAGES (Verte) */
   .comp-ball.match-exact { 
@@ -105,9 +107,15 @@
   .plage-box { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 200px;}
   .plage-box label { font-size: 13px; font-weight: bold; }
   
-  /* Légende */
-  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px;}
+  /* Légende et Palette */
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px; flex-wrap: wrap;}
   .legend-item { display: flex; align-items: center; gap: 5px; }
+  
+  /* Palette de couleurs */
+  .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 8px; }
+  .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; }
+  .color-btn:active { transform: scale(0.9); }
+  .color-btn.active { border-color: #333; transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
 </style>
 </head>
 <body>
@@ -224,8 +232,7 @@
 <!-- ====== ONGLET 5 : COMPARATEUR MULTI-PLAGES ====== -->
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
-    <h2>⚖️ Comparateur Multi-Plages (Rigueur Absolue)</h2>
-    <p style="color:#555;">Les boules ne seront colorées que si elles sont présentes sur <b>TOUTES les plages</b> simultanément à la même ligne.</p>
+    <h2>⚖️ Comparateur Multi-Plages</h2>
     
     <div id="plages-config" class="plages-config">
         <!-- Les champs seront générés par JS -->
@@ -237,10 +244,23 @@
     </div>
 
     <div class="legend">
-        <div class="legend-item"><span class="comp-ball"></span> Pas de match partout</div>
-        <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact Partout</div>
-        <div class="legend-item"><span class="comp-ball match-turning"></span> Turning Partout</div>
-        <div class="legend-item"><span class="comp-ball match-multi"></span> Exact + Turning Partout</div>
+        <div class="legend-item"><span class="comp-ball"></span> Normal</div>
+        <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact</div>
+        <div class="legend-item"><span class="comp-ball match-turning"></span> Turning</div>
+        <div class="legend-item"><span class="comp-ball match-multi"></span> Exact + Turning</div>
+    </div>
+
+    <!-- LA PALETTE D'ANNOTATION -->
+    <div class="palette">
+        <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
+        <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')" title="Rouge"></div>
+        <div class="color-btn" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')" title="Bleu"></div>
+        <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')" title="Vert"></div>
+        <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')" title="Jaune"></div>
+        <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')" title="Rose"></div>
+        
+        <span style="font-weight:bold; margin-left:10px; margin-right:5px;">Gomme :</span>
+        <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')" title="Annuler la couleur">🧽</div>
     </div>
 
     <div id="resultatComparaison" class="comp-container">
@@ -367,9 +387,42 @@ const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
+var couleurActive = '#e74c3c'; // Rouge par défaut
 
-function calculerSomme(boules) {
-    return boules.reduce(function(a, b) { return a + b; }, 0);
+// --- FONCTION POUR LA PALETTE DE COULEURS ---
+function changerCouleur(element, couleur) {
+    // On enlève la classe active de tous les boutons
+    document.querySelectorAll('.color-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    // On ajoute la classe active au bouton cliqué
+    element.classList.add('active');
+    
+    // On enregistre la couleur choisie (ou l'action annuler)
+    if (couleur === 'annuler') {
+        couleurActive = 'annuler';
+    } else {
+        couleurActive = couleur;
+    }
+}
+
+// --- FONCTION DE COLORIAGE AU CLIC SUR UNE BOULE ---
+function colorierBoule(bouleElement) {
+    // On empêche la couleur de s'appliquer si la boule fait partie d'un match (facultatif, mais ici on autorise)
+    
+    if (couleurActive === 'annuler') {
+        // On remet la couleur de base
+        bouleElement.style.backgroundColor = '';
+        bouleElement.style.color = '';
+        bouleElement.style.borderColor = '';
+        bouleElement.style.boxShadow = '';
+    } else {
+        // On applique la couleur choisie
+        bouleElement.style.backgroundColor = couleurActive;
+        bouleElement.style.color = '#fff';
+        bouleElement.style.borderColor = '#333';
+        bouleElement.style.boxShadow = '0 0 8px ' + couleurActive;
+    }
 }
 
 // Fonction pour calculer le Turning (Miroir)
@@ -408,7 +461,7 @@ async function chargerDepuisCloud() {
           jeu: item.jeu,
           heure: item.heure,
           boules: boulesArray,
-          somme: calculerSomme(boulesArray),
+          somme: boulesArray.reduce(function(a, b) { return a + b; }, 0),
           numGlobal: compteurGlobal,
           numJeu: compteursJeux[item.jeu]
       };
@@ -538,7 +591,7 @@ function afficherCombine() {
   });
 }
 
-// --- COMPARATEUR MULTI-PLAGES (RIGUEUR ABSOLUE) ---
+// --- COMPARATEUR MULTI-PLAGES (RIGUEUR ABSOLUE + PALETTE) ---
 var nombrePlages = 0;
 
 function ajouterPlage() {
@@ -622,7 +675,6 @@ function executerComparateurMulti() {
 
     var htmlTotal = "";
     
-    // Pour chaque plage, on va générer son tableau HTML
     plages.forEach(function(p) {
         htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>Plage " + p.id + "</h3><table class='comp-table'><tr><th>Tirage</th><th>Numéros</th></tr>";
         
@@ -634,13 +686,12 @@ function executerComparateurMulti() {
                 htmlTotal += "<tr><td><b>N°" + t.numGlobal + "</b><br><small>" + t.jeu + "</small></td><td>";
                 
                 t.boules.forEach(function(n) {
-                    // On vérifie si ce numéro (ou son turning) existe dans TOUTES les autres plages à la ligne 'l'
                     var matchExactCount = 0;
                     var matchTurningCount = 0;
                     var allPlagesMatch = true;
 
                     plages.forEach(function(otherP) {
-                        if (otherP.id === p.id) return; // On ne se compare pas à soi-même
+                        if (otherP.id === p.id) return; 
                         
                         var otherT = otherP.data[l];
                         if (otherT) {
@@ -649,7 +700,7 @@ function executerComparateurMulti() {
                             
                             if (hasExact) matchExactCount++;
                             else if (hasTurning) matchTurningCount++;
-                            else allPlagesMatch = false; // Si une seule plage ne l'a pas, on annule
+                            else allPlagesMatch = false; 
                         } else {
                             allPlagesMatch = false;
                         }
@@ -658,18 +709,13 @@ function executerComparateurMulti() {
                     var cls = "comp-ball";
                     
                     if (allPlagesMatch) {
-                        // Le numéro est présent sur TOUTES les plages.
-                        // On détermine la couleur selon si c'est exact ou turning
-                        if (matchExactCount === plages.length - 1) {
-                            cls += " match-exact"; // Exact partout
-                        } else if (matchTurningCount === plages.length - 1) {
-                            cls += " match-turning"; // Turning partout
-                        } else {
-                            cls += " match-multi"; // Mélange d'exact et de turning partout
-                        }
+                        if (matchExactCount === plages.length - 1) cls += " match-exact";
+                        else if (matchTurningCount === plages.length - 1) cls += " match-turning";
+                        else cls += " match-multi";
                     }
 
-                    htmlTotal += "<span class='" + cls + "'>" + n + "</span>";
+                    // Ajout de l'événement onclick pour la palette
+                    htmlTotal += "<span class='" + cls + "' onclick='colorierBoule(this)'>" + n + "</span>";
                 });
                 
                 htmlTotal += "</td></tr>";
