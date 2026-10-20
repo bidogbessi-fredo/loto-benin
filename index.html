@@ -60,13 +60,7 @@
   .search-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
   .search-form label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
   .search-form input, .search-form select { width: 100%; margin: 0; padding: 8px; }
-  .search-results-list { margin-top: 15px; max-height: 400px; overflow-y: auto; }
-  
-  /* Styles spécifiques pour le contexte */
-  .context-table { font-size: 12px; width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .context-table td, .context-table th { padding: 5px; border: 1px solid #eee; }
-  .context-row-match { background-color: #d4edda; font-weight: bold; }
-  .context-separator { background-color: #f8f9fa; text-align: center; font-weight: bold; color: #888; }
+  .search-results-list { margin-top: 15px; max-height: 300px; overflow-y: auto; }
 </style>
 </head>
 <body>
@@ -241,7 +235,7 @@
     </div>
 
     <hr style="border: 0; border-top: 1px solid #ddd; margin-bottom: 30px;">
-    
+
     <div class="lab-grid">
       <div>
         <div class="lab-box">
@@ -297,7 +291,7 @@ const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
-var donneesTriees = []; // Sera utilisé pour la recherche inversée avec contexte
+var numeroActuelMax = 0; // Variable pour stocker le plus grand numéro trouvé
 
 function calculerSomme(boules) {
     return boules.reduce(function(a, b) { return a + b; }, 0);
@@ -318,8 +312,21 @@ async function chargerDepuisCloud() {
   statusEl.textContent = "✅ Connecté au Cloud ! (" + data.length + " tirages)";
   statusEl.style.color = "green";
   
+  // On cherche le plus grand numéro de tirage existant pour savoir où reprendre
+  numeroActuelMax = 0;
+
   donneesCloud = data.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
+      
+      var nTirage = item.numero_tirage;
+      // Si le numéro est un vrai nombre, on met à jour le compteur max
+      if (nTirage && !isNaN(parseInt(nTirage, 10))) {
+          var valNum = parseInt(nTirage, 10);
+          if (valNum > numeroActuelMax) numeroActuelMax = valNum;
+      } else if (!nTirage) {
+          nTirage = "N/A";
+      }
+
       return {
           id: item.id,
           date: item.date,
@@ -327,14 +334,8 @@ async function chargerDepuisCloud() {
           heure: item.heure,
           boules: boulesArray,
           somme: calculerSomme(boulesArray),
-          numTirage: item.numero_tirage || "N/A"
+          numTirage: nTirage
       };
-  });
-
-  // Créer un tableau trié chronologiquement pour la recherche de contexte
-  donneesTriees = [...donneesCloud].sort(function(a, b) {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.heure || "").localeCompare(b.heure || "");
   });
   
   return donneesCloud;
@@ -378,11 +379,14 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
-  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Manuel" }]);
+  // On incrémente le numéro max pour la saisie manuelle
+  numeroActuelMax++;
+
+  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: numeroActuelMax.toString() }]);
   if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
 
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !";
+  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé avec le N° " + numeroActuelMax + " !";
   await rafraichirDonnees();
 });
 
@@ -495,7 +499,7 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- IMPORTATION VERS LE CLOUD ---
+// --- IMPORTATION VERS LE CLOUD (AUTO-NUMEROTATION) ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
@@ -514,6 +518,9 @@ async function traiterTexteColle() {
   var anneeActuelle = new Date().getFullYear();
   var anneeMaxAcceptee = anneeActuelle + 1;
   var anneeMinAcceptee = 2020; 
+
+  // On utilise le numéro max trouvé au chargement de la page
+  var prochainNumero = numeroActuelMax + 1;
 
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; 
@@ -537,10 +544,9 @@ async function traiterTexteColle() {
 
     var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
 
-    var numTirageTrouve = "N/A";
-    var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
-    if (matchNumTirage) numTirageTrouve = matchNumTirage[1];
-
+    // On ignore les numéros de tirages trouvés dans le texte (ex: N°68) 
+    // car on veut générer notre propre numérotation séquentielle propre !
+    
     var jeuTrouve = "Star"; 
     var heureTrouvee = "00H";
     
@@ -557,7 +563,7 @@ async function traiterTexteColle() {
     }
 
     var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
-    if (numTirageTrouve !== "N/A") texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' ');
+    texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' '); // On enlève l'ancien numéro s'il y en a un
     
     var nombres = [];
     var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
@@ -576,7 +582,15 @@ async function traiterTexteColle() {
         var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
 
         if (!existeDeja && !existeDansFichier) {
-            aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: numTirageTrouve });
+            // ON ASSIGNE LE NUMERO AUTO-INCREMENTE ICI
+            aInserer.push({ 
+                date: dateFormatee, 
+                heure: heureTrouvee, 
+                jeu: jeuTrouve, 
+                boules: JSON.stringify(boules), 
+                numero_tirage: prochainNumero.toString() 
+            });
+            prochainNumero++; // On passe au numéro suivant pour la prochaine ligne
         } else {
             doublons++;
         }
@@ -602,7 +616,7 @@ async function traiterTexteColle() {
       
       if (succes) {
           msg.style.color = "green"; 
-          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés."; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés avec numéros séquentiels, " + doublons + " doublons, " + erreurs + " rejetés."; 
           document.getElementById("texteAImporter").value = ""; 
           await rafraichirDonnees();
       }
@@ -615,7 +629,6 @@ async function traiterTexteColle() {
 // --- LABORATOIRE ---
 var tirageActifLabo = null;
 
-// RECHERCHE INVERSEE AVEC CONTEXTE (30 avant / 30 après)
 function executerRechercheInversee() {
     var b1 = parseInt(document.getElementById("searchBanker1").value, 10);
     var p1 = parseInt(document.getElementById("searchPos1").value, 10);
@@ -629,9 +642,7 @@ function executerRechercheInversee() {
         return;
     }
 
-    // On cherche les index dans le tableau trié
-    var matchIndexes = [];
-    donneesTriees.forEach(function(t, index) {
+    var resultats = donneesCloud.filter(function(t) {
         var match1 = false;
         if (p1 === 0) { match1 = t.boules.includes(b1); } 
         else { match1 = (t.boules[p1 - 1] === b1); }
@@ -641,53 +652,31 @@ function executerRechercheInversee() {
             if (p2 === 0) { match2 = t.boules.includes(b2); } 
             else { match2 = (t.boules[p2 - 1] === b2); }
         }
-        
-        if (match1 && match2) {
-            matchIndexes.push(index);
-        }
+        return match1 && match2;
     });
 
-    if (matchIndexes.length === 0) {
+    if (resultats.length === 0) {
         resDiv.innerHTML = "<p style='color:#d32f2f; font-weight:bold;'>Aucun tirage ne correspond à ces critères.</p>";
         return;
     }
 
-    var html = "<h4 style='color:#8e44ad;'>Résultats trouvés (" + matchIndexes.length + " occurrences) :</h4>";
+    var html = "<h4 style='color:#8e44ad;'>Résultats trouvés (" + resultats.length + ") :</h4>";
+    html += "<table style='width:100%; border-collapse: collapse; font-size: 13px;'>";
     
-    // Pour chaque occurrence, on affiche les 30 lignes avant et après
-    matchIndexes.forEach(function(idx, loop) {
-        html += "<div style='margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; overflow: hidden;'>";
-        
-        // Calcul des bornes
-        var start = Math.max(0, idx - 30);
-        var end = Math.min(donneesTriees.length - 1, idx + 30);
-        
-        html += "<table class='context-table'>";
-        html += "<thead><tr><th>Date</th><th>Jeu</th><th>Boules</th><th>To</th></tr></thead><tbody>";
-        
-        for (var i = start; i <= end; i++) {
-            var t = donneesTriees[i];
-            var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-            
-            // Si c'est la ligne qui correspond à la recherche
-            var isMatch = (i === idx);
-            var rowClass = isMatch ? "class='context-row-match'" : "";
-            
-            html += "<tr " + rowClass + ">";
-            html += "<td>" + t.date + "<br><small>N°" + t.numTirage + "</small></td>";
-            html += "<td>" + t.jeu + " " + t.heure + "</td>";
-            html += "<td>";
-            t.boules.forEach(function(n) { 
-                var style = (n === b1 || n === b2) ? "background:#d32f2f;" : ""; // Surligne en rouge
-                html += "<span class='ball " + c + "' style='" + style + " width:20px; height:20px; line-height:20px; font-size:10px;'>" + n + "</span>"; 
-            });
-            html += "</td>";
-            html += "<td>" + t.somme + "</td>";
-            html += "</tr>";
-        }
-        
-        html += "</tbody></table></div>";
+    resultats.forEach(function(t) {
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        html += "<tr style='border-bottom:1px solid #eee;'>";
+        html += "<td style='padding:5px;'>" + t.date + "<br><small>N°" + t.numTirage + "</small></td>";
+        html += "<td style='padding:5px;'>" + t.jeu + " " + t.heure + "</td>";
+        html += "<td style='padding:5px;'>";
+        t.boules.forEach(function(n) { 
+            var style = (n === b1 || n === b2) ? "background:#d32f2f;" : ""; // Surligne en rouge
+            html += "<span class='ball " + c + "' style='" + style + "'>" + n + "</span>"; 
+        });
+        html += "</td>";
+        html += "</tr>";
     });
+    html += "</table>";
     
     resDiv.innerHTML = html;
 }
