@@ -56,6 +56,12 @@
   .result-box { margin-top: 15px; padding: 10px; background: #eef5ef; border-left: 4px solid var(--primary); border-radius: 4px; font-weight: bold; }
   .pos-table td, .pos-table th { padding: 5px; font-size: 13px; border: 1px solid #ddd; }
   select[multiple] { padding: 5px; border: 1px solid #ccc; border-radius: 6px; }
+  
+  /* Nouveaux styles pour le formulaire de recherche */
+  .search-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+  .search-form label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+  .search-form input, .search-form select { width: 100%; margin: 0; padding: 8px; }
+  .search-results-list { margin-top: 15px; max-height: 300px; overflow-y: auto; }
 </style>
 </head>
 <body>
@@ -187,25 +193,55 @@
   <div class="card">
     <h2>🧪 Laboratoire d'Analyse Avancée</h2>
     
-    <div class="lab-grid">
-      <!-- COLONNE GAUCHE -->
-      <div>
-        <div class="lab-box" style="border: 2px solid #e74c3c; background: #fffaf0;">
-          <h3 style="color: #e74c3c; margin-top: 0;">🎯 Étude des Totaux (Somme T)</h3>
-          <label><b>Choisir le créneau :</b>
-            <select id="creneauTotal" onchange="analyserTotaux()" style="width: 100%; margin-bottom: 10px;">
-              <option value="Tous">Tous les tirages</option>
-              <option value="Digital-00H">Digital 00H</option>
-              <option value="Digital-08H">Digital 08H</option>
-              <option value="Digital-20H">Digital 20H</option>
-              <option value="Star-11H">Star 11H</option>
-              <option value="Fortune-14H">Fortune 14H</option>
-            </select>
-          </label>
-          <div id="resultatTotaux" style="font-weight: normal; font-size: 14px; line-height: 1.6;"><i>Sélectionnez un créneau...</i></div>
+    <!-- NOUVEAU MODULE : RECHERCHE INVERSÉE -->
+    <div style="margin-bottom: 30px; border: 1px solid #8e44ad; border-radius: 8px; padding: 15px;">
+      <h3 style="color: #8e44ad; margin-top: 0;">🔍 Recherche Inversée (Bankers)</h3>
+      <p style="font-size: 13px; color: #555;">Trouvez les tirages passés qui correspondent à vos numéros "Bankers".</p>
+      
+      <div class="search-form">
+        <div>
+          <label>Banker 1 (Numéro obligatoire)</label>
+          <input type="number" id="searchBanker1" min="1" max="90" placeholder="Ex: 20">
         </div>
+        <div>
+          <label>Position Banker 1</label>
+          <select id="searchPos1">
+            <option value="0">Peu importe</option>
+            <option value="1">Position 1</option>
+            <option value="2">Position 2</option>
+            <option value="3">Position 3</option>
+            <option value="4">Position 4</option>
+            <option value="5">Position 5</option>
+          </select>
+        </div>
+        <div>
+          <label>Banker 2 (Optionnel)</label>
+          <input type="number" id="searchBanker2" min="1" max="90" placeholder="Ex: 02">
+        </div>
+        <div>
+          <label>Position Banker 2</label>
+          <select id="searchPos2">
+            <option value="0">Peu importe</option>
+            <option value="1">Position 1</option>
+            <option value="2">Position 2</option>
+            <option value="3">Position 3</option>
+            <option value="4">Position 4</option>
+            <option value="5">Position 5</option>
+          </select>
+        </div>
+      </div>
+      
+      <button onclick="executerRechercheInversee()" style="margin-top: 15px; width: 100%; background-color: #8e44ad;">Lancer la recherche</button>
+      
+      <div id="resultatsRecherche" class="search-results-list"></div>
+    </div>
 
-        <div class="lab-box" style="margin-top: 20px;">
+    <hr style="border: 0; border-top: 1px solid #ddd; margin-bottom: 30px;">
+
+    <!-- ANCIENS MODULES DU LABORATOIRE -->
+    <div class="lab-grid">
+      <div>
+        <div class="lab-box">
           <h3>1. Analyse d'un seul tirage</h3>
           <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
           <div style="margin-top: 10px;">
@@ -226,16 +262,13 @@
         </div>
       </div>
 
-      <!-- COLONNE DROITE -->
       <div>
         <div class="lab-box" style="height: 100%;">
           <h3>Résultats & Analyses</h3>
           <div id="resultatLaboAvance" style="min-height: 150px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; font-weight: normal;"><i>En attente...</i></div>
-          
           <h4>📍 Analyse par Position</h4>
           <button onclick="analyserPositions()" class="secondary" style="width: 100%;">Générer le tableau</button>
           <div id="resultatPositions" style="margin-top: 15px; overflow-x: auto; font-weight: normal;"></div>
-          
           <h4 style="margin-top: 20px;">🏦 Détection de Banker (Créneau)</h4>
           <div style="display: flex; gap: 10px; align-items: center;">
             <select id="creneauBanker" style="flex: 1;">
@@ -249,34 +282,6 @@
         </div>
       </div>
     </div>
-
-    <!-- NOUVELLE SECTION : COMPARAISON DE PAIRES -->
-    <div class="card" style="margin-top: 20px; border: 2px solid #8e44ad; background: #f8f4fa;">
-      <h2 style="color: #8e44ad;">🔗 L'Écho des Paires (Comportement Passé)</h2>
-      <p style="font-size: 14px; color: #555;">Entrez 2 ou 3 numéros sortis ensemble. L'application trouvera tous les tirages passés où ces numéros sont apparus ensemble, et vous montrera les numéros qui ont eu tendance à sortir juste après (dans les 3 tirages suivants).</p>
-      
-      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-        <input type="number" id="paire1" placeholder="Ex: 14" style="width: 80px; font-weight: bold; text-align: center;">
-        <input type="number" id="paire2" placeholder="Ex: 85" style="width: 80px; font-weight: bold; text-align: center;">
-        <input type="number" id="paire3" placeholder="(Optionnel)" style="width: 80px; font-weight: bold; text-align: center;">
-        
-        <label>Filtrer par jeu : 
-          <select id="filtrePaireJeu">
-            <option value="Tous">Tous</option>
-            <option value="Digital">Digital</option>
-            <option value="Star">Star</option>
-            <option value="Fortune">Fortune</option>
-          </select>
-        </label>
-        
-        <button onclick="chercherPaire()" style="background-color: #8e44ad;">Analyser l'Écho</button>
-      </div>
-      
-      <div id="resultatEcho" style="background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 6px;">
-        <i>Entrez des numéros et cliquez sur Analyser...</i>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -290,21 +295,38 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
 
-function calculerSomme(boules) { return boules.reduce(function(a, b) { return a + b; }, 0); }
+function calculerSomme(boules) {
+    return boules.reduce(function(a, b) { return a + b; }, 0);
+}
 
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
   statusEl.textContent = "⏳ Téléchargement...";
+  
   let { data, error } = await supabaseClient.from('tirages').select('*');
-  if (error) { statusEl.textContent = "❌ Erreur de connexion."; statusEl.style.color = "red"; return []; }
+    
+  if (error) {
+    statusEl.textContent = "❌ Erreur de connexion.";
+    statusEl.style.color = "red";
+    return [];
+  }
   
   statusEl.textContent = "✅ Connecté au Cloud ! (" + data.length + " tirages)";
   statusEl.style.color = "green";
   
   donneesCloud = data.map(function(item) {
-      var b = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
-      return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: b, somme: calculerSomme(b), numTirage: item.numero_tirage || "N/A" };
+      var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
+      return {
+          id: item.id,
+          date: item.date,
+          jeu: item.jeu,
+          heure: item.heure,
+          boules: boulesArray,
+          somme: calculerSomme(boulesArray),
+          numTirage: item.numero_tirage || "N/A"
+      };
   });
+  
   return donneesCloud;
 }
 
@@ -314,7 +336,6 @@ async function rafraichirDonnees() {
   if(document.getElementById('onglet-combine').classList.contains('active')) afficherCombine();
   if(document.getElementById('onglet-analyseJeu').classList.contains('active')) afficherAnalyseJeu();
   if(document.getElementById('onglet-analyseCrenea').classList.contains('active')) afficherAnalyseCreneau();
-  if(document.getElementById('onglet-labo').classList.contains('active')) { analyserTotaux(); remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
 function ouvrirOnglet(id) {
@@ -322,20 +343,23 @@ function ouvrirOnglet(id) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('onglet-' + id).classList.add('active');
   event.currentTarget.classList.add('active');
+  
   if(id === 'combine') afficherCombine();
   if(id === 'analyseJeu') afficherAnalyseJeu();
   if(id === 'analyseCrenea') afficherAnalyseCreneau();
-  if(id === 'labo') { analyserTotaux(); remplirSelecteurTirage(); remplirSelectMulti(); }
+  if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
 // --- SAISIE ---
 document.getElementById("btnAjouter").addEventListener("click", async function () {
   var msg = document.getElementById("message");
   msg.textContent = "Envoi..."; msg.style.color = "blue";
+  
   var date = document.getElementById("date").value;
   var jeu = document.getElementById("jeuSaisie").value;
   var heure = document.getElementById("heureSaisie").value;
   var boules = [];
+  
   for (var i = 1; i <= 5; i++) {
     var v = parseInt(document.getElementById("b" + i).value, 10);
     if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
@@ -345,7 +369,8 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
 
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Manuel" }]);
-  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur."; return; }
+  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur d'enregistrement."; return; }
+
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
   msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !";
   await rafraichirDonnees();
@@ -353,9 +378,11 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
 
 async function supprimer(i) {
   if (!confirm("Supprimer ce tirage ?")) return;
-  if (donneesCloud[i].id) { await supabaseClient.from('tirages').delete().eq('id', donneesCloud[i].id); }
+  var tirage = donneesCloud[i];
+  if (tirage.id) { await supabaseClient.from('tirages').delete().eq('id', tirage.id); }
   await rafraichirDonnees();
 }
+
 async function toutEffacer() {
   if (!confirm("⚠️ Supprimer TOUS les tirages du Cloud ?")) return;
   await supabaseClient.from('tirages').delete().neq('id', 0);
@@ -365,9 +392,12 @@ async function toutEffacer() {
 function afficherHistorique() {
   document.getElementById("nbTotal").textContent = donneesCloud.length;
   var corps = document.getElementById("corps"); corps.innerHTML = "";
+
   if (donneesCloud.length === 0) { corps.innerHTML = "<tr><td colspan='5'>Aucun tirage.</td></tr>"; return; }
+
   var tri = donneesCloud.map(function (t, i) { return { t: t, i: i }; });
   tri.sort(function (a, b) { return b.t.date.localeCompare(a.t.date) || (a.t.heure || "").localeCompare(b.t.heure || ""); });
+
   tri.forEach(function (obj) {
     var tr = document.createElement("tr");
     var html = "<td>" + obj.t.date + "<br><span class='n-info'>N° " + obj.t.numTirage + "</span></td>";
@@ -384,30 +414,43 @@ function afficherHistorique() {
 function afficherCombine() {
   var conteneur = document.getElementById("contenuCombine"); conteneur.innerHTML = "";
   if (donneesCloud.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
+
   var parDate = {};
   donneesCloud.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
   var datesTriees = Object.keys(parDate).sort(function(a, b) { return b.localeCompare(a); });
+
   datesTriees.forEach(function(dateStr) {
     var tiragesDuJour = parDate[dateStr];
     var divJour = document.createElement("div"); divJour.className = "combo-day";
     var dateObj = new Date(dateStr);
-    var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    var dateFormatee = dateStr;
+    if (!isNaN(dateObj.getTime())) {
+        dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    
     var html = "<div class='combo-header'>📅 " + dateFormatee + "</div>";
+
     function trouverTirage(jeu, heure) { return tiragesDuJour.find(function(t) { return t.jeu === jeu && t.heure === heure; }); }
     function genBoules(tirage) {
       if (!tirage) return "<span style='color:#ccc;'>-</span>";
       var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
-      var s = ""; tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); 
+      var s = ""; 
+      tirage.boules.forEach(function(n) { s += "<span class='ball " + c + "'>" + n + "</span>"; }); 
       s += " <span class='t-info'>(T= " + tirage.somme + ")</span>";
-      if(tirage.numTirage !== "N/A" && tirage.numTirage !== "Manuel") s += " <span class='n-info'>N° " + tirage.numTirage + "</span>";
+      if(tirage.numTirage !== "N/A" && tirage.numTirage !== "Manuel") {
+          s += " <span class='n-info'>N° " + tirage.numTirage + "</span>";
+      }
       return s;
     }
+
     var t00 = trouverTirage('Digital', '00H'); html += "<div class='combo-row'><div class='combo-time'>00H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t00) + "</div></div>";
     var t08 = trouverTirage('Digital', '08H'); html += "<div class='combo-row'><div class='combo-time'>08H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t08) + "</div></div>";
     var t11 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '11H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>11H00</div><div class='combo-source'>" + (t11 ? t11.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t11) + "</div></div>";
     var t14 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '14H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>14H00</div><div class='combo-source'>" + (t14 ? t14.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t14) + "</div></div>";
     var t18 = tiragesDuJour.find(function(t) { return (t.jeu === 'Star' || t.jeu === 'Fortune') && t.heure === '18H'; }); html += "<div class='combo-row highlight-star-fortune'><div class='combo-time'>18H00</div><div class='combo-source'>" + (t18 ? t18.jeu : "Star/Fortune") + "</div><div class='combo-nums'>" + genBoules(t18) + "</div></div>";
     var t20 = trouverTirage('Digital', '20H'); html += "<div class='combo-row'><div class='combo-time'>20H00</div><div class='combo-source'>Digital</div><div class='combo-nums'>" + genBoules(t20) + "</div></div>";
+
     divJour.innerHTML = html; conteneur.appendChild(divJour);
   });
 }
@@ -442,163 +485,189 @@ function afficherAnalyseCreneau() {
   for (var i = 1; i <= 90; i++) { var div = document.createElement("div"); div.className = "box"; if (top10Ids.indexOf(i) !== -1) div.classList.add("hot"); else if (freq[i] === 0 && filtres.length > 0) div.classList.add("cold"); div.innerHTML = "<b>" + i + "</b><br>Sorties: " + freq[i] + "<br><span style='color:#888;'>R: " + ecarts[i] + "</span>"; grid.appendChild(div); }
 }
 
-// --- ETUDE DES TOTAUX ---
-function analyserTotaux() {
-  var filtre = document.getElementById("creneauTotal").value;
-  var tirages = donneesCloud;
-  if (filtre !== "Tous") { var parts = filtre.split("-"); tirages = tirages.filter(function(t) { return t.jeu === parts[0] && t.heure === parts[1]; }); }
-  var div = document.getElementById("resultatTotaux");
-  if (tirages.length === 0) { div.innerHTML = "<i>Aucune donnée pour ce créneau.</i>"; return; }
-  tirages.sort(function(a, b) { return b.date.localeCompare(a.date); });
-  var sommes = tirages.map(function(t) { return t.somme; });
-  var sommeMin = Math.min.apply(null, sommes);
-  var sommeMax = Math.max.apply(null, sommes);
-  var sommeMoyenne = Math.round(sommes.reduce(function(a,b) { return a+b; }, 0) / sommes.length);
-  var derniers20 = sommes.slice(0, 20);
-  var freqTotaux = {};
-  derniers20.forEach(function(s) { freqTotaux[s] = (freqTotaux[s] || 0) + 1; });
-  var totalBanker = "Aucun"; var maxFreq = 0;
-  for (var s in freqTotaux) { if (freqTotaux[s] > maxFreq) { maxFreq = freqTotaux[s]; totalBanker = s; } }
-  var html = "<div style='margin-bottom: 5px;'><b>Total Moyen :</b> <span class='ball' style='background:#e74c3c; width:auto; padding:0 10px; border-radius:5px;'>" + sommeMoyenne + "</span></div>";
-  html += "<div style='margin-bottom: 5px;'><b>Total le plus bas :</b> " + sommeMin + "</div>";
-  html += "<div style='margin-bottom: 5px;'><b>Total le plus haut :</b> " + sommeMax + "</div>";
-  html += "<div style='margin-bottom: 5px;'><b>Total Banker (20 derniers) :</b> " + totalBanker + "</div>";
-  html += "<hr style='border:0; border-top:1px solid #ddd; margin: 10px 0;'><b>Historique récent (Top 5) :</b><br>";
-  for (var i = 0; i < Math.min(5, tirages.length); i++) { html += "Tirage " + tirages[i].date + " : <b style='color:#e74c3c;'>T= " + tirages[i].somme + "</b><br>"; }
-  div.innerHTML = html;
-}
-
-// --- NOUVELLE FONCTION : L'ECHO DES PAIRES ---
-function chercherPaire() {
-  var p1 = parseInt(document.getElementById("paire1").value, 10);
-  var p2 = parseInt(document.getElementById("paire2").value, 10);
-  var p3 = parseInt(document.getElementById("paire3").value, 10);
-  
-  if (isNaN(p1) || isNaN(p2)) {
-      document.getElementById("resultatEcho").innerHTML = "<span style='color:red;'>Veuillez entrer au moins 2 numéros valides.</span>";
-      return;
-  }
-
-  var cible = [p1, p2];
-  if (!isNaN(p3)) cible.push(p3);
-
-  var filtreJeu = document.getElementById("filtrePaireJeu").value;
-  var tirages = donneesCloud;
-  
-  if (filtreJeu !== "Tous") {
-      tirages = tirages.filter(function(t) { return t.jeu === filtreJeu; });
-  }
-
-  // Trier du plus ancien au plus récent pour analyser le futur
-  tirages.sort(function(a, b) { return a.date.localeCompare(b.date) || (a.heure || "").localeCompare(b.heure || ""); });
-
-  var occurrences = 0;
-  var echosFuturs = {}; // Compter les numéros qui sortent après
-
-  for (var i = 0; i < tirages.length; i++) {
-      var t = tirages[i];
-      // Vérifier si le tirage contient tous les numéros de la cible
-      var contientTout = cible.every(function(num) { return t.boules.indexOf(num) !== -1; });
-
-      if (contientTout) {
-          occurrences++;
-          // Regarder les 3 tirages suivants (dans le même jeu si possible)
-          for (var j = 1; j <= 3; j++) {
-              if (i + j < tirages.length) {
-                  var tFutur = tirages[i + j];
-                  tFutur.boules.forEach(function(numFutur) {
-                      if (cible.indexOf(numFutur) === -1) { // On ne compte pas les numéros de la cible elle-même
-                          echosFuturs[numFutur] = (echosFuturs[numFutur] || 0) + 1;
-                      }
-                  });
-              }
-          }
-      }
-  }
-
-  var div = document.getElementById("resultatEcho");
-
-  if (occurrences === 0) {
-      div.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>Aucun tirage trouvé avec la combinaison " + cible.join(" - ") + " " + (filtreJeu !== "Tous" ? "pour le jeu " + filtreJeu : "") + ".</span>";
-      return;
-  }
-
-  // Trier les échos (numéros qui sortent le plus souvent après)
-  var topEchos = Object.keys(echosFuturs).map(function(n) { return { n: parseInt(n), f: echosFuturs[n] }; })
-                    .sort(function(a, b) { return b.f - a.f; })
-                    .slice(0, 10); // Top 10 des numéros qui reviennent
-
-  var html = "<div style='margin-bottom: 10px; font-size: 15px;'>";
-  html += "La combinaison <b>" + cible.join(" - ") + "</b> a été trouvée <b style='color:#8e44ad;'>" + occurrences + " fois</b> dans l'historique.";
-  html += "</div>";
-
-  if (topEchos.length > 0) {
-      html += "<b>Numéros qui sortent le plus souvent dans les 3 tirages suivants (L'Écho) :</b><br><br>";
-      topEchos.forEach(function(item) {
-          html += "<span class='ball' style='background:#8e44ad;'>" + item.n + "</span> est revenu <b>" + item.f + " fois</b>.<br>";
-      });
-  } else {
-      html += "<i>Aucun numéro n'est ressorti de manière significative après ces tirages.</i>";
-  }
-
-  div.innerHTML = html;
-}
-
 // --- IMPORTATION VERS LE CLOUD ---
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
-  if (!texte.trim()) { msg.style.color = "red"; msg.textContent = "❌ Le cadre est vide."; return; }
+  
+  if (!texte.trim()) {
+    msg.style.color = "red"; msg.textContent = "❌ Le cadre est vide."; return;
+  }
+
   msg.style.color = "blue"; msg.textContent = "⏳ Analyse et envoi vers le Cloud en cours (patientez)...";
+
   var lignes = texte.split(/\r?\n/); 
-  var aInserer = []; var doublons = 0; var erreurs = 0;
-  var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020; 
+  var aInserer = []; 
+  var doublons = 0;
+  var erreurs = 0;
+
+  var anneeActuelle = new Date().getFullYear();
+  var anneeMaxAcceptee = anneeActuelle + 1;
+  var anneeMinAcceptee = 2020; 
 
   lignes.forEach(function(ligne, index) {
     if (!ligne.trim()) return; 
+    
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
+
     var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
     var matchDate = ligne.match(regexDate);
+    
     if (!matchDate) { erreurs++; return; } 
-    var jour = parseInt(matchDate[1], 10); var mois = parseInt(matchDate[2], 10);
-    var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3]; var anneeInt = parseInt(annee, 10);
-    if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { erreurs++; return; }
+    
+    var jour = parseInt(matchDate[1], 10);
+    var mois = parseInt(matchDate[2], 10);
+    var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
+    var anneeInt = parseInt(annee, 10);
+
+    if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) {
+        erreurs++; return;
+    }
+
     var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
-    var numTirageTrouve = "N/A"; var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
-    if (matchNumTirage) { numTirageTrouve = matchNumTirage[1]; }
-    var jeuTrouve = "Star"; var heureTrouvee = "00H";
+
+    var numTirageTrouve = "N/A";
+    var matchNumTirage = ligne.match(/N[°o]\s*(\d+)/i);
+    if (matchNumTirage) numTirageTrouve = matchNumTirage[1];
+
+    var jeuTrouve = "Star"; 
+    var heureTrouvee = "00H";
+    
     if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
     else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
     else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
+    
     var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
-    if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; } 
-    else if (ligneMinuscule.indexOf("digital") !== -1) { if (ligne.indexOf("20") !== -1) heureTrouvee = "20H"; else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H"; }
+    if (matchHeure) {
+        heureTrouvee = matchHeure[1].padStart(2, '0') + "H";
+    } else if (ligneMinuscule.indexOf("digital") !== -1) {
+        if (ligne.indexOf("20") !== -1) heureTrouvee = "20H";
+        else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
+    }
+
     var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
     if (numTirageTrouve !== "N/A") texteNettoye = texteNettoye.replace(/N[°o]\s*\d+/i, ' ');
-    var nombres = []; var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
-    if (matchNombres) { for (var i = 0; i < matchNombres.length; i++) { var num = parseInt(matchNombres[i], 10); if (num >= 1 && num <= 90) nombres.push(num); } }
-    var boules = nombres.slice(0, 5); if (boules.length < 5) boules = nombres.slice(-5);
+    
+    var nombres = [];
+    var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
+    if (matchNombres) {
+        for (var i = 0; i < matchNombres.length; i++) {
+            var num = parseInt(matchNombres[i], 10);
+            if (num >= 1 && num <= 90) nombres.push(num);
+        }
+    }
+
+    var boules = nombres.slice(0, 5);
+    if (boules.length < 5) boules = nombres.slice(-5);
+
     if (boules.length === 5 && new Set(boules).size === 5) {
         var existeDeja = donneesCloud.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
         var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
-        if (!existeDeja && !existeDansFichier) { aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: numTirageTrouve }); } else { doublons++; }
-    } else { erreurs++; }
+
+        if (!existeDeja && !existeDansFichier) {
+            aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: numTirageTrouve });
+        } else {
+            doublons++;
+        }
+    } else {
+        erreurs++;
+    }
   });
 
   if (aInserer.length > 0) {
-      var taillePaquet = 100; var succes = true;
+      var taillePaquet = 100;
+      var succes = true;
+      
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
           var paquet = aInserer.slice(i, i + taillePaquet);
           let { error } = await supabaseClient.from('tirages').insert(paquet);
-          if (error) { console.error(error); msg.style.color = "red"; msg.textContent = "❌ Erreur d'envoi Cloud : " + error.message; succes = false; break; }
+          if (error) {
+              console.error(error);
+              msg.style.color = "red"; msg.textContent = "❌ Erreur d'envoi Cloud : " + error.message;
+              succes = false;
+              break;
+          }
       }
-      if (succes) { msg.style.color = "green"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
-  } else { msg.style.color = "orange"; msg.textContent = "⚠️ Aucun nouveau tirage valide (" + doublons + " doublons, " + erreurs + " rejets)."; }
+      
+      if (succes) {
+          msg.style.color = "green"; 
+          msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejetés."; 
+          document.getElementById("texteAImporter").value = ""; 
+          await rafraichirDonnees();
+      }
+  } else {
+      msg.style.color = "orange"; 
+      msg.textContent = "⚠️ Aucun nouveau tirage valide (" + doublons + " doublons, " + erreurs + " rejets).";
+  }
 }
 
 // --- LABORATOIRE ---
 var tirageActifLabo = null;
+
+// NOUVELLE FONCTION : RECHERCHE INVERSEE
+function executerRechercheInversee() {
+    var b1 = parseInt(document.getElementById("searchBanker1").value, 10);
+    var p1 = parseInt(document.getElementById("searchPos1").value, 10);
+    var b2 = parseInt(document.getElementById("searchBanker2").value, 10);
+    var p2 = parseInt(document.getElementById("searchPos2").value, 10);
+    
+    var resDiv = document.getElementById("resultatsRecherche");
+    
+    if (isNaN(b1)) {
+        resDiv.innerHTML = "<span style='color:red;'>Veuillez entrer au moins le Banker 1.</span>";
+        return;
+    }
+
+    var resultats = donneesCloud.filter(function(t) {
+        // Vérification Banker 1
+        var match1 = false;
+        if (p1 === 0) {
+            match1 = t.boules.includes(b1);
+        } else {
+            match1 = (t.boules[p1 - 1] === b1);
+        }
+
+        // Vérification Banker 2 (si rempli)
+        var match2 = true;
+        if (!isNaN(b2)) {
+            if (p2 === 0) {
+                match2 = t.boules.includes(b2);
+            } else {
+                match2 = (t.boules[p2 - 1] === b2);
+            }
+        }
+
+        return match1 && match2;
+    });
+
+    if (resultats.length === 0) {
+        resDiv.innerHTML = "<p style='color:#d32f2f; font-weight:bold;'>Aucun tirage ne correspond à ces critères.</p>";
+        return;
+    }
+
+    var html = "<h4 style='color:#8e44ad;'>Résultats trouvés (" + resultats.length + ") :</h4>";
+    html += "<table style='width:100%; border-collapse: collapse; font-size: 13px;'>";
+    
+    resultats.forEach(function(t) {
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        html += "<tr style='border-bottom:1px solid #eee;'>";
+        html += "<td style='padding:5px;'>" + t.date + "</td>";
+        html += "<td style='padding:5px;'>" + t.jeu + " " + t.heure + "</td>";
+        html += "<td style='padding:5px;'>";
+        t.boules.forEach(function(n) { 
+            var style = (n === b1 || n === b2) ? "background:#d32f2f;" : ""; // Surligne les bankers en rouge
+            html += "<span class='ball " + c + "' style='" + style + "'>" + n + "</span>"; 
+        });
+        html += "</td>";
+        html += "</tr>";
+    });
+    html += "</table>";
+    
+    resDiv.innerHTML = html;
+}
+
+
 function remplirSelecteurTirage() {
   var tirages = donneesCloud.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
