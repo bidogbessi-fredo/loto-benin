@@ -43,12 +43,23 @@
       font-weight: bold; margin: 0 2px; font-size: 13px;
   }
   
-  /* LA BOULE QUI MATCHE (Jaune vif + rouge) */
-  .comp-ball.match { 
-      background: #f1c40f !important; 
-      color: #111 !important; 
-      border: 3px solid #c0392b; 
-      box-shadow: 0 0 10px rgba(241, 196, 15, 1);
+  /* BOULE QUI MATCHE EXACTEMENT (Verte) */
+  .comp-ball.match-exact { 
+      background: #2ecc71 !important; /* Vert */
+      color: #fff !important; 
+      border: 3px solid #27ae60; 
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+      transform: scale(1.25); 
+      z-index: 10;
+      margin: 0 4px;
+  }
+  
+  /* BOULE QUI MATCHE PAR TURNING (Violette) */
+  .comp-ball.match-turning { 
+      background: #9b59b6 !important; /* Violet */
+      color: #fff !important; 
+      border: 3px solid #8e44ad; 
+      box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
       transform: scale(1.25); 
       z-index: 10;
       margin: 0 4px;
@@ -89,6 +100,10 @@
   .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
   .comp-table td { padding: 8px; border: 1px solid #eee; text-align: center;}
   .comp-table th { padding: 8px; border: 1px solid #eee; background: #f8f9fa;}
+  
+  /* Légende */
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px;}
+  .legend-item { display: flex; align-items: center; gap: 5px; }
 </style>
 </head>
 <body>
@@ -206,7 +221,7 @@
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
     <h2>⚖️ Comparateur Ligne par Ligne</h2>
-    <p style="color:#555;">Compare deux plages. <b>Seules les boules qui matchent sur la MÊME LIGNE opposée (ou leur Turning) sont mises en jaune.</b></p>
+    <p style="color:#555;">Compare deux plages. Les correspondances exactes ou les Turnings sont mis en évidence.</p>
     
     <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
       <div style="flex: 1; min-width: 300px; background: #f0f8ff; padding: 15px; border-radius: 8px; border: 1px solid #b3d4ec;">
@@ -247,6 +262,12 @@
     </div>
     
     <button onclick="executerComparateurParNumero()" style="margin-top: 20px; width: 100%; background-color: #16a085; font-size: 16px;">🔍 Comparer les deux plages</button>
+
+    <div class="legend">
+        <div class="legend-item"><span class="comp-ball"></span> Pas de match</div>
+        <div class="legend-item"><span class="comp-ball match-exact"></span> Match Exact</div>
+        <div class="legend-item"><span class="comp-ball match-turning"></span> Turning (Miroir)</div>
+    </div>
 
     <div id="resultatComparaison" class="comp-container">
         <!-- Les deux tableaux s'afficheront ici -->
@@ -543,7 +564,7 @@ function afficherCombine() {
   });
 }
 
-// --- COMPARATEUR (CORRIGÉ) ---
+// --- COMPARATEUR (LIGNE PAR LIGNE) ---
 function executerComparateurParNumero() {
     var ref1 = parseInt(document.getElementById("refNum1").value, 10);
     var range1 = parseInt(document.getElementById("refRange1").value, 10);
@@ -579,26 +600,31 @@ function executerComparateurParNumero() {
     var htmlTotal = "<div class='comp-col' style='border-top: 4px solid #2980b9;'><h3 style='text-align:center; color:#2980b9;'>Plage 1 (Réf: N°"+ref1+")</h3><table class='comp-table'><tr><th>N° Tirage</th><th>Numéros</th></tr>";
     var htmlTotal2 = "<div class='comp-col' style='border-top: 4px solid #d35400;'><h3 style='text-align:center; color:#d35400;'>Plage 2 (Réf: N°"+ref2+")</h3><table class='comp-table'><tr><th>N° Tirage</th><th>Numéros</th></tr>";
 
-    // On compare ligne par ligne (index 0 avec index 0, etc.)
     var maxLines = Math.max(plage1.length, plage2.length);
 
     for (var i = 0; i < maxLines; i++) {
         var t1 = plage1[i];
         var t2 = plage2[i];
 
-        // Si l'un des deux n'existe pas (fin de plage), on affiche une ligne vide
         if (!t1) {
             htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>";
         } else {
             htmlTotal += "<tr><td><b>N°" + t1.numGlobal + "</b><br><small>" + t1.jeu + " " + t1.heure + "</small></td><td>";
             t1.boules.forEach(function(n) { 
-                // On vérifie si ce numéro (ou son turning) est dans les boules de la ligne 2
-                var estMatch = false;
+                var estMatchExact = false;
+                var estMatchTurning = false;
                 if (t2) {
-                    var turningN = getTurning(n);
-                    if (t2.boules.includes(n) || t2.boules.includes(turningN)) estMatch = true;
+                    if (t2.boules.includes(n)) estMatchExact = true;
+                    else {
+                        var turningN = getTurning(n);
+                        if (turningN !== n && t2.boules.includes(turningN)) estMatchTurning = true;
+                    }
                 }
-                var cls = estMatch ? "comp-ball match" : "comp-ball";
+                
+                var cls = "comp-ball";
+                if (estMatchExact) cls += " match-exact";
+                else if (estMatchTurning) cls += " match-turning";
+
                 htmlTotal += "<span class='" + cls + "'>" + n + "</span>"; 
             });
             htmlTotal += "</td></tr>";
@@ -609,13 +635,20 @@ function executerComparateurParNumero() {
         } else {
             htmlTotal2 += "<tr><td><b>N°" + t2.numGlobal + "</b><br><small>" + t2.jeu + " " + t2.heure + "</small></td><td>";
             t2.boules.forEach(function(n) { 
-                // On vérifie si ce numéro (ou son turning) est dans les boules de la ligne 1
-                var estMatch = false;
+                var estMatchExact = false;
+                var estMatchTurning = false;
                 if (t1) {
-                    var turningN = getTurning(n);
-                    if (t1.boules.includes(n) || t1.boules.includes(turningN)) estMatch = true;
+                    if (t1.boules.includes(n)) estMatchExact = true;
+                    else {
+                        var turningN = getTurning(n);
+                        if (turningN !== n && t1.boules.includes(turningN)) estMatchTurning = true;
+                    }
                 }
-                var cls = estMatch ? "comp-ball match" : "comp-ball";
+                
+                var cls = "comp-ball";
+                if (estMatchExact) cls += " match-exact";
+                else if (estMatchTurning) cls += " match-turning";
+
                 htmlTotal2 += "<span class='" + cls + "'>" + n + "</span>"; 
             });
             htmlTotal2 += "</td></tr>";
