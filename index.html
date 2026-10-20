@@ -30,13 +30,11 @@
   th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
   .msg { font-weight: bold; margin-top: 10px; font-size: 14px; }
   
-  /* Styles de base des boules (historique et analyses) */
   .ball { display: inline-block; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 1px; font-size: 13px;}
   .ball.star { background: #f39c12; }
   .ball.fortune { background: #2980b9; }
   .ball.digital { background: #8e44ad; }
   
-  /* BOULE DU COMPARATEUR (Cliquable) */
   .comp-ball {
       display: inline-block; width: 32px; height: 32px; line-height: 32px; border-radius: 50%;
       background: #dcdde1; color: #7f8c8d; 
@@ -45,21 +43,16 @@
   }
   .comp-ball:active { transform: scale(0.9); }
   
-  /* BOULE QUI MATCHE EXACTEMENT SUR TOUTES LES PLAGES (Verte) */
   .comp-ball.match-exact { 
       background: #2ecc71 !important; color: #fff !important; 
       border: 3px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
       transform: scale(1.25); z-index: 10; margin: 0 4px;
   }
-  
-  /* BOULE QUI MATCHE PAR TURNING SUR TOUTES LES PLAGES (Violette) */
   .comp-ball.match-turning { 
       background: #9b59b6 !important; color: #fff !important; 
       border: 3px solid #8e44ad; box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
       transform: scale(1.25); z-index: 10; margin: 0 4px;
   }
-  
-  /* BOULE QUI MATCHE EN EXACT ET TURNING SUR TOUTES LES PLAGES (Or) */
   .comp-ball.match-multi { 
       background: #f1c40f !important; color: #111 !important; 
       border: 3px solid #d35400; box-shadow: 0 0 15px rgba(241, 196, 15, 1);
@@ -95,23 +88,19 @@
   .search-form input, .search-form select { width: 100%; margin: 0; padding: 8px; }
   .search-results-list { margin-top: 15px; max-height: 300px; overflow-y: auto; }
   
-  /* Styles Comparateur Multi-Plages */
   .comp-container { display: flex; gap: 15px; margin-top: 20px; overflow-x: auto; }
   .comp-col { flex: 1; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
   .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
   .comp-table td { padding: 6px; border: 1px solid #eee; text-align: center;}
   .comp-table th { padding: 6px; border: 1px solid #eee; background: #f8f9fa;}
   
-  /* Formulaire de configuration des plages */
   .plages-config { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
   .plage-box { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 200px;}
   .plage-box label { font-size: 13px; font-weight: bold; }
   
-  /* Légende et Palette */
   .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px; flex-wrap: wrap;}
   .legend-item { display: flex; align-items: center; gap: 5px; }
   
-  /* Palette de couleurs */
   .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 8px; }
   .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; }
   .color-btn:active { transform: scale(0.9); }
@@ -250,7 +239,6 @@
         <div class="legend-item"><span class="comp-ball match-multi"></span> Exact + Turning</div>
     </div>
 
-    <!-- LA PALETTE D'ANNOTATION -->
     <div class="palette">
         <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
         <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')" title="Rouge"></div>
@@ -337,10 +325,14 @@
         <div class="lab-box">
           <h3>1. Analyse d'un seul tirage</h3>
           <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
-          <div style="margin-top: 10px;">
-            <button onclick="faireTurning()">Miroir / Turning</button>
-            <button onclick="faireAddition()">Somme (+)</button>
+          
+          <!-- NOUVEAUX BOUTONS D'ANALYSE -->
+          <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+            <button onclick="faireTurning()" style="flex:1; font-size:13px;">Miroir / Turning</button>
+            <button onclick="faireAddition()" style="flex:1; font-size:13px;">Somme (+)</button>
+            <button onclick="faireTheosophie()" style="flex:1; background-color: #e67e22; font-size:13px;">🔢 Somme Théosophique</button>
           </div>
+          
           <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
         </div>
 
@@ -387,37 +379,21 @@ const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
-var couleurActive = '#e74c3c'; // Rouge par défaut
+var couleurActive = '#e74c3c';
 
-// --- FONCTION POUR LA PALETTE DE COULEURS ---
 function changerCouleur(element, couleur) {
-    // On enlève la classe active de tous les boutons
-    document.querySelectorAll('.color-btn').forEach(function(btn) {
-        btn.classList.remove('active');
-    });
-    // On ajoute la classe active au bouton cliqué
+    document.querySelectorAll('.color-btn').forEach(function(btn) { btn.classList.remove('active'); });
     element.classList.add('active');
-    
-    // On enregistre la couleur choisie (ou l'action annuler)
-    if (couleur === 'annuler') {
-        couleurActive = 'annuler';
-    } else {
-        couleurActive = couleur;
-    }
+    couleurActive = couleur === 'annuler' ? 'annuler' : couleur;
 }
 
-// --- FONCTION DE COLORIAGE AU CLIC SUR UNE BOULE ---
 function colorierBoule(bouleElement) {
-    // On empêche la couleur de s'appliquer si la boule fait partie d'un match (facultatif, mais ici on autorise)
-    
     if (couleurActive === 'annuler') {
-        // On remet la couleur de base
         bouleElement.style.backgroundColor = '';
         bouleElement.style.color = '';
         bouleElement.style.borderColor = '';
         bouleElement.style.boxShadow = '';
     } else {
-        // On applique la couleur choisie
         bouleElement.style.backgroundColor = couleurActive;
         bouleElement.style.color = '#fff';
         bouleElement.style.borderColor = '#333';
@@ -425,7 +401,6 @@ function colorierBoule(bouleElement) {
     }
 }
 
-// Fonction pour calculer le Turning (Miroir)
 function getTurning(num) {
     var s = num.toString().padStart(2, '0'); 
     var inv = parseInt(s.split('').reverse().join(''), 10); 
@@ -591,7 +566,7 @@ function afficherCombine() {
   });
 }
 
-// --- COMPARATEUR MULTI-PLAGES (RIGUEUR ABSOLUE + PALETTE) ---
+// --- COMPARATEUR MULTI-PLAGES ---
 var nombrePlages = 0;
 
 function ajouterPlage() {
@@ -714,7 +689,6 @@ function executerComparateurMulti() {
                         else cls += " match-multi";
                     }
 
-                    // Ajout de l'événement onclick pour la palette
                     htmlTotal += "<span class='" + cls + "' onclick='colorierBoule(this)'>" + n + "</span>";
                 });
                 
@@ -842,6 +816,42 @@ async function traiterTexteColle() {
 
 // --- LABORATOIRE ---
 var tirageActifLabo = null;
+
+function faireTheosophie() {
+    if(!tirageActifLabo) return;
+    
+    var sommeTheo = 0;
+    var calculDetail = [];
+    
+    // On sépare chaque chiffre de chaque boule pour les additionner
+    tirageActifLabo.boules.forEach(function(n) {
+        var s = n.toString();
+        var sumNum = 0;
+        var detailNum = [];
+        for (var i = 0; i < s.length; i++) {
+            var chiffre = parseInt(s[i], 10);
+            sumNum += chiffre;
+            detailNum.push(chiffre);
+        }
+        sommeTheo += sumNum;
+        calculDetail.push(detailNum.join("+") + "=" + sumNum);
+    });
+
+    // On réduit si le total dépasse 90 (Optionnel, pour rester dans les normes du loto)
+    var totalAffiche = sommeTheo;
+    var reductionTxt = "";
+    while(totalAffiche > 90) {
+        totalAffiche -= 90;
+        reductionTxt += " -> " + totalAffiche;
+    }
+
+    document.getElementById("resultatOperations").innerHTML = 
+        "<b>Somme Théosophique :</b><br>" +
+        "Détail : " + calculDetail.join(" | ") + "<br>" +
+        "<b>Total brut : " + sommeTheo + "</b><br>" +
+        (reductionTxt !== "" ? "<span style='color:#d35400;'>Réduction (>90) : " + reductionTxt + "</span><br>" : "") +
+        "Résultat final : <span class='ball' style='background:#e67e22;'>" + totalAffiche + "</span>";
+}
 
 function executerRechercheInversee() {
     var b1 = parseInt(document.getElementById("searchBanker1").value, 10);
