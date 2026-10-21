@@ -70,7 +70,7 @@
   .day-header { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; display: flex; justify-content: space-between; }
   .day-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
   .day-row:last-child { border-bottom: none; }
-  .day-time { width: 80px; font-weight: bold; color: #555; }
+  .day-time { width: 100px; font-weight: bold; color: #555; }
   .day-game { width: 100px; font-weight: bold; font-size: 13px; }
   .day-nums { flex: 1; display: flex; align-items: center; }
 
@@ -135,7 +135,7 @@
 
   <div class="card">
     <h2>📜 Compilation par Sac</h2>
-    <p style="color:#555; font-size: 13px;">Sélectionnez une catégorie pour voir sa chronologie et sa numérotation de lignes propres. Les heures manquantes restent vides.</p>
+    <p style="color:#555; font-size: 13px;">Sélectionnez une catégorie. L'application masque automatiquement les jeux qui n'existaient pas encore aux dates concernées.</p>
     
     <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
         <option value="tous">Vue Globale (Tout mélangé)</option>
@@ -328,7 +328,7 @@ function getTiragesDuSac(sacId) {
     });
 }
 
-// --- AFFICHAGE DU SAC SÉLECTIONNÉ (GRILLE FIXE) ---
+// --- AFFICHAGE DU SAC SÉLECTIONNÉ (GRILLE FIXE + DATES DE LANCEMENT) ---
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var tiragesFiltres = getTiragesDuSac(sacId);
@@ -350,11 +350,16 @@ function afficherSacSelectionne() {
     // 2. Extraire et trier les dates (de la plus ancienne à la plus récente)
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
 
-    // 3. Liste des heures standards (Grille Fixe)
-    var heuresFixes = ["00H", "08H", "11H", "14H", "18H", "20H"];
+    // 3. DÉFINITION DES DATES DE LANCEMENT
+    var dateLancementStar = new Date("2004-06-16");
+    var dateLancementFortune = new Date("2010-04-28");
+    var dateLancementDigital = new Date("2023-07-13");
+
+    // 4. Liste des heures standards
+    var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
 
     var htmlTotal = "";
-    var compteurLigne = 0; // Le fameux compteur de ligne du sac
+    var compteurLigne = 0; 
 
     datesTriees.forEach(function(dateStr) {
         var tiragesDuJour = parDate[dateStr];
@@ -364,11 +369,36 @@ function afficherSacSelectionne() {
         var htmlJour = "<div class='day-card'>";
         htmlJour += "<div class='day-header'><span>📅 " + dateFormatee + "</span></div>";
 
-        // 4. Pour chaque heure fixe, on cherche s'il y a un tirage correspondant
-        heuresFixes.forEach(function(heure) {
-            compteurLigne++; // On incrémente la ligne à chaque heure affichée
+        // 5. Déterminer les heures applicables selon la date
+        var heuresApplicables = toutesLesHeures.filter(function(heure) {
+            // Règle Digital (00H, 08H, 20H) -> Après Juillet 2023
+            if (heure === "00H" || heure === "08H" || heure === "20H") {
+                return dateObj >= dateLancementDigital;
+            }
+            // Règle Fortune (11H, 14H, 18H) -> Après Avril 2010
+            // Note: On vérifie si c'est un jour de Fortune ou Star dans le sac sélectionné
+            if (heure === "11H" || heure === "14H" || heure === "18H") {
+                // Si le sac contient le Star, on vérifie après 2004
+                if (sacId.includes("Star")) {
+                    if (dateObj < dateLancementStar) return false;
+                    // Si le sac contient AUSSI Fortune, on doit voir si le jeu de ce jour était Fortune
+                    if (sacId.includes("Fortune")) {
+                        // Si c'est avant le lancement de Fortune, seul le Star existait
+                        return true; 
+                    }
+                    return true;
+                }
+                // Si le sac contient Fortune seul
+                if (sacId.includes("Fortune")) {
+                    return dateObj >= dateLancementFortune;
+                }
+            }
+            return false;
+        });
 
-            // On cherche le tirage qui correspond à cette heure exacte
+        heuresApplicables.forEach(function(heure) {
+            compteurLigne++; 
+
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
 
             htmlJour += "<div class='day-row'>";
@@ -381,7 +411,6 @@ function afficherSacSelectionne() {
                 tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "'>" + n + "</span>"; });
                 htmlJour += "</div>";
             } else {
-                // Si pas de tirage à cette heure, on met un tiret
                 htmlJour += "<div class='day-game' style='color:#ccc;'>-</div>";
                 htmlJour += "<div class='day-nums'><span class='ball empty'>-</span></div>";
             }
@@ -464,10 +493,7 @@ function executerComparateurMulti() {
         
         if (isNaN(refLigne)) continue;
 
-        // 1. Récupérer les tirages du sac sélectionné
         var tiragesDuSac = getTiragesDuSac(sacId);
-        
-        // 2. Trouver la position de la ligne demandée (ex: Ligne 800)
         var startIndex = refLigne - 1;
         
         if (startIndex < 0 || startIndex >= tiragesDuSac.length) { 
