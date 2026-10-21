@@ -26,17 +26,19 @@
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
   h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
   
-  /* --- L'ÉCRAN DE CONNEXION (Caché par défaut) --- */
+  /* --- L'ÉCRAN DE CONNEXION --- */
   #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
   .login-box h2 { margin-bottom: 25px; color: var(--primary); }
   .login-box input { width: 100%; margin-bottom: 15px; }
   .login-box button { width: 100%; margin-top: 10px; }
+  .btn-visiteur { background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
+  .btn-visiteur:hover { background: var(--border-color) !important; }
 
-  /* --- L'APPLICATION (Cachée par défaut) --- */
+  /* --- L'APPLICATION --- */
   #app-content { display: none; }
 
-  /* --- LE RESTE DU DESIGN --- */
+  /* --- RESTE DU DESIGN --- */
   .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); }
   input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
   input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
@@ -109,6 +111,9 @@
   .color-btn:active { transform: scale(0.9); }
   .color-btn.active { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
+  /* --- CLASSES POUR LE MODE VISITEUR --- */
+  .mode-visiteur .admin-only { display: none !important; }
+
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
@@ -123,23 +128,24 @@
 <div id="login-screen">
     <div class="login-box">
         <h1 style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
-        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Espace Administrateur</p>
+        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Portail d'accès</p>
         
-        <input type="email" id="loginEmail" placeholder="Adresse email" required>
+        <input type="email" id="loginEmail" placeholder="Adresse email (Admin)" required>
         <input type="password" id="loginPassword" placeholder="Mot de passe" required>
         
         <button onclick="seConnecter()">Se connecter</button>
+        <button class="btn-visiteur" onclick="entrerVisiteur()">👁️ Entrer en mode Visiteur</button>
         
         <div id="loginMessage" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
     </div>
 </div>
 
-<!-- ================= APPLICATION (CACHÉE) ================= -->
+<!-- ================= APPLICATION ================= -->
 <div id="app-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
         <h1>🎰 Loto Bénin - Pro Cockpit</h1>
         <div>
-            <span id="userEmail" style="font-size: 14px; color: var(--text-muted); margin-right: 15px;"></span>
+            <span id="userStatus" style="font-size: 14px; color: var(--text-muted); margin-right: 15px;"></span>
             <button class="danger" onclick="seDeconnecter()" style="font-size: 13px;">Déconnexion</button>
         </div>
     </div>
@@ -156,7 +162,9 @@
 
     <!-- ====== ONGLET 1 : COMPILATION & SACS ====== -->
     <div id="onglet-saisie" class="tab-content active">
-      <div class="card">
+      
+      <!-- ZONE ADMIN UNIQUEMENT (Saisie) -->
+      <div class="card admin-only">
         <h2>➕ Saisir un tirage</h2>
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
           <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
@@ -172,10 +180,11 @@
         <div class="msg" id="message" style="color: var(--color-hot); margin-top:10px;"></div>
       </div>
 
+      <!-- ZONE COMMUNE (Lecture des sacs) -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
           <h2>📜 Compilation par Sac</h2>
-          <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer</button>
+          <button class="danger admin-only" onclick="toutEffacer()">🗑️ Tout effacer</button>
         </div>
         
         <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
@@ -192,7 +201,8 @@
         <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
       </div>
       
-      <div class="card">
+      <!-- ZONE ADMIN UNIQUEMENT (Importation) -->
+      <div class="card admin-only">
         <h2>📁 Importer des résultats</h2>
         <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
         <br>
@@ -291,23 +301,22 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = []; 
 var couleurActive = '#e74c3c';
+var estAdmin = false;
 
 // --- 1. VÉRIFICATION DE LA SESSION AU DÉMARRAGE ---
 async function verifierSession() {
-    // On demande à Supabase si l'utilisateur est déjà connecté (session sauvegardée)
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     
     if (session) {
-        // L'utilisateur est connecté, on affiche l'app
-        afficherApplication(session.user.email);
+        estAdmin = true;
+        afficherApplication(session.user.email, true);
     } else {
-        // Pas de session, on affiche le login
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("app-content").style.display = "none";
     }
 }
 
-// --- 2. FONCTION DE CONNEXION ---
+// --- 2. CONNEXION ADMIN ---
 async function seConnecter() {
     var email = document.getElementById("loginEmail").value;
     var password = document.getElementById("loginPassword").value;
@@ -317,8 +326,7 @@ async function seConnecter() {
     msg.textContent = "Connexion en cours...";
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password,
+        email: email, password: password,
     });
 
     if (error) {
@@ -327,11 +335,18 @@ async function seConnecter() {
     } else {
         msg.style.color = "#27ae60";
         msg.textContent = "✅ Connexion réussie !";
-        afficherApplication(data.user.email);
+        estAdmin = true;
+        afficherApplication(data.user.email, true);
     }
 }
 
-// --- 3. FONCTION DE DÉCONNEXION ---
+// --- 3. MODE VISITEUR ---
+function entrerVisiteur() {
+    estAdmin = false;
+    afficherApplication("Visiteur", false);
+}
+
+// --- 4. DÉCONNEXION ---
 async function seDeconnecter() {
     await supabaseClient.auth.signOut();
     document.getElementById("loginEmail").value = "";
@@ -339,15 +354,27 @@ async function seDeconnecter() {
     document.getElementById("loginMessage").textContent = "";
     document.getElementById("login-screen").style.display = "flex";
     document.getElementById("app-content").style.display = "none";
+    document.body.classList.remove("mode-visiteur");
 }
 
-// --- 4. AFFICHER L'APPLICATION ---
-function afficherApplication(email) {
+// --- 5. AFFICHER L'APPLICATION ---
+function afficherApplication(nomUtilisateur, isAdmin) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app-content").style.display = "block";
-    document.getElementById("userEmail").textContent = "Connecté : " + email;
     
-    // On charge les données une fois connecté
+    var statusEl = document.getElementById("userStatus");
+    
+    if (isAdmin) {
+        statusEl.textContent = "Connecté : " + nomUtilisateur;
+        statusEl.style.color = "#27ae60";
+        document.body.classList.remove("mode-visiteur");
+    } else {
+        statusEl.textContent = "Mode : Lecture Seule (Visiteur)";
+        statusEl.style.color = "var(--color-star)";
+        document.body.classList.add("mode-visiteur");
+    }
+    
+    // On charge les données
     rafraichirDonnees().then(function() {
         ajouterPlage();
         ajouterPlage();
@@ -418,7 +445,7 @@ function ouvrirOnglet(id) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// --- FILTRAGE DES SACS ET AFFICHAGE ---
+// --- FILTRAGE DES SACS ---
 function getTiragesDuSac(sacId) {
     return donneesCloud.filter(function(t) {
         if (sacId === 'tous') return true;
@@ -509,8 +536,10 @@ function afficherSacSelectionne() {
     conteneur.innerHTML = htmlTotal;
 }
 
-// --- SAISIE ---
+// --- SAISIE (SÉCURISÉE) ---
 document.getElementById("btnAjouter").addEventListener("click", async function () {
+  if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+  
   var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "var(--primary)";
   var date = document.getElementById("date").value;
   var jeu = document.getElementById("jeuSaisie").value;
@@ -523,19 +552,19 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   }
   if (!date) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules différentes requises."; return; }
+  
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
-  if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; return; }
+  if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur (êtes-vous connecté ?)."; return; }
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
-async function supprimerParId(id) { 
-    if (!confirm("Supprimer cette ligne ?")) return; 
-    if (id) { await supabaseClient.from('tirages').delete().eq('id', id); } 
+async function toutEffacer() { 
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    if (!confirm("⚠️ Tout supprimer ?")) return; 
+    await supabaseClient.from('tirages').delete().neq('id', 0); 
     await rafraichirDonnees(); 
 }
-
-async function toutEffacer() { if (!confirm("⚠️ Tout supprimer ?")) return; await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); }
 
 // --- COMPARATEUR MULTI-PLAGES ---
 var nombrePlages = 0;
@@ -689,8 +718,10 @@ function colorierBoule(bouleElement) {
     }
 }
 
-// --- IMPORTATION ---
+// --- IMPORTATION (SÉCURISÉE) ---
 async function traiterTexteColle() {
+  if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+  
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
   if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
@@ -731,7 +762,7 @@ async function traiterTexteColle() {
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
           var paquet = aInserer.slice(i, i + taillePaquet);
           let { error } = await supabaseClient.from('tirages').insert(paquet);
-          if (error) { console.error(error); msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message; succes = false; break; }
+          if (error) { console.error(error); msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur (êtes-vous connecté ?)."; succes = false; break; }
       }
       if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejets."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
   } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage valide."; }
