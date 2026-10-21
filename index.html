@@ -2,140 +2,198 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Loto Bénin - Pro Cloud</title>
+<title>Loto Bénin - Pro Cockpit</title>
 <style>
-  :root { --primary: #1a5c2a; --bg: #f4f6f8; --card: #ffffff; }
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg); color: #333; }
-  h1, h2, h3 { color: var(--primary); }
-  .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-  input, button, select, textarea { padding: 10px; font-size: 15px; margin: 4px 2px; border-radius: 6px; border: 1px solid #ccc; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-  input[type=number] { width: 65px; text-align: center; font-weight: bold; }
-  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-  button:hover { background: #144a22; }
-  button.secondary { background: #6c757d; }
-  button.danger { background: #dc3545; }
-  button.danger:hover { background: #c82333; }
-  button.warning { background: #f39c12; color: white; }
-  button.warning:hover { background: #d68910; }
-  
-  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
-  .tab-btn { background: none; color: #555; border: none; font-size: 15px; padding: 10px 15px; cursor: pointer; border-radius: 6px 6px 0 0; font-weight: bold;}
-  .tab-btn.active { background: var(--primary); color: white; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  /* --- VARIABLES DE COULEURS (MODE CLAIR PAR DÉFAUT) --- */
+  :root {
+    --primary: #2980b9;
+    --primary-hover: #1f618d;
+    --bg-body: #f0f2f5;
+    --bg-card: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
+    --border-color: #e1e8ed;
+    --shadow: 0 4px 12px rgba(0,0,0,0.05);
+    
+    --color-star: #f39c12;
+    --color-fortune: #2980b9;
+    --color-digital: #8e44ad;
+    --color-hot: #e74c3c;
+    --color-cold: #3498db;
+    
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --radius-pill: 50px;
+  }
 
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-  th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: center; }
-  th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
-  .msg { font-weight: bold; margin-top: 10px; font-size: 14px; }
+  /* --- MODE SOMBRE AUTOMATIQUE --- */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3498db;
+      --primary-hover: #2980b9;
+      --bg-body: #121212;
+      --bg-card: #1e1e1e;
+      --text-main: #ecf0f1;
+      --text-muted: #95a5a6;
+      --border-color: #333333;
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+  }
+
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
+  h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
   
-  .ball { display: inline-block; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; background: var(--primary); color: white; font-weight: bold; margin: 0 2px; font-size: 14px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);}
-  .ball.star { background: #f39c12; }
-  .ball.fortune { background: #2980b9; }
-  .ball.digital { background: #8e44ad; }
-  .ball.hot { background: #e74c3c; }
-  .ball.cold { background: #3498db; }
-  .ball.empty { background: transparent; color: #ccc; font-size: 24px; line-height: 32px; }
+  /* --- CARTES ET CONTENEURS --- */
+  .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); transition: all 0.3s; }
   
+  /* --- CHAMPS DE SAISIE --- */
+  input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; transition: 0.2s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
+  input[type=number] { width: 70px; text-align: center; font-weight: bold; }
+  
+  /* --- BOUTONS --- */
+  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; border-radius: var(--radius-pill); padding: 10px 20px; transition: 0.2s; }
+  button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+  button.secondary { background: var(--text-muted); }
+  button.danger { background: var(--color-hot); }
+  button.warning { background: var(--color-star); color: #fff; }
+  
+  /* --- NAVIGATION EN PILULES --- */
+  .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); }
+  .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; }
+  .tab-btn:hover { background: var(--bg-body); }
+  .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(41,128,185,0.3); }
+  .tab-content { display: none; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* --- TABLEAUX --- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; font-size: 14px; }
+  th, td { border-bottom: 1px solid var(--border-color); padding: 12px 10px; text-align: center; }
+  th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+  th:first-child { border-top-left-radius: var(--radius-sm); border-bottom-left-radius: var(--radius-sm); }
+  th:last-child { border-top-right-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm); }
+  tr:last-child td { border-bottom: none; }
+  
+  /* --- BOULES 3D --- */
+  .ball { 
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%; 
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.2) 100%), var(--primary); 
+      color: white; font-weight: bold; margin: 0 3px; font-size: 15px; 
+      box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+  }
+  .ball:hover { transform: scale(1.1); }
+  .ball.star { background: linear-gradient(135deg, #f1c40f, #e67e22); }
+  .ball.fortune { background: linear-gradient(135deg, #3498db, #2980b9); }
+  .ball.digital { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+  .ball.hot { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+  .ball.cold { background: linear-gradient(135deg, #3498db, #2980b9); }
+  .ball.empty { background: transparent; box-shadow: none; color: var(--border-color); font-size: 24px; }
+
+  /* --- BOULES DU COMPARATEUR --- */
   .comp-ball {
-      display: inline-block; width: 34px; height: 34px; line-height: 34px; border-radius: 50%;
-      background: #dcdde1; color: #7f8c8d; 
-      font-weight: bold; margin: 0 2px; font-size: 14px; cursor: pointer; user-select: none;
-      transition: transform 0.1s, background-color 0.2s; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--bg-body); color: var(--text-muted); border: 2px solid var(--border-color);
+      font-weight: bold; margin: 0 3px; font-size: 15px; cursor: pointer; user-select: none;
+      transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
   }
   .comp-ball:active { transform: scale(0.9); }
   
-  .comp-ball.match-exact { 
-      background: #2ecc71 !important; color: #fff !important; 
-      border: 3px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
-      transform: scale(1.25); z-index: 10; margin: 0 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-  }
-  .comp-ball.match-turning { 
-      background: #9b59b6 !important; color: #fff !important; 
-      border: 3px solid #8e44ad; box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
-      transform: scale(1.25); z-index: 10; margin: 0 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-  }
-  .comp-ball.match-multi { 
-      background: #f1c40f !important; color: #111 !important; 
-      border: 3px solid #d35400; box-shadow: 0 0 15px rgba(241, 196, 15, 1);
-      transform: scale(1.35); z-index: 10; margin: 0 5px; text-shadow: none;
-  }
-  
-  .t-info { font-size: 13px; color: #d32f2f; font-weight: bold; margin-left: 5px; }
-  .n-info { font-size: 12px; color: #777; margin-left: 10px; }
-  
-  /* Styles pour les journées */
-  .day-card { background: #fff; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  .day-header { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; display: flex; justify-content: space-between; }
-  .day-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
-  .day-row:last-child { border-bottom: none; }
-  .day-time { width: 100px; font-weight: bold; color: #555; }
-  .day-game { width: 100px; font-weight: bold; font-size: 13px; }
-  .day-nums { flex: 1; display: flex; align-items: center; }
+  .comp-ball.match-exact { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; border-color: #1e8449; box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); transform: scale(1.1); }
+  .comp-ball.match-turning { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; border-color: #6c3483; box-shadow: 0 0 10px rgba(155, 89, 182, 0.6); transform: scale(1.1); }
+  .comp-ball.match-multi { background: linear-gradient(135deg, #f1c40f, #d35400); color: #fff; border-color: #a04000; box-shadow: 0 0 15px rgba(241, 196, 15, 0.8); transform: scale(1.2); }
 
-  .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .lab-box { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; }
-  .result-box { margin-top: 15px; padding: 10px; background: #eef5ef; border-left: 4px solid var(--primary); border-radius: 4px; font-weight: bold; }
+  /* --- JOURNÉES (SACS) --- */
+  .day-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 15px; padding: 15px 20px; box-shadow: var(--shadow); }
+  .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
+  .day-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+  .day-row:last-child { border-bottom: none; }
+  .day-time { width: 110px; font-weight: bold; color: var(--text-muted); font-size: 13px; }
+  .day-game { width: 100px; font-weight: bold; font-size: 13px; }
+  .day-nums { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+
+  /* --- COCKPIT & DASHBOARD --- */
+  .cockpit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .cockpit-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); }
+  .cockpit-card h4 { margin-top: 0; margin-bottom: 15px; color: var(--text-main); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
+  .stat-list { list-style: none; padding: 0; margin: 0; }
+  .stat-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color); font-size: 14px;}
   
-  .comp-container { display: flex; gap: 15px; margin-top: 20px; overflow-x: auto; }
-  .comp-col { flex: 1; min-width: 320px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+  /* --- FORMULAIRES ET SELECTS --- */
+  .sac-selector { padding: 15px; font-size: 16px; border-radius: var(--radius-pill); border: 2px solid var(--primary); background: var(--bg-card); font-weight: bold; width: 100%; max-width: 500px; margin-bottom: 20px; color: var(--text-main);}
+  .filtre-btns { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filtre-btn { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 8px 15px; cursor: pointer; transition: 0.2s; }
+  .filtre-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* --- LABORATOIRE ET COMPARATEUR --- */
+  .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .lab-box { background: var(--bg-body); border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius-md); }
+  .result-box { margin-top: 15px; padding: 15px; background: var(--bg-card); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); box-shadow: var(--shadow);}
+  
+  .comp-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px;}
+  .comp-col { flex: 1; min-width: 350px; background: var(--bg-card); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow); }
   .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
-  .comp-table td { padding: 6px; border: 1px solid #eee; text-align: center;}
-  .comp-table th { padding: 6px; border: 1px solid #eee; background: #f8f9fa;}
+  .comp-table td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center;}
+  .comp-table th { padding: 10px; border-bottom: 2px solid var(--border-color); background: transparent;}
   
   .plages-config { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
-  .plage-box { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 250px;}
-  .plage-box label { font-size: 13px; font-weight: bold; }
-  .plage-box select { margin-bottom: 5px; width: 100%; }
+  .plage-box { background: var(--bg-body); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 10px; min-width: 250px;}
   
-  .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 8px; flex-wrap: wrap;}
-  .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; }
+  .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 20px; padding: 15px; background: var(--bg-body); border-radius: var(--radius-lg); flex-wrap: wrap;}
+  .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
   .color-btn:active { transform: scale(0.9); }
-  .color-btn.active { border-color: #333; transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+  .color-btn.active { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-  .cockpit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-  .cockpit-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  .cockpit-card h4 { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-  .stat-list { list-style: none; padding: 0; margin: 0; }
-  .stat-list li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
-
-  .sac-selector { padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid var(--primary); background: #eef5ef; font-weight: bold; width: 100%; max-width: 400px; margin-bottom: 15px;}
+  /* Responsive */
+  @media (max-width: 768px) {
+      .lab-grid { grid-template-columns: 1fr; }
+      .day-row { flex-wrap: wrap; }
+      .day-time { width: 100%; margin-bottom: 5px; }
+      .day-game { width: auto; margin-right: 10px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>🎰 Loto Bénin - Pro Cloud (En Ligne)</h1>
-<p id="statusCloud" style="font-weight: bold; color: orange;">⏳ Connexion à la base de données en ligne...</p>
+<h1>🎰 Loto Bénin - Pro Cockpit</h1>
+<p id="statusCloud" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
 
+<!-- NAVIGATION EN PILULES -->
 <div class="tabs">
   <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Compilation</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('cockpit')" style="background-color: #e67e22;">🚀 Cockpit</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('comparateur')" style="background-color: #16a085;">⚖️ Comparateur</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('labo')" style="background-color: #8e44ad;">🧪 Laboratoire</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('cockpit')">🚀 Cockpit</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('comparateur')">⚖️ Comparateur</button>
+  <button class="tab-btn" onclick="ouvrirOnglet('labo')">🧪 Laboratoire</button>
 </div>
 
 <!-- ====== ONGLET 1 : COMPILATION & SACS ====== -->
 <div id="onglet-saisie" class="tab-content active">
   <div class="card">
     <h2>➕ Saisir un tirage</h2>
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 15px;">
-      <label>Jeu : <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select></label>
-      <label>Heure : <select id="heureSaisie"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
-      <label>Date : <input type="date" id="date"></label>
-      <label>B1 <input type="number" id="b1" min="1" max="90"></label>
-      <label>B2 <input type="number" id="b2" min="1" max="90"></label>
-      <label>B3 <input type="number" id="b3" min="1" max="90"></label>
-      <label>B4 <input type="number" id="b4" min="1" max="90"></label>
-      <label>B5 <input type="number" id="b5" min="1" max="90"></label>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+      <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+      <select id="heureSaisie"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
+      <input type="date" id="date">
+      <input type="number" id="b1" min="1" max="90" placeholder="B1">
+      <input type="number" id="b2" min="1" max="90" placeholder="B2">
+      <input type="number" id="b3" min="1" max="90" placeholder="B3">
+      <input type="number" id="b4" min="1" max="90" placeholder="B4">
+      <input type="number" id="b5" min="1" max="90" placeholder="B5">
       <button id="btnAjouter">Ajouter</button>
     </div>
-    <div class="msg" id="message"></div>
+    <div class="msg" id="message" style="color: var(--color-hot); margin-top:10px;"></div>
   </div>
 
   <div class="card">
-    <h2>📜 Compilation par Sac</h2>
-    <p style="color:#555; font-size: 13px;">Sélectionnez une catégorie. L'application masque automatiquement les jeux qui n'existaient pas encore aux dates concernées.</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+      <h2>📜 Compilation par Sac</h2>
+      <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer</button>
+    </div>
     
     <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
         <option value="tous">Vue Globale (Tout mélangé)</option>
@@ -148,15 +206,15 @@
         <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
     </select>
 
-    <div id="conteneurSac" style="max-height: 600px; overflow-y: auto;"></div>
+    <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
   </div>
   
   <div class="card">
     <h2>📁 Importer des résultats</h2>
-    <textarea id="texteAImporter" rows="5" style="width: 100%; font-family: monospace; font-size: 13px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Collez vos données brutes (ex: Fortune 11H;09/09/2026;67;76;75;55;60)..."></textarea>
+    <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
     <br>
-    <button onclick="traiterTexteColle()" style="margin-top: 10px; font-size: 14px;">🚀 Importer</button>
-    <div class="msg" id="importMessage" style="font-size: 14px; margin-top: 10px;"></div>
+    <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Importer</button>
+    <div class="msg" id="importMessage" style="margin-top: 10px;"></div>
   </div>
 </div>
 
@@ -164,22 +222,22 @@
 <div id="onglet-cockpit" class="tab-content">
   <div class="card">
     <h2>🚀 Cockpit & Simulation</h2>
-    <div style="background: #eef5ef; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+    <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
         <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
         <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
         <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
     </div>
 
     <div class="cockpit-grid">
-        <div class="cockpit-card">
+        <div class="cockpit-card" style="border-left-color: var(--color-hot);">
             <h4>🎯 Prédiction</h4>
-            <div id="cockpitPrediction"><p><i>En attente...</i></p></div>
+            <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
             <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
-            <div id="grilleGeneree" style="margin-top: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #27ae60;"></div>
+            <div id="grilleGeneree" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
         </div>
-        <div class="cockpit-card">
+        <div class="cockpit-card" style="border-left-color: var(--color-cold);">
             <h4>🔄 Cycles (Retards)</h4>
-            <div id="cockpitCycles" style="max-height: 200px; overflow-y: auto;"><p><i>En attente...</i></p></div>
+            <div id="cockpitCycles"><p style="color: var(--text-muted);">En attente...</p></div>
         </div>
     </div>
   </div>
@@ -188,11 +246,11 @@
 <!-- ====== ONGLET 3 : COMPARATEUR MULTI-PLAGES ====== -->
 <div id="onglet-comparateur" class="tab-content">
   <div class="card">
-    <h2>⚖️ Comparateur Multi-Plages (Par Sacs)</h2>
+    <h2>⚖️ Comparateur Multi-Plages</h2>
     <div id="plages-config" class="plages-config"></div>
-    <div style="margin-top: 15px; display: flex; gap: 10px;">
-        <button onclick="ajouterPlage()" class="info" style="background-color: #2980b9;">➕ Ajouter une plage</button>
-        <button onclick="executerComparateurMulti()" style="flex: 1; background-color: #16a085;">🔍 Comparer</button>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
+        <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
     </div>
     
     <div class="palette">
@@ -202,9 +260,10 @@
         <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></div>
         <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></div>
         <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></div>
-        <span style="font-weight:bold; margin-left:10px; margin-right:5px;">Gomme :</span>
+        
+        <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
         <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</div>
-        <button onclick="resetColors()" class="danger" style="margin-left: 10px; font-size: 12px; padding: 5px;">Réinitialiser</button>
+        <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
     </div>
 
     <div id="resultatComparaison" class="comp-container"></div>
@@ -219,21 +278,21 @@
       <div class="lab-box">
         <h3>1. Analyse d'un tirage</h3>
         <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
-        <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
-          <button onclick="faireTurning()" style="flex:1; font-size:13px;">Miroir</button>
-          <button onclick="faireAddition()" style="flex:1; font-size:13px;">Somme (+)</button>
-          <button onclick="faireTheosophie()" style="flex:1; background-color: #e67e22; font-size:13px;">🔢 Théosophie</button>
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
+          <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme (+)</button>
+          <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">🔢 Théosophie</button>
         </div>
         <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
       </div>
       <div class="lab-box">
         <h3>2. Multi-Draws</h3>
-        <select id="selectMultiTirages" multiple style="width: 100%; height: 100px;"></select>
-        <div style="margin-top: 10px; display:flex; gap:5px;">
-          <button onclick="executerAdditions()" style="flex:1; background-color: #2980b9;">➕ Additionner</button>
-          <button onclick="executerBankersMulti()" style="flex:1; background-color: #f39c12;">🏦 Communs</button>
+        <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;"></select>
+        <div style="margin-top: 15px; display:flex; gap:10px;">
+          <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
+          <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
         </div>
-        <div id="resultatLaboAvance" style="margin-top:10px; background:#fff; padding:10px; border:1px solid #ddd;"></div>
+        <div id="resultatLaboAvance" class="result-box" style="margin-top:15px; font-weight: normal;"></div>
       </div>
     </div>
   </div>
@@ -270,7 +329,7 @@ async function chargerDepuisCloud() {
 
     if (error) {
       statusEl.textContent = "❌ Erreur de connexion.";
-      statusEl.style.color = "red";
+      statusEl.style.color = "var(--color-hot)";
       return [];
     }
 
@@ -283,7 +342,7 @@ async function chargerDepuisCloud() {
   }
   
   statusEl.textContent = "✅ Connecté au Cloud ! (" + tousLesTirages.length + " tirages)";
-  statusEl.style.color = "green";
+  statusEl.style.color = "#27ae60";
   
   donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
@@ -328,7 +387,7 @@ function getTiragesDuSac(sacId) {
     });
 }
 
-// --- AFFICHAGE DU SAC SÉLECTIONNÉ (GRILLE FIXE + DATES DE LANCEMENT) ---
+// --- AFFICHAGE DU SAC (GRILLE FIXE AVEC DATES DE LANCEMENT) ---
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var tiragesFiltres = getTiragesDuSac(sacId);
@@ -336,26 +395,22 @@ function afficherSacSelectionne() {
     conteneur.innerHTML = "";
 
     if (tiragesFiltres.length === 0) { 
-        conteneur.innerHTML = "<p style='color:#777;'>Aucun tirage pour ce sac.</p>"; 
+        conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage pour ce sac.</p>"; 
         return; 
     }
 
-    // 1. Regrouper les tirages par date
     var parDate = {};
     tiragesFiltres.forEach(function(t) {
         if (!parDate[t.date]) parDate[t.date] = [];
         parDate[t.date].push(t);
     });
 
-    // 2. Extraire et trier les dates (de la plus ancienne à la plus récente)
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
 
-    // 3. DÉFINITION DES DATES DE LANCEMENT
     var dateLancementStar = new Date("2004-06-16");
     var dateLancementFortune = new Date("2010-04-28");
     var dateLancementDigital = new Date("2023-07-13");
 
-    // 4. Liste des heures standards
     var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
 
     var htmlTotal = "";
@@ -367,38 +422,23 @@ function afficherSacSelectionne() {
         var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
         var htmlJour = "<div class='day-card'>";
-        htmlJour += "<div class='day-header'><span>📅 " + dateFormatee + "</span></div>";
+        htmlJour += "<div class='day-header'>📅 " + dateFormatee + "</div>";
 
-        // 5. Déterminer les heures applicables selon la date
         var heuresApplicables = toutesLesHeures.filter(function(heure) {
-            // Règle Digital (00H, 08H, 20H) -> Après Juillet 2023
-            if (heure === "00H" || heure === "08H" || heure === "20H") {
-                return dateObj >= dateLancementDigital;
-            }
-            // Règle Fortune (11H, 14H, 18H) -> Après Avril 2010
-            // Note: On vérifie si c'est un jour de Fortune ou Star dans le sac sélectionné
+            if (heure === "00H" || heure === "08H" || heure === "20H") return dateObj >= dateLancementDigital;
             if (heure === "11H" || heure === "14H" || heure === "18H") {
-                // Si le sac contient le Star, on vérifie après 2004
                 if (sacId.includes("Star")) {
                     if (dateObj < dateLancementStar) return false;
-                    // Si le sac contient AUSSI Fortune, on doit voir si le jeu de ce jour était Fortune
-                    if (sacId.includes("Fortune")) {
-                        // Si c'est avant le lancement de Fortune, seul le Star existait
-                        return true; 
-                    }
+                    if (sacId.includes("Fortune")) return true; 
                     return true;
                 }
-                // Si le sac contient Fortune seul
-                if (sacId.includes("Fortune")) {
-                    return dateObj >= dateLancementFortune;
-                }
+                if (sacId.includes("Fortune")) return dateObj >= dateLancementFortune;
             }
             return false;
         });
 
         heuresApplicables.forEach(function(heure) {
             compteurLigne++; 
-
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
 
             htmlJour += "<div class='day-row'>";
@@ -411,7 +451,7 @@ function afficherSacSelectionne() {
                 tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "'>" + n + "</span>"; });
                 htmlJour += "</div>";
             } else {
-                htmlJour += "<div class='day-game' style='color:#ccc;'>-</div>";
+                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div>";
                 htmlJour += "<div class='day-nums'><span class='ball empty'>-</span></div>";
             }
             htmlJour += "</div>";
@@ -426,22 +466,22 @@ function afficherSacSelectionne() {
 
 // --- SAISIE ---
 document.getElementById("btnAjouter").addEventListener("click", async function () {
-  var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "blue";
+  var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "var(--primary)";
   var date = document.getElementById("date").value;
   var jeu = document.getElementById("jeuSaisie").value;
   var heure = document.getElementById("heureSaisie").value;
   var boules = [];
   for (var i = 1; i <= 5; i++) {
     var v = parseInt(document.getElementById("b" + i).value, 10);
-    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "red"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
+    if (isNaN(v) || v < 1 || v > 90) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules entre 1 et 90."; return; }
     boules.push(v);
   }
-  if (!date) { msg.style.color = "red"; msg.textContent = "Erreur : date requise."; return; }
-  if (new Set(boules).size !== 5) { msg.style.color = "red"; msg.textContent = "Erreur : boules différentes requises."; return; }
+  if (!date) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : date requise."; return; }
+  if (new Set(boules).size !== 5) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules différentes requises."; return; }
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
-  if (error) { msg.style.color = "red"; msg.textContent = "❌ Erreur."; return; }
+  if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; return; }
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-  msg.style.color = "green"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
+  msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
 async function supprimerParId(id) { 
@@ -449,6 +489,8 @@ async function supprimerParId(id) {
     if (id) { await supabaseClient.from('tirages').delete().eq('id', id); } 
     await rafraichirDonnees(); 
 }
+
+async function toutEffacer() { if (!confirm("⚠️ Tout supprimer ?")) return; await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); }
 
 // --- COMPARATEUR MULTI-PLAGES ---
 var nombrePlages = 0;
@@ -606,8 +648,8 @@ function colorierBoule(bouleElement) {
 async function traiterTexteColle() {
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
-  if (!texte.trim()) { msg.style.color = "red"; msg.textContent = "❌ Le cadre est vide."; return; }
-  msg.style.color = "blue"; msg.textContent = "⏳ Analyse et envoi...";
+  if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
+  msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse et envoi...";
   var lignes = texte.split(/\r?\n/); var aInserer = []; var doublons = 0; var erreurs = 0;
   var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020; 
   lignes.forEach(function(ligne) {
@@ -644,10 +686,10 @@ async function traiterTexteColle() {
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
           var paquet = aInserer.slice(i, i + taillePaquet);
           let { error } = await supabaseClient.from('tirages').insert(paquet);
-          if (error) { console.error(error); msg.style.color = "red"; msg.textContent = "❌ Erreur : " + error.message; succes = false; break; }
+          if (error) { console.error(error); msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message; succes = false; break; }
       }
-      if (succes) { msg.style.color = "green"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejets."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
-  } else { msg.style.color = "orange"; msg.textContent = "⚠️ Aucun nouveau tirage valide."; }
+      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejets."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
+  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage valide."; }
 }
 
 // --- COCKPIT ---
@@ -657,8 +699,8 @@ function actualiserCockpit() {
     var filtres = donneesCloud.filter(function(t) { return t.jeu === jeu && (heure === "all" || t.heure === heure); });
     
     if (filtres.length === 0) {
-        document.getElementById("cockpitPrediction").innerHTML = "<p>Pas de données.</p>";
-        document.getElementById("cockpitCycles").innerHTML = "<p>Pas de données.</p>";
+        document.getElementById("cockpitPrediction").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
+        document.getElementById("cockpitCycles").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
         return;
     }
     var freq = {}, ecarts = {};
@@ -673,10 +715,19 @@ function actualiserCockpit() {
     
     var htmlPred = "<p><b>🔥 Top 5 Chauds :</b><br>";
     topChauds.forEach(function(x) { htmlPred += "<span class='ball hot'>" + x.n + "</span> (" + x.f + "x) "; });
-    htmlPred += "</p><p><b>❄️ Top 5 Retards :</b><br>";
+    htmlPred += "</p><p style='margin-top:15px;'><b>❄️ Top 5 Retards :</b><br>";
     topRetards.forEach(function(x) { htmlPred += "<span class='ball cold'>" + x.n + "</span> (R:" + x.e + ") "; });
     htmlPred += "</p>";
     document.getElementById("cockpitPrediction").innerHTML = htmlPred;
+
+    var htmlCycles = "<ul class='stat-list'>";
+    topRetards.forEach(function(x) {
+        var moyenneGlobale = filtres.length / 90; 
+        var enZone = x.e > moyenneGlobale ? "<span style='color:var(--color-hot); font-weight:bold;'>🔴 Zone !</span>" : "<span style='color:var(--text-muted);'>⚪ Normal</span>";
+        htmlCycles += "<li><b>" + x.n + "</b> <span>Retard: " + x.e + " | " + enZone + "</span></li>";
+    });
+    htmlCycles += "</ul>";
+    document.getElementById("cockpitCycles").innerHTML = htmlCycles;
 }
 
 function genererGrilleCockpit() {
@@ -709,7 +760,7 @@ function faireTheosophie() {
     });
     var totalAffiche = sommeTheo; var reductionTxt = "";
     while(totalAffiche > 90) { totalAffiche -= 90; reductionTxt += " -> " + totalAffiche; }
-    document.getElementById("resultatOperations").innerHTML = "<b>Somme Théosophique :</b><br>Détail : " + calculDetail.join(" | ") + "<br><b>Total brut : " + sommeTheo + "</b><br>" + (reductionTxt !== "" ? "<span style='color:#d35400;'>Réduction : " + reductionTxt + "</span><br>" : "") + "Résultat : <span class='ball' style='background:#e67e22;'>" + totalAffiche + "</span>";
+    document.getElementById("resultatOperations").innerHTML = "<b>Somme Théosophique :</b><br>Détail : " + calculDetail.join(" | ") + "<br><b>Total brut : " + sommeTheo + "</b><br>" + (reductionTxt !== "" ? "<span style='color:var(--color-star);'>Réduction : " + reductionTxt + "</span><br>" : "") + "Résultat : <span class='ball' style='background:linear-gradient(135deg, #f39c12, #d35400);'>" + totalAffiche + "</span>";
 }
 function remplirSelecteurTirage() {
   var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
@@ -729,13 +780,13 @@ function analyserTirageLabo() {
 function faireTurning() {
   if(!tirageActifLabo) return;
   var res = tirageActifLabo.boules.map(function(n) { var s = n.toString(); if(s.length === 1) s = "0" + s; var inv = parseInt(s.split('').reverse().join(''), 10); return (inv > 90 || inv === 0) ? n : inv; });
-  document.getElementById("resultatOperations").innerHTML = "<b>Turning :</b><br>Base : " + tirageActifLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#8e44ad;'>" + res.join(" - ") + "</span>";
+  document.getElementById("resultatOperations").innerHTML = "<b>Turning :</b><br>Base : " + tirageActifLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + res.join(" - ") + "</span>";
 }
 function faireAddition() {
   if(!tirageActifLabo) return;
   var somme = tirageActifLabo.boules.reduce(function(a, b) { return a + b; }, 0);
   var reduit = somme; while(reduit > 90) { reduit -= 90; }
-  document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#8e44ad;'>" + reduit + "</span>";
+  document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#9b59b6; font-weight:bold;'>" + reduit + "</span>";
 }
 
 // Initialisation
