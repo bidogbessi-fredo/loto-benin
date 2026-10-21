@@ -29,16 +29,23 @@
   #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
   .login-box h2 { margin-bottom: 25px; color: var(--primary); }
-  .login-box input { width: 100%; margin-bottom: 15px; }
-  .login-box button { width: 100%; margin-top: 10px; }
+  
+  /* Cacher l'inscription par défaut */
+  #form-inscription { display: none; }
+
+  .login-box input { width: 100%; margin-bottom: 15px; padding: 12px 15px; font-size: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
+  .login-box button { width: 100%; margin-top: 10px; padding: 12px 20px; font-weight: bold; border-radius: var(--radius-pill); cursor: pointer; border: none; transition: 0.2s;}
+  .btn-principal { background: var(--primary); color: white; }
+  .btn-principal:hover { background: var(--primary-hover); }
   .btn-visiteur { background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
   .btn-visiteur:hover { background: var(--border-color) !important; }
-  .btn-inscription { background: var(--color-star) !important; color: white !important; margin-top: 20px !important; }
+  .btn-inscription { background: var(--color-star) !important; color: white !important; }
+  
+  .lien-switch { display: block; margin-top: 20px; font-size: 14px; color: var(--primary); cursor: pointer; text-decoration: underline; }
+  .lien-switch:hover { color: var(--primary-hover); }
 
-  /* --- L'APPLICATION --- */
+  /* --- LE RESTE DU DESIGN --- */
   #app-content { display: none; }
-
-  /* --- RESTE DU DESIGN --- */
   .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); }
   input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
   input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
@@ -111,10 +118,8 @@
   .color-btn:active { transform: scale(0.9); }
   .color-btn.active { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-  /* --- CLASSES POUR LE MODE VISITEUR --- */
   .mode-visiteur .admin-only { display: none !important; }
 
-  /* --- SYSTÈME D'ABONNEMENT (FLOUTAGE) --- */
   .premium-locked { position: relative; min-height: 400px; overflow: hidden; }
   .premium-locked > *:not(.lock-overlay) { filter: blur(8px); pointer-events: none; user-select: none; opacity: 0.5;}
   .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); z-index: 10; border-radius: var(--radius-lg); text-align: center; padding: 20px;}
@@ -132,22 +137,33 @@
 </head>
 <body>
 
-<!-- ================= ÉCRAN DE CONNEXION / INSCRIPTION ================= -->
+<!-- ================= ÉCRAN DE CONNEXION & INSCRIPTION ================= -->
 <div id="login-screen">
     <div class="login-box">
         <h1 style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Portail d'accès</p>
         
-        <input type="email" id="loginEmail" placeholder="Adresse email" required>
-        <input type="password" id="loginPassword" placeholder="Mot de passe" required>
-        
-        <button onclick="seConnecter()">Se connecter</button>
-        <button class="btn-visiteur" onclick="entrerVisiteur()">👁️ Entrer en mode Visiteur (Résultats seuls)</button>
-        
-        <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--border-color);">
-        
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Pas encore de compte ? Inscrivez-vous pour accéder aux analyses.</p>
-        <button class="btn-inscription" onclick="creerCompte()">Créer un compte</button>
+        <!-- FORMULAIRE CONNEXION -->
+        <div id="form-connexion">
+            <input type="email" id="loginEmail" placeholder="Adresse email" required>
+            <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+            
+            <button class="btn-principal" onclick="seConnecter()">Se connecter</button>
+            <button class="btn-visiteur" onclick="entrerVisiteur()">👁️ Entrer en mode Visiteur</button>
+            
+            <span class="lien-switch" onclick="afficherInscription()">Pas encore de compte ? S'inscrire</span>
+        </div>
+
+        <!-- FORMULAIRE INSCRIPTION -->
+        <div id="form-inscription">
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Créez votre compte pour accéder aux analyses.</p>
+            <input type="email" id="insEmail" placeholder="Nouvelle adresse email" required>
+            <input type="password" id="insPassword" placeholder="Mot de passe (6 caractères min.)" required>
+            
+            <button class="btn-inscription" onclick="creerCompte()">Créer mon compte</button>
+            
+            <span class="lien-switch" onclick="afficherConnexion()">Déjà un compte ? Se connecter</span>
+        </div>
         
         <div id="loginMessage" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
     </div>
@@ -165,7 +181,6 @@
     
     <p id="statusCloud" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
 
-    <!-- NAVIGATION EN PILULES -->
     <div class="tabs">
       <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Compilation</button>
       <button class="tab-btn" onclick="ouvrirOnglet('cockpit')">🚀 Cockpit</button>
@@ -173,7 +188,7 @@
       <button class="tab-btn" onclick="ouvrirOnglet('labo')">🧪 Laboratoire</button>
     </div>
 
-    <!-- ====== ONGLET 1 : COMPILATION (Accessible à tous) ====== -->
+    <!-- ====== ONGLET 1 : COMPILATION ====== -->
     <div id="onglet-saisie" class="tab-content active">
       
       <div class="card admin-only">
@@ -221,17 +236,15 @@
       </div>
     </div>
 
-    <!-- ====== ONGLET 2 : COCKPIT (Premium) ====== -->
+    <!-- ====== ONGLET 2 : COCKPIT ====== -->
     <div id="onglet-cockpit" class="tab-content">
       <div class="card premium-locked" id="lock-cockpit">
-        <!-- Overlay de blocage (caché par défaut) -->
         <div class="lock-overlay" id="overlay-cockpit" style="display: none;">
             <h2>🔒 Accès Abonné Requis</h2>
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
         </div>
 
-        <!-- Contenu réel -->
         <div id="content-cockpit">
             <h2>🚀 Cockpit & Simulation</h2>
             <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
@@ -256,7 +269,7 @@
       </div>
     </div>
 
-    <!-- ====== ONGLET 3 : COMPARATEUR (Premium) ====== -->
+    <!-- ====== ONGLET 3 : COMPARATEUR ====== -->
     <div id="onglet-comparateur" class="tab-content">
       <div class="card premium-locked" id="lock-comparateur">
         <div class="lock-overlay" id="overlay-comparateur" style="display: none;">
@@ -290,7 +303,7 @@
       </div>
     </div>
 
-    <!-- ====== ONGLET 4 : LABORATOIRE (Premium) ====== -->
+    <!-- ====== ONGLET 4 : LABORATOIRE ====== -->
     <div id="onglet-labo" class="tab-content">
       <div class="card premium-locked" id="lock-labo">
         <div class="lock-overlay" id="overlay-labo" style="display: none;">
@@ -327,7 +340,6 @@
     </div>
 </div>
 
-<!-- INTEGRATION DE LA LIBRAIRIE SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -340,15 +352,32 @@ var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
 
+// --- NAVIGATION LOGIN / INSCRIPTION ---
+function afficherInscription() {
+    document.getElementById("form-connexion").style.display = "none";
+    document.getElementById("form-inscription").style.display = "block";
+    document.getElementById("loginMessage").textContent = "";
+}
+
+function afficherConnexion() {
+    document.getElementById("form-inscription").style.display = "none";
+    document.getElementById("form-connexion").style.display = "block";
+    document.getElementById("loginMessage").textContent = "";
+}
+
 // --- 1. VÉRIFICATION DE LA SESSION ---
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (session) {
-        // On récupère le profil pour voir le rôle et la date d'expiration
-        const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
+        const { data: profil, error: errProfil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
         
         let role = profil ? profil.role : 'visiteur';
+        
+        if (errProfil) {
+            console.error("ERREUR PROFIL :", errProfil);
+        }
+
         let dateFin = profil && profil.date_fin_abonnement ? new Date(profil.date_fin_abonnement) : null;
         let dateJour = new Date();
         
@@ -367,33 +396,39 @@ async function seConnecter() {
     var email = document.getElementById("loginEmail").value;
     var password = document.getElementById("loginPassword").value;
     var msg = document.getElementById("loginMessage");
-    msg.style.color = "var(--primary)"; msg.textContent = "Connexion en cours...";
+    
+    if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
+    
+    msg.style.color = "var(--primary)"; msg.textContent = "Connexion...";
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
 
     if (error) {
         msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message;
     } else {
-        msg.style.color = "#27ae60"; msg.textContent = "✅ Connexion réussie !";
+        msg.style.color = "#27ae60"; msg.textContent = "✅ Connecté !";
         setTimeout(() => { verifierSession(); }, 500);
     }
 }
 
 // --- 3. INSCRIPTION ---
 async function creerCompte() {
-    var email = document.getElementById("loginEmail").value;
-    var password = document.getElementById("loginPassword").value;
+    var email = document.getElementById("insEmail").value;
+    var password = document.getElementById("insPassword").value;
     var msg = document.getElementById("loginMessage");
     
-    if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez l'email et le mot de passe."; return; }
+    if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
+    if (password.length < 6) { msg.style.color = "var(--color-hot)"; msg.textContent = "Le mot de passe doit faire 6 caractères min."; return; }
+    
     msg.style.color = "var(--primary)"; msg.textContent = "Création du compte...";
 
     const { data, error } = await supabaseClient.auth.signUp({ email: email, password: password });
 
     if (error) {
-        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message;
+        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message;
     } else {
-        msg.style.color = "#27ae60"; msg.textContent = "✅ Compte créé ! Vérifiez vos emails ou connectez-vous.";
+        msg.style.color = "#27ae60"; msg.textContent = "✅ Compte créé ! Connectez-vous.";
+        setTimeout(() => { afficherConnexion(); }, 2000);
     }
 }
 
@@ -409,10 +444,13 @@ async function seDeconnecter() {
     await supabaseClient.auth.signOut();
     document.getElementById("loginEmail").value = "";
     document.getElementById("loginPassword").value = "";
+    document.getElementById("insEmail").value = "";
+    document.getElementById("insPassword").value = "";
     document.getElementById("loginMessage").textContent = "";
     document.getElementById("login-screen").style.display = "flex";
     document.getElementById("app-content").style.display = "none";
     document.body.classList.remove("mode-visiteur");
+    afficherConnexion();
 }
 
 // --- 6. AFFICHER L'APPLICATION ---
@@ -436,16 +474,16 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne) {
         document.body.classList.add("mode-visiteur");
     }
     
-    // GESTION DU FLOUTAGE PREMIUM
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
+        var card = document.getElementById('lock-' + id);
         if (isAdmin || isAbonne) {
             if(overlay) overlay.style.display = "none";
-            document.getElementById('lock-' + id).classList.remove('premium-locked');
+            if(card) card.classList.remove('premium-locked');
         } else {
             if(overlay) overlay.style.display = "flex";
-            document.getElementById('lock-' + id).classList.add('premium-locked');
+            if(card) card.classList.add('premium-locked');
         }
     });
     
@@ -459,13 +497,12 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne) {
 }
 
 function contacterAdmin() {
-    window.open("https://wa.me/22900000000?text=Bonjour,%20je%20souhaite%20m'abonner%20pour%20accéder%20aux%20analyses%20Loto%20Bénin.", "_blank");
+    window.open("https://wa.me/22900000000?text=Bonjour,%20je%20souhaite%20m'abonner.", "_blank");
 }
 
-// --- CHARGEMENT DES DONNÉES ---
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
-  statusEl.textContent = "⏳ Téléchargement de toutes les données...";
+  statusEl.textContent = "⏳ Téléchargement...";
   
   let tousLesTirages = [];
   let page = 0;
@@ -474,35 +511,23 @@ async function chargerDepuisCloud() {
 
   while (enCours) {
     let { data, error } = await supabaseClient
-      .from('tirages')
-      .select('*')
+      .from('tirages').select('*')
       .order('date', { ascending: true })
       .order('heure', { ascending: true })
       .range(page * parPage, (page + 1) * parPage - 1);
 
-    if (error) {
-      statusEl.textContent = "❌ Erreur de connexion.";
-      statusEl.style.color = "var(--color-hot)";
-      return [];
-    }
+    if (error) { statusEl.textContent = "❌ Erreur de connexion."; statusEl.style.color = "var(--color-hot)"; return []; }
 
-    if (data.length > 0) {
-      tousLesTirages = tousLesTirages.concat(data);
-      page++;
-    } else {
-      enCours = false; 
-    }
+    if (data.length > 0) { tousLesTirages = tousLesTirages.concat(data); page++; } 
+    else { enCours = false; }
   }
   
-  statusEl.textContent = "✅ Connecté au Cloud ! (" + tousLesTirages.length + " tirages)";
+  statusEl.textContent = "✅ Connecté ! (" + tousLesTirages.length + " tirages)";
   statusEl.style.color = "#27ae60";
   
   donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
-      return {
-          id: item.id, date: item.date, jeu: item.jeu, heure: item.heure,
-          boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0)
-      };
+      return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0) };
   });
   
   return donneesCloud;
@@ -525,7 +550,6 @@ function ouvrirOnglet(id) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// --- FILTRAGE DES SACS ---
 function getTiragesDuSac(sacId) {
     return donneesCloud.filter(function(t) {
         if (sacId === 'tous') return true;
@@ -546,23 +570,15 @@ function afficherSacSelectionne() {
     var conteneur = document.getElementById("conteneurSac");
     conteneur.innerHTML = "";
 
-    if (tiragesFiltres.length === 0) { 
-        conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage pour ce sac.</p>"; 
-        return; 
-    }
+    if (tiragesFiltres.length === 0) { conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage.</p>"; return; }
 
     var parDate = {};
-    tiragesFiltres.forEach(function(t) {
-        if (!parDate[t.date]) parDate[t.date] = [];
-        parDate[t.date].push(t);
-    });
-
+    tiragesFiltres.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
 
     var dateLancementStar = new Date("2004-06-16");
     var dateLancementFortune = new Date("2010-04-28");
     var dateLancementDigital = new Date("2023-07-13");
-
     var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
 
     var htmlTotal = "";
@@ -573,8 +589,7 @@ function afficherSacSelectionne() {
         var dateObj = new Date(dateStr);
         var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
-        var htmlJour = "<div class='day-card'>";
-        htmlJour += "<div class='day-header'>📅 " + dateFormatee + "</div>";
+        var htmlJour = "<div class='day-card'><div class='day-header'>📅 " + dateFormatee + "</div>";
 
         var heuresApplicables = toutesLesHeures.filter(function(heure) {
             if (heure === "00H" || heure === "08H" || heure === "20H") return dateObj >= dateLancementDigital;
@@ -593,30 +608,24 @@ function afficherSacSelectionne() {
             compteurLigne++; 
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
 
-            htmlJour += "<div class='day-row'>";
-            htmlJour += "<div class='day-time'>Ligne " + compteurLigne + "<br><small>" + heure + "</small></div>";
+            htmlJour += "<div class='day-row'><div class='day-time'>Ligne " + compteurLigne + "<br><small>" + heure + "</small></div>";
             
             if (tirage) {
                 var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
-                htmlJour += "<div class='day-game'>" + tirage.jeu + "</div>";
-                htmlJour += "<div class='day-nums'>";
+                htmlJour += "<div class='day-game'>" + tirage.jeu + "</div><div class='day-nums'>";
                 tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "'>" + n + "</span>"; });
                 htmlJour += "</div>";
             } else {
-                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div>";
-                htmlJour += "<div class='day-nums'><span class='ball empty'>-</span></div>";
+                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div><div class='day-nums'><span class='ball empty'>-</span></div>";
             }
             htmlJour += "</div>";
         });
-
         htmlJour += "</div>";
         htmlTotal += htmlJour;
     });
-
     conteneur.innerHTML = htmlTotal;
 }
 
-// --- SAISIE ---
 document.getElementById("btnAjouter").addEventListener("click", async function () {
   if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
   var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "var(--primary)";
@@ -633,7 +642,7 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   if (new Set(boules).size !== 5) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules différentes requises."; return; }
   
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
-  if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur (êtes-vous connecté ?)."; return; }
+  if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; return; }
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
@@ -641,11 +650,9 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
 async function toutEffacer() { 
     if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
     if (!confirm("⚠️ Tout supprimer ?")) return; 
-    await supabaseClient.from('tirages').delete().neq('id', 0); 
-    await rafraichirDonnees(); 
+    await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); 
 }
 
-// --- COMPARATEUR MULTI-PLAGES ---
 var nombrePlages = 0;
 function ajouterPlage() {
     if (nombrePlages >= 5) { alert("Maximum 5 plages."); return; }
@@ -691,18 +698,13 @@ function executerComparateurMulti() {
         var tiragesDuSac = getTiragesDuSac(sacId);
         var startIndex = refLigne - 1;
         
-        if (startIndex < 0 || startIndex >= tiragesDuSac.length) { 
-            alert("La ligne " + refLigne + " n'existe pas dans ce sac."); 
-            return; 
-        }
+        if (startIndex < 0 || startIndex >= tiragesDuSac.length) { alert("La ligne " + refLigne + " n'existe pas."); return; }
 
         var plage = [];
         var minIdx = Math.max(0, startIndex - range); 
         var maxIdx = Math.min(tiragesDuSac.length - 1, startIndex + range);
         
-        for (var j = minIdx; j <= maxIdx; j++) { 
-            plage.push({ data: tiragesDuSac[j], ligneLocale: j + 1 }); 
-        }
+        for (var j = minIdx; j <= maxIdx; j++) { plage.push({ data: tiragesDuSac[j], ligneLocale: j + 1 }); }
         
         plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
     }
@@ -715,15 +717,11 @@ function executerComparateurMulti() {
     var htmlTotal = "";
     
     plages.forEach(function(p) {
-        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'>";
-        htmlTotal += "<h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3>";
-        htmlTotal += "<table class='comp-table'><tr><th>Ligne</th><th>Numéros</th></tr>";
+        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><tr><th>Ligne</th><th>Numéros</th></tr>";
         
         for (var l = 0; l < maxLines; l++) {
             var item = p.data[l];
-            if (!item) { 
-                htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; 
-            } 
+            if (!item) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; } 
             else {
                 var t = item.data;
                 htmlTotal += "<tr><td><b>Ligne " + item.ligneLocale + "</b><br><small>" + t.jeu + " " + t.heure + "</small></td><td>";
@@ -743,9 +741,7 @@ function executerComparateurMulti() {
                             if (hasExact) matchExactCount++; 
                             else if (hasTurning) matchTurningCount++; 
                             else allPlagesMatch = false; 
-                        } else { 
-                            allPlagesMatch = false; 
-                        }
+                        } else { allPlagesMatch = false; }
                     });
                     
                     var cls = "comp-ball";
@@ -765,45 +761,20 @@ function executerComparateurMulti() {
     document.getElementById("resultatComparaison").innerHTML = htmlTotal;
 }
 
-function getTurning(num) {
-    var s = num.toString().padStart(2, '0'); 
-    var inv = parseInt(s.split('').reverse().join(''), 10); 
-    return (inv === 0 || inv > 90) ? num : inv;
-}
-
-function resetColors() {
-    document.querySelectorAll('.comp-ball').forEach(function(b) {
-        b.style.backgroundColor = ''; b.style.color = '';
-        b.style.borderColor = ''; b.style.boxShadow = '';
-    });
-}
-
-function changerCouleur(element, couleur) {
-    document.querySelectorAll('.color-btn').forEach(function(btn) { btn.classList.remove('active'); });
-    element.classList.add('active');
-    couleurActive = couleur === 'annuler' ? 'annuler' : couleur;
-}
-
+function getTurning(num) { var s = num.toString().padStart(2, '0'); var inv = parseInt(s.split('').reverse().join(''), 10); return (inv === 0 || inv > 90) ? num : inv; }
+function resetColors() { document.querySelectorAll('.comp-ball').forEach(function(b) { b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = ''; b.style.boxShadow = ''; }); }
+function changerCouleur(element, couleur) { document.querySelectorAll('.color-btn').forEach(function(btn) { btn.classList.remove('active'); }); element.classList.add('active'); couleurActive = couleur === 'annuler' ? 'annuler' : couleur; }
 function colorierBoule(bouleElement) {
-    if (couleurActive === 'annuler') {
-        bouleElement.style.backgroundColor = ''; bouleElement.style.color = '';
-        bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = '';
-    } else {
-        bouleElement.style.backgroundColor = couleurActive; 
-        bouleElement.style.color = '#fff';
-        bouleElement.style.borderColor = '#333'; 
-        bouleElement.style.boxShadow = '0 0 8px ' + couleurActive;
-        bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
-    }
+    if (couleurActive === 'annuler') { bouleElement.style.backgroundColor = ''; bouleElement.style.color = ''; bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = ''; } 
+    else { bouleElement.style.backgroundColor = couleurActive; bouleElement.style.color = '#fff'; bouleElement.style.borderColor = '#333'; bouleElement.style.boxShadow = '0 0 8px ' + couleurActive; bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; }
 }
 
-// --- IMPORTATION ---
 async function traiterTexteColle() {
   if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
   var texte = document.getElementById("texteAImporter").value;
   var msg = document.getElementById("importMessage");
   if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
-  msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse et envoi...";
+  msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse...";
   var lignes = texte.split(/\r?\n/); var aInserer = []; var doublons = 0; var erreurs = 0;
   var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020; 
   lignes.forEach(function(ligne) {
@@ -840,13 +811,12 @@ async function traiterTexteColle() {
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
           var paquet = aInserer.slice(i, i + taillePaquet);
           let { error } = await supabaseClient.from('tirages').insert(paquet);
-          if (error) { console.error(error); msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur (êtes-vous connecté ?)."; succes = false; break; }
+          if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; succes = false; break; }
       }
-      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés, " + doublons + " doublons, " + erreurs + " rejets."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
-  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage valide."; }
+      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
+  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage."; }
 }
 
-// --- COCKPIT ---
 function actualiserCockpit() {
     var jeu = document.getElementById("cockpitJeu").value;
     var heure = document.getElementById("cockpitHeure").value;
@@ -902,7 +872,6 @@ function genererGrilleCockpit() {
     document.getElementById("grilleGeneree").innerHTML = "🎲 " + combinaison.join(" - ");
 }
 
-// --- LABORATOIRE ---
 var tirageActifLabo = null;
 function faireTheosophie() {
     if(!tirageActifLabo) return;
@@ -943,7 +912,6 @@ function faireAddition() {
   document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#9b59b6; font-weight:bold;'>" + reduit + "</span>";
 }
 
-// Initialisation au chargement
 document.getElementById("date").valueAsDate = new Date();
 verifierSession();
 </script>
