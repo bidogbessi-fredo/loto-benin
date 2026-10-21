@@ -4,63 +4,50 @@
 <meta charset="UTF-8">
 <title>Loto Bénin - Pro Cockpit</title>
 <style>
-  /* --- VARIABLES DE COULEURS (MODE CLAIR PAR DÉFAUT) --- */
+  /* --- VARIABLES ET MODE SOMBRE --- */
   :root {
-    --primary: #2980b9;
-    --primary-hover: #1f618d;
-    --bg-body: #f0f2f5;
-    --bg-card: #ffffff;
-    --text-main: #2c3e50;
-    --text-muted: #7f8c8d;
-    --border-color: #e1e8ed;
-    --shadow: 0 4px 12px rgba(0,0,0,0.05);
-    
-    --color-star: #f39c12;
-    --color-fortune: #2980b9;
-    --color-digital: #8e44ad;
-    --color-hot: #e74c3c;
-    --color-cold: #3498db;
-    
-    --radius-lg: 20px;
-    --radius-md: 12px;
-    --radius-sm: 8px;
-    --radius-pill: 50px;
+    --primary: #2980b9; --primary-hover: #1f618d;
+    --bg-body: #f0f2f5; --bg-card: #ffffff;
+    --text-main: #2c3e50; --text-muted: #7f8c8d;
+    --border-color: #e1e8ed; --shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --color-star: #f39c12; --color-fortune: #2980b9; --color-digital: #8e44ad;
+    --color-hot: #e74c3c; --color-cold: #3498db;
+    --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px; --radius-pill: 50px;
   }
-
-  /* --- MODE SOMBRE AUTOMATIQUE --- */
   @media (prefers-color-scheme: dark) {
     :root {
-      --primary: #3498db;
-      --primary-hover: #2980b9;
-      --bg-body: #121212;
-      --bg-card: #1e1e1e;
-      --text-main: #ecf0f1;
-      --text-muted: #95a5a6;
-      --border-color: #333333;
-      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+      --primary: #3498db; --primary-hover: #2980b9;
+      --bg-body: #121212; --bg-card: #1e1e1e;
+      --text-main: #ecf0f1; --text-muted: #95a5a6;
+      --border-color: #333333; --shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
   }
 
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
   h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
   
-  /* --- CARTES ET CONTENEURS --- */
-  .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); transition: all 0.3s; }
-  
-  /* --- CHAMPS DE SAISIE --- */
-  input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; transition: 0.2s; }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
+  /* --- L'ÉCRAN DE CONNEXION (Caché par défaut) --- */
+  #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+  .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
+  .login-box h2 { margin-bottom: 25px; color: var(--primary); }
+  .login-box input { width: 100%; margin-bottom: 15px; }
+  .login-box button { width: 100%; margin-top: 10px; }
+
+  /* --- L'APPLICATION (Cachée par défaut) --- */
+  #app-content { display: none; }
+
+  /* --- LE RESTE DU DESIGN --- */
+  .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); }
+  input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
+  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
   input[type=number] { width: 70px; text-align: center; font-weight: bold; }
-  
-  /* --- BOUTONS --- */
   button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; border-radius: var(--radius-pill); padding: 10px 20px; transition: 0.2s; }
   button:hover { background: var(--primary-hover); transform: translateY(-1px); }
   button.secondary { background: var(--text-muted); }
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
   
-  /* --- NAVIGATION EN PILULES --- */
-  .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); }
+  .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center;}
   .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; }
   .tab-btn:hover { background: var(--bg-body); }
   .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(41,128,185,0.3); }
@@ -68,24 +55,12 @@
   .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* --- TABLEAUX --- */
   table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; font-size: 14px; }
   th, td { border-bottom: 1px solid var(--border-color); padding: 12px 10px; text-align: center; }
   th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
-  th:first-child { border-top-left-radius: var(--radius-sm); border-bottom-left-radius: var(--radius-sm); }
-  th:last-child { border-top-right-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm); }
   tr:last-child td { border-bottom: none; }
   
-  /* --- BOULES 3D --- */
-  .ball { 
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 50%; 
-      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.2) 100%), var(--primary); 
-      color: white; font-weight: bold; margin: 0 3px; font-size: 15px; 
-      box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-      transition: transform 0.2s;
-  }
+  .ball { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.2) 100%), var(--primary); color: white; font-weight: bold; margin: 0 3px; font-size: 15px; box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.2); text-shadow: 1px 1px 2px rgba(0,0,0,0.4); transition: transform 0.2s; }
   .ball:hover { transform: scale(1.1); }
   .ball.star { background: linear-gradient(135deg, #f1c40f, #e67e22); }
   .ball.fortune { background: linear-gradient(135deg, #3498db, #2980b9); }
@@ -94,21 +69,12 @@
   .ball.cold { background: linear-gradient(135deg, #3498db, #2980b9); }
   .ball.empty { background: transparent; box-shadow: none; color: var(--border-color); font-size: 24px; }
 
-  /* --- BOULES DU COMPARATEUR --- */
-  .comp-ball {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 38px; height: 38px; border-radius: 50%;
-      background: var(--bg-body); color: var(--text-muted); border: 2px solid var(--border-color);
-      font-weight: bold; margin: 0 3px; font-size: 15px; cursor: pointer; user-select: none;
-      transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-  }
+  .comp-ball { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--bg-body); color: var(--text-muted); border: 2px solid var(--border-color); font-weight: bold; margin: 0 3px; font-size: 15px; cursor: pointer; user-select: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
   .comp-ball:active { transform: scale(0.9); }
-  
   .comp-ball.match-exact { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; border-color: #1e8449; box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); transform: scale(1.1); }
   .comp-ball.match-turning { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; border-color: #6c3483; box-shadow: 0 0 10px rgba(155, 89, 182, 0.6); transform: scale(1.1); }
   .comp-ball.match-multi { background: linear-gradient(135deg, #f1c40f, #d35400); color: #fff; border-color: #a04000; box-shadow: 0 0 15px rgba(241, 196, 15, 0.8); transform: scale(1.2); }
 
-  /* --- JOURNÉES (SACS) --- */
   .day-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 15px; padding: 15px 20px; box-shadow: var(--shadow); }
   .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
   .day-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
@@ -117,20 +83,14 @@
   .day-game { width: 100px; font-weight: bold; font-size: 13px; }
   .day-nums { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 
-  /* --- COCKPIT & DASHBOARD --- */
   .cockpit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
   .cockpit-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); }
   .cockpit-card h4 { margin-top: 0; margin-bottom: 15px; color: var(--text-main); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
   .stat-list { list-style: none; padding: 0; margin: 0; }
   .stat-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color); font-size: 14px;}
   
-  /* --- FORMULAIRES ET SELECTS --- */
   .sac-selector { padding: 15px; font-size: 16px; border-radius: var(--radius-pill); border: 2px solid var(--primary); background: var(--bg-card); font-weight: bold; width: 100%; max-width: 500px; margin-bottom: 20px; color: var(--text-main);}
-  .filtre-btns { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-  .filtre-btn { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 8px 15px; cursor: pointer; transition: 0.2s; }
-  .filtre-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-  /* --- LABORATOIRE ET COMPARATEUR --- */
+  
   .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .lab-box { background: var(--bg-body); border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius-md); }
   .result-box { margin-top: 15px; padding: 15px; background: var(--bg-card); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); box-shadow: var(--shadow);}
@@ -149,7 +109,6 @@
   .color-btn:active { transform: scale(0.9); }
   .color-btn.active { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-  /* Responsive */
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
@@ -160,142 +119,166 @@
 </head>
 <body>
 
-<h1>🎰 Loto Bénin - Pro Cockpit</h1>
-<p id="statusCloud" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
-
-<!-- NAVIGATION EN PILULES -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Compilation</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('cockpit')">🚀 Cockpit</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('comparateur')">⚖️ Comparateur</button>
-  <button class="tab-btn" onclick="ouvrirOnglet('labo')">🧪 Laboratoire</button>
-</div>
-
-<!-- ====== ONGLET 1 : COMPILATION & SACS ====== -->
-<div id="onglet-saisie" class="tab-content active">
-  <div class="card">
-    <h2>➕ Saisir un tirage</h2>
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
-      <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
-      <select id="heureSaisie"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
-      <input type="date" id="date">
-      <input type="number" id="b1" min="1" max="90" placeholder="B1">
-      <input type="number" id="b2" min="1" max="90" placeholder="B2">
-      <input type="number" id="b3" min="1" max="90" placeholder="B3">
-      <input type="number" id="b4" min="1" max="90" placeholder="B4">
-      <input type="number" id="b5" min="1" max="90" placeholder="B5">
-      <button id="btnAjouter">Ajouter</button>
-    </div>
-    <div class="msg" id="message" style="color: var(--color-hot); margin-top:10px;"></div>
-  </div>
-
-  <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-      <h2>📜 Compilation par Sac</h2>
-      <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer</button>
-    </div>
-    
-    <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
-        <option value="tous">Vue Globale (Tout mélangé)</option>
-        <option value="Star">Star Bénin (Seul)</option>
-        <option value="Fortune">Fortune Bénin (Seul)</option>
-        <option value="Digital">Digital Bénin (Seul)</option>
-        <option value="Star_Digital">Sac Star + Digital</option>
-        <option value="Fortune_Digital">Sac Fortune + Digital</option>
-        <option value="Star_Fortune">Sac Star + Fortune</option>
-        <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
-    </select>
-
-    <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
-  </div>
-  
-  <div class="card">
-    <h2>📁 Importer des résultats</h2>
-    <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
-    <br>
-    <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Importer</button>
-    <div class="msg" id="importMessage" style="margin-top: 10px;"></div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 2 : COCKPIT ====== -->
-<div id="onglet-cockpit" class="tab-content">
-  <div class="card">
-    <h2>🚀 Cockpit & Simulation</h2>
-    <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-        <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
-        <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
-        <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
-    </div>
-
-    <div class="cockpit-grid">
-        <div class="cockpit-card" style="border-left-color: var(--color-hot);">
-            <h4>🎯 Prédiction</h4>
-            <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
-            <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
-            <div id="grilleGeneree" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
-        </div>
-        <div class="cockpit-card" style="border-left-color: var(--color-cold);">
-            <h4>🔄 Cycles (Retards)</h4>
-            <div id="cockpitCycles"><p style="color: var(--text-muted);">En attente...</p></div>
-        </div>
-    </div>
-  </div>
-</div>
-
-<!-- ====== ONGLET 3 : COMPARATEUR MULTI-PLAGES ====== -->
-<div id="onglet-comparateur" class="tab-content">
-  <div class="card">
-    <h2>⚖️ Comparateur Multi-Plages</h2>
-    <div id="plages-config" class="plages-config"></div>
-    <div style="margin-top: 20px; display: flex; gap: 10px;">
-        <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
-        <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
-    </div>
-    
-    <div class="palette">
-        <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
-        <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></div>
-        <div class="color-btn" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></div>
-        <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></div>
-        <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></div>
-        <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></div>
+<!-- ================= ÉCRAN DE CONNEXION ================= -->
+<div id="login-screen">
+    <div class="login-box">
+        <h1 style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
+        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Espace Administrateur</p>
         
-        <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
-        <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</div>
-        <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
+        <input type="email" id="loginEmail" placeholder="Adresse email" required>
+        <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+        
+        <button onclick="seConnecter()">Se connecter</button>
+        
+        <div id="loginMessage" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
     </div>
-
-    <div id="resultatComparaison" class="comp-container"></div>
-  </div>
 </div>
 
-<!-- ====== ONGLET 4 : LABORATOIRE ====== -->
-<div id="onglet-labo" class="tab-content">
-  <div class="card">
-    <h2>🧪 Laboratoire d'Analyse</h2>
-    <div class="lab-grid">
-      <div class="lab-box">
-        <h3>1. Analyse d'un tirage</h3>
-        <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
-        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
-          <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme (+)</button>
-          <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">🔢 Théosophie</button>
+<!-- ================= APPLICATION (CACHÉE) ================= -->
+<div id="app-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+        <h1>🎰 Loto Bénin - Pro Cockpit</h1>
+        <div>
+            <span id="userEmail" style="font-size: 14px; color: var(--text-muted); margin-right: 15px;"></span>
+            <button class="danger" onclick="seDeconnecter()" style="font-size: 13px;">Déconnexion</button>
         </div>
-        <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
+    </div>
+    
+    <p id="statusCloud" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
+
+    <!-- NAVIGATION EN PILULES -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Compilation</button>
+      <button class="tab-btn" onclick="ouvrirOnglet('cockpit')">🚀 Cockpit</button>
+      <button class="tab-btn" onclick="ouvrirOnglet('comparateur')">⚖️ Comparateur</button>
+      <button class="tab-btn" onclick="ouvrirOnglet('labo')">🧪 Laboratoire</button>
+    </div>
+
+    <!-- ====== ONGLET 1 : COMPILATION & SACS ====== -->
+    <div id="onglet-saisie" class="tab-content active">
+      <div class="card">
+        <h2>➕ Saisir un tirage</h2>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+          <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+          <select id="heureSaisie"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
+          <input type="date" id="date">
+          <input type="number" id="b1" min="1" max="90" placeholder="B1">
+          <input type="number" id="b2" min="1" max="90" placeholder="B2">
+          <input type="number" id="b3" min="1" max="90" placeholder="B3">
+          <input type="number" id="b4" min="1" max="90" placeholder="B4">
+          <input type="number" id="b5" min="1" max="90" placeholder="B5">
+          <button id="btnAjouter">Ajouter</button>
+        </div>
+        <div class="msg" id="message" style="color: var(--color-hot); margin-top:10px;"></div>
       </div>
-      <div class="lab-box">
-        <h3>2. Multi-Draws</h3>
-        <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;"></select>
-        <div style="margin-top: 15px; display:flex; gap:10px;">
-          <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
-          <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+          <h2>📜 Compilation par Sac</h2>
+          <button class="danger" onclick="toutEffacer()">🗑️ Tout effacer</button>
         </div>
-        <div id="resultatLaboAvance" class="result-box" style="margin-top:15px; font-weight: normal;"></div>
+        
+        <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
+            <option value="tous">Vue Globale (Tout mélangé)</option>
+            <option value="Star">Star Bénin (Seul)</option>
+            <option value="Fortune">Fortune Bénin (Seul)</option>
+            <option value="Digital">Digital Bénin (Seul)</option>
+            <option value="Star_Digital">Sac Star + Digital</option>
+            <option value="Fortune_Digital">Sac Fortune + Digital</option>
+            <option value="Star_Fortune">Sac Star + Fortune</option>
+            <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
+        </select>
+
+        <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
+      </div>
+      
+      <div class="card">
+        <h2>📁 Importer des résultats</h2>
+        <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
+        <br>
+        <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Importer</button>
+        <div class="msg" id="importMessage" style="margin-top: 10px;"></div>
       </div>
     </div>
-  </div>
+
+    <!-- ====== ONGLET 2 : COCKPIT ====== -->
+    <div id="onglet-cockpit" class="tab-content">
+      <div class="card">
+        <h2>🚀 Cockpit & Simulation</h2>
+        <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
+            <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
+            <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
+        </div>
+
+        <div class="cockpit-grid">
+            <div class="cockpit-card" style="border-left-color: var(--color-hot);">
+                <h4>🎯 Prédiction</h4>
+                <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
+                <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
+                <div id="grilleGeneree" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
+            </div>
+            <div class="cockpit-card" style="border-left-color: var(--color-cold);">
+                <h4>🔄 Cycles (Retards)</h4>
+                <div id="cockpitCycles"><p style="color: var(--text-muted);">En attente...</p></div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ONGLET 3 : COMPARATEUR MULTI-PLAGES ====== -->
+    <div id="onglet-comparateur" class="tab-content">
+      <div class="card">
+        <h2>⚖️ Comparateur Multi-Plages</h2>
+        <div id="plages-config" class="plages-config"></div>
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
+            <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
+        </div>
+        
+        <div class="palette">
+            <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
+            <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></div>
+            <div class="color-btn" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></div>
+            <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></div>
+            <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></div>
+            <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></div>
+            <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
+            <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</div>
+            <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
+        </div>
+
+        <div id="resultatComparaison" class="comp-container"></div>
+      </div>
+    </div>
+
+    <!-- ====== ONGLET 4 : LABORATOIRE ====== -->
+    <div id="onglet-labo" class="tab-content">
+      <div class="card">
+        <h2>🧪 Laboratoire d'Analyse</h2>
+        <div class="lab-grid">
+          <div class="lab-box">
+            <h3>1. Analyse d'un tirage</h3>
+            <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
+              <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme (+)</button>
+              <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">🔢 Théosophie</button>
+            </div>
+            <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
+          </div>
+          <div class="lab-box">
+            <h3>2. Multi-Draws</h3>
+            <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;"></select>
+            <div style="margin-top: 15px; display:flex; gap:10px;">
+              <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
+              <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
+            </div>
+            <div id="resultatLaboAvance" class="result-box" style="margin-top:15px; font-weight: normal;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 
 <!-- INTEGRATION DE LA LIBRAIRIE SUPABASE -->
@@ -309,7 +292,70 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 var donneesCloud = []; 
 var couleurActive = '#e74c3c';
 
-// --- CHARGEMENT ---
+// --- 1. VÉRIFICATION DE LA SESSION AU DÉMARRAGE ---
+async function verifierSession() {
+    // On demande à Supabase si l'utilisateur est déjà connecté (session sauvegardée)
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (session) {
+        // L'utilisateur est connecté, on affiche l'app
+        afficherApplication(session.user.email);
+    } else {
+        // Pas de session, on affiche le login
+        document.getElementById("login-screen").style.display = "flex";
+        document.getElementById("app-content").style.display = "none";
+    }
+}
+
+// --- 2. FONCTION DE CONNEXION ---
+async function seConnecter() {
+    var email = document.getElementById("loginEmail").value;
+    var password = document.getElementById("loginPassword").value;
+    var msg = document.getElementById("loginMessage");
+    
+    msg.style.color = "var(--primary)";
+    msg.textContent = "Connexion en cours...";
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        msg.style.color = "var(--color-hot)";
+        msg.textContent = "❌ Erreur : " + error.message;
+    } else {
+        msg.style.color = "#27ae60";
+        msg.textContent = "✅ Connexion réussie !";
+        afficherApplication(data.user.email);
+    }
+}
+
+// --- 3. FONCTION DE DÉCONNEXION ---
+async function seDeconnecter() {
+    await supabaseClient.auth.signOut();
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginMessage").textContent = "";
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("app-content").style.display = "none";
+}
+
+// --- 4. AFFICHER L'APPLICATION ---
+function afficherApplication(email) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app-content").style.display = "block";
+    document.getElementById("userEmail").textContent = "Connecté : " + email;
+    
+    // On charge les données une fois connecté
+    rafraichirDonnees().then(function() {
+        ajouterPlage();
+        ajouterPlage();
+        actualiserCockpit();
+    });
+}
+
+// --- CHARGEMENT DES DONNÉES ---
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
   statusEl.textContent = "⏳ Téléchargement de toutes les données...";
@@ -372,7 +418,7 @@ function ouvrirOnglet(id) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// --- FONCTION DE FILTRAGE DES SACS ---
+// --- FILTRAGE DES SACS ET AFFICHAGE ---
 function getTiragesDuSac(sacId) {
     return donneesCloud.filter(function(t) {
         if (sacId === 'tous') return true;
@@ -387,7 +433,6 @@ function getTiragesDuSac(sacId) {
     });
 }
 
-// --- AFFICHAGE DU SAC (GRILLE FIXE AVEC DATES DE LANCEMENT) ---
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var tiragesFiltres = getTiragesDuSac(sacId);
@@ -789,13 +834,9 @@ function faireAddition() {
   document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>Base : " + tirageActifLabo.boules.join(" + ") + " = " + somme + "<br>Réduit : <span style='color:#9b59b6; font-weight:bold;'>" + reduit + "</span>";
 }
 
-// Initialisation
+// Initialisation au chargement
 document.getElementById("date").valueAsDate = new Date();
-rafraichirDonnees().then(function() {
-    ajouterPlage();
-    ajouterPlage();
-    actualiserCockpit();
-});
+verifierSession();
 </script>
 </body>
 </html>
