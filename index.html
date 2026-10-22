@@ -8,7 +8,7 @@
   :root {
     --primary: #2980b9; --primary-hover: #1f618d;
     --bg-body: #f0f2f5; --bg-card: #ffffff;
-    --text-main: #2c3e50; --text-muted: #5a6b6d; /* contraste renforcé */
+    --text-main: #2c3e50; --text-muted: #5a6b6d;
     --border-color: #e1e8ed; --shadow: 0 4px 12px rgba(0,0,0,0.05);
     --color-star: #f39c12; --color-fortune: #2980b9; --color-digital: #8e44ad;
     --color-hot: #e74c3c; --color-cold: #3498db;
@@ -24,7 +24,6 @@
     }
   }
 
-  /* --- ACCESSIBILITÉ : focus visible & skip link --- */
   *:focus { outline: none; }
   *:focus-visible {
     outline: 3px solid var(--focus-ring);
@@ -82,7 +81,6 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-  /* --- ONGLETS ACCESSIBLES --- */
   .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center;}
   .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; position: relative; min-height: 44px;}
   .tab-btn:hover { background: var(--bg-body); }
@@ -145,6 +143,11 @@
   .color-btn:active { transform: scale(0.9); }
   .color-btn[aria-pressed="true"] { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
+  /* Barre audio du comparateur */
+  .audio-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; padding: 12px; background: var(--bg-body); border-radius: var(--radius-md); align-items: center; }
+  .audio-bar button { font-size: 14px; }
+  .audio-bar .sr-only { flex: 0; }
+
   .mode-visiteur .admin-only { display: none !important; }
 
   .premium-locked { position: relative; min-height: 400px; overflow: hidden; }
@@ -171,7 +174,6 @@
 </head>
 <body>
 
-<!-- Lien d'évitement pour lecteurs d'écran / clavier -->
 <a href="#contenu-principal" class="skip-link">Aller au contenu principal</a>
 
 <!-- ================= ÉCRAN DE CONNEXION & INSCRIPTION ================= -->
@@ -351,6 +353,16 @@
                 <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
             </div>
 
+            <!-- NOUVEAU : barre audio (résumé + détail + mute) -->
+            <div class="audio-bar" role="group" aria-label="Options audio du comparateur">
+                <button type="button" id="btnLireDetail" onclick="lireDetailComparaison()">🔊 Écouter le détail</button>
+                <button type="button" id="btnMuet" class="secondary" onclick="basculerMuet()" aria-pressed="false">🔇 Muet</button>
+                <span id="etatAudio" class="sr-only" role="status" aria-live="polite"></span>
+            </div>
+
+            <!-- Zone d'annonce vocale du résumé (aria-live) -->
+            <div id="annonceComparaison" class="sr-only" role="status" aria-live="polite"></div>
+
             <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
         </div>
       </div>
@@ -408,6 +420,132 @@ var donneesCloud = [];
 var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
+
+/* =========================================================
+   ANNONCES VOCALES
+   ========================================================= */
+var audioMuet = (localStorage.getItem('loto_audio_muet') === 'true');
+var derniereComparaison = null; // mémorisée pour relecture
+
+function initialiserBoutonMuet() {
+    var btn = document.getElementById('btnMuet');
+    if (!btn) return;
+    if (audioMuet) {
+        btn.textContent = "🔊 Activer le son";
+        btn.setAttribute('aria-pressed', 'false');
+    } else {
+        btn.textContent = "🔇 Muet";
+        btn.setAttribute('aria-pressed', 'true');
+    }
+}
+
+function basculerMuet() {
+    audioMuet = !audioMuet;
+    localStorage.setItem('loto_audio_muet', audioMuet ? 'true' : 'false');
+    var btn = document.getElementById('btnMuet');
+    var etat = document.getElementById('etatAudio');
+
+    if (audioMuet) {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        btn.textContent = "🔊 Activer le son";
+        btn.setAttribute('aria-pressed', 'false');
+        if (etat) etat.textContent = "Son désactivé.";
+    } else {
+        btn.textContent = "🔇 Muet";
+        btn.setAttribute('aria-pressed', 'true');
+        if (etat) etat.textContent = "Son activé.";
+    }
+}
+
+// Lit un texte avec la synthèse vocale du navigateur (FR)
+function lireTexteVocal(texte) {
+    if (audioMuet) return;
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(texte);
+    u.lang = 'fr-FR';
+    u.rate = 1.05;
+    u.pitch = 1;
+    // Choix préférentiel d'une voix française si disponible
+    var voix = window.speechSynthesis.getVoices().find(function(v) { return v.lang && v.lang.toLowerCase().indexOf('fr') === 0; });
+    if (voix) u.voice = voix;
+    window.speechSynthesis.speak(u);
+}
+
+/* Annonce le résumé après une comparaison */
+function annoncerResumeComparaison(plages, statsParPlage) {
+    // statsParPlage = [{ nom, exact, miroir, totalBoules }, ...]
+    var parties = [];
+    statsParPlage.forEach(function(s) {
+        parties.push("Plage " + s.nom + " : " + s.exact + " identique" + (s.exact > 1 ? "s" : "") + ", " + s.miroir + " miroir" + (s.miroir > 1 ? "s" : ""));
+    });
+    var totalMulti = 0;
+    // On ne recompte pas ici, c'est calculé pendant la génération
+    var texte = "Comparaison terminée sur " + plages.length + " plages. " + parties.join(". ") + ".";
+
+    // 1) Annonce lecteur d'écran (aria-live)
+    var zone = document.getElementById('annonceComparaison');
+    if (zone) {
+        // Petite temporisation pour que les lecteurs détectent bien le changement
+        zone.textContent = "";
+        setTimeout(function() { zone.textContent = texte; }, 50);
+    }
+
+    // 2) Annonce optionnelle via synthèse vocale (si son actif)
+    if (!audioMuet) {
+        lireTexteVocal(texte);
+    }
+}
+
+/* Construit le texte détaillé pour le bouton "Écouter le détail" */
+function construireTexteDetail(plages) {
+    if (!plages || plages.length === 0) return "Aucune comparaison à lire.";
+    var phrases = ["Détail de la comparaison."];
+    plages.forEach(function(p) {
+        phrases.push("Colonne " + p.id + ", " + p.nomSac + ".");
+        p.data.forEach(function(item) {
+            if (!item) return;
+            var t = item.data;
+            var labels = [];
+            t.boules.forEach(function(n) {
+                var statut = "normale";
+                var exact = 0, miroir = 0, allMatch = true;
+                plages.forEach(function(otherP) {
+                    if (otherP.id === p.id) return;
+                    var otherItem = otherP.data[item.ligneLocale - 1] // approximatif, mais item est déjà indexé
+                    // On utilise plutôt l'index local dans p.data
+                });
+                labels.push("boule " + n);
+            });
+            // Version simplifiée lisible : "Ligne 45, 12 mars 2024, 11 heures, boules : 12, 34, 7, 56, 78."
+            var d = t.date ? new Date(t.date) : null;
+            var dateLisible = d && !isNaN(d.getTime())
+                ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                : t.date;
+            phrases.push("Ligne " + item.ligneLocale + ", " + dateLisible + ", " + t.heure + ", jeu " + t.jeu + ". Boules : " + t.boules.join(", ") + ".");
+        });
+    });
+    return phrases.join(" ");
+}
+
+function lireDetailComparaison() {
+    if (!derniereComparaison) {
+        alert("Lance d'abord une comparaison.");
+        return;
+    }
+    var texte = construireTexteDetail(derniereComparaison);
+    if (audioMuet) {
+        // même muet, on informe
+        var etat = document.getElementById('etatAudio');
+        if (etat) etat.textContent = "Son désactivé. Activez le son pour écouter.";
+        return;
+    }
+    lireTexteVocal(texte);
+}
+
+/* =========================================================
+   FIN ANNONCES VOCALES
+   ========================================================= */
 
 function afficherInscription() {
     document.getElementById("form-connexion").style.display = "none";
@@ -497,6 +635,7 @@ async function seDeconnecter() {
     document.getElementById("login-screen").style.display = "flex";
     document.getElementById("app-content").style.display = "none";
     document.body.classList.remove("mode-visiteur");
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     afficherConnexion();
 }
 
@@ -543,7 +682,6 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
         } else {
             if(overlay) overlay.style.display = "flex";
             if(card) card.classList.add('premium-locked');
-            // Neutralise le contenu flouté pour lecteurs d'écran et clavier
             if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
@@ -601,7 +739,6 @@ async function rafraichirDonnees() {
   if(document.getElementById('onglet-labo').classList.contains('active')) { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-/* --- ONGLETS ACCESSIBLES --- */
 function ouvrirOnglet(id, btn) {
   var tabs = document.querySelectorAll('[role="tab"]');
   var panels = document.querySelectorAll('[role="tabpanel"]');
@@ -622,7 +759,6 @@ function ouvrirOnglet(id, btn) {
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-// Navigation clavier ← / → / Home / End sur les onglets
 document.addEventListener('DOMContentLoaded', function() {
   var tablist = document.querySelector('[role="tablist"]');
   if (!tablist) return;
@@ -641,6 +777,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ouvrirOnglet(id, next);
     }
   });
+  initialiserBoutonMuet();
 });
 
 function getTiragesDuSac(sacId) {
@@ -812,8 +949,10 @@ function executerComparateurMulti() {
     plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
 
     var htmlTotal = "";
+    // Statistiques pour l'annonce vocale
+    var statsParPlage = plages.map(function(p) { return { nom: p.id, exact: 0, miroir: 0, totalBoules: 0 }; });
 
-    plages.forEach(function(p) {
+    plages.forEach(function(p, pIdx) {
         htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><thead><tr><th scope='col'>Ligne</th><th scope='col'>Numéros</th></tr></thead><tbody>";
 
         for (var l = 0; l < maxLines; l++) {
@@ -825,6 +964,7 @@ function executerComparateurMulti() {
 
                 t.boules.forEach(function(n) {
                     var matchExactCount = 0, matchTurningCount = 0, allPlagesMatch = true;
+                    statsParPlage[pIdx].totalBoules++;
 
                     plages.forEach(function(otherP) {
                         if (otherP.id === p.id) return;
@@ -844,9 +984,15 @@ function executerComparateurMulti() {
                     var cls = "comp-ball";
                     var srInfo = "";
                     if (allPlagesMatch) {
-                        if (matchExactCount === plages.length - 1) { cls += " match-exact"; srInfo = "identique dans toutes les plages"; }
-                        else if (matchTurningCount === plages.length - 1) { cls += " match-turning"; srInfo = "miroir dans toutes les plages"; }
-                        else { cls += " match-multi"; srInfo = "présent dans toutes les plages"; }
+                        if (matchExactCount === plages.length - 1) {
+                            cls += " match-exact"; srInfo = "identique dans toutes les plages";
+                            statsParPlage[pIdx].exact++;
+                        } else if (matchTurningCount === plages.length - 1) {
+                            cls += " match-turning"; srInfo = "miroir dans toutes les plages";
+                            statsParPlage[pIdx].miroir++;
+                        } else {
+                            cls += " match-multi"; srInfo = "présent dans toutes les plages";
+                        }
                     }
                     var label = "Boule " + n + (srInfo ? ", " + srInfo : "") + ". Cliquez pour colorier.";
                     htmlTotal += "<button type='button' class='" + cls + "' onclick='colorierBoule(this)' aria-label='" + label + "'>" + n + "</button>";
@@ -858,6 +1004,12 @@ function executerComparateurMulti() {
     });
 
     document.getElementById("resultatComparaison").innerHTML = htmlTotal;
+
+    // Mémorisation pour la lecture détaillée
+    derniereComparaison = plages;
+
+    // Annonce vocale du résumé
+    annoncerResumeComparaison(plages, statsParPlage);
 }
 
 function getTurning(num) { var s = num.toString().padStart(2, '0'); var inv = parseInt(s.split('').reverse().join(''), 10); return (inv === 0 || inv > 90) ? num : inv; }
