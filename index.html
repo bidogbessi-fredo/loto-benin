@@ -25,30 +25,13 @@
   }
 
   *:focus { outline: none; }
-  *:focus-visible {
-    outline: 3px solid var(--focus-ring);
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-  .sr-only {
-    position: absolute !important;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-  }
-  .skip-link {
-    position: absolute; left: -9999px; top: 8px; z-index: 10000;
-    background: var(--primary); color: #fff; padding: 10px 16px;
-    border-radius: var(--radius-sm); font-weight: bold; text-decoration: none;
-  }
+  *:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+  .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .skip-link { position: absolute; left: -9999px; top: 8px; z-index: 10000; background: var(--primary); color: #fff; padding: 10px 16px; border-radius: var(--radius-sm); font-weight: bold; text-decoration: none; }
   .skip-link:focus { left: 8px; }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-    }
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   }
 
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
@@ -58,7 +41,6 @@
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
   .login-box h2 { margin-bottom: 25px; color: var(--primary); }
   #form-inscription { display: none; }
-
   .login-box input { width: 100%; margin-bottom: 15px; padding: 12px 15px; font-size: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); }
   .login-box button { width: 100%; margin-top: 10px; padding: 12px 20px; font-weight: bold; border-radius: var(--radius-pill); cursor: pointer; border: none; transition: 0.2s;}
   .btn-principal { background: var(--primary); color: white; }
@@ -66,7 +48,6 @@
   .btn-visiteur { background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
   .btn-visiteur:hover { background: var(--border-color) !important; }
   .btn-inscription { background: var(--color-star) !important; color: white !important; }
-
   .lien-switch { display: block; margin-top: 20px; font-size: 14px; color: var(--primary); cursor: pointer; text-decoration: underline; background: none; border: none; width: 100%; text-align: center; }
   .lien-switch:hover { color: var(--primary-hover); }
 
@@ -143,10 +124,8 @@
   .color-btn:active { transform: scale(0.9); }
   .color-btn[aria-pressed="true"] { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-  /* Barre audio du comparateur */
   .audio-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; padding: 12px; background: var(--bg-body); border-radius: var(--radius-md); align-items: center; }
   .audio-bar button { font-size: 14px; }
-  .audio-bar .sr-only { flex: 0; }
 
   .mode-visiteur .admin-only { display: none !important; }
 
@@ -162,6 +141,13 @@
   .badge-abonne { background: var(--primary); box-shadow: 0 0 10px rgba(41, 128, 185, 0.4); }
   .badge-warning { background: var(--color-star); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); color: #000; }
   .badge-gratuit { background: var(--color-hot); box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+
+  /* Modale de suppression sécurisée */
+  .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: modalIn 0.2s ease; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
+  #btnConfirmerFinal:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
@@ -353,16 +339,13 @@
                 <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
             </div>
 
-            <!-- NOUVEAU : barre audio (résumé + détail + mute) -->
             <div class="audio-bar" role="group" aria-label="Options audio du comparateur">
                 <button type="button" id="btnLireDetail" onclick="lireDetailComparaison()">🔊 Écouter le détail</button>
                 <button type="button" id="btnMuet" class="secondary" onclick="basculerMuet()" aria-pressed="false">🔇 Muet</button>
                 <span id="etatAudio" class="sr-only" role="status" aria-live="polite"></span>
             </div>
 
-            <!-- Zone d'annonce vocale du résumé (aria-live) -->
             <div id="annonceComparaison" class="sr-only" role="status" aria-live="polite"></div>
-
             <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
         </div>
       </div>
@@ -409,6 +392,42 @@
 </div>
 </main>
 
+<!-- ================= MODALE DE SUPPRESSION SÉCURISÉE ================= -->
+<div id="modalSuppression" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSuppTitre" aria-describedby="modalSuppDesc" style="display: none;">
+    <div class="modal-box">
+        <h2 id="modalSuppTitre" style="color: var(--color-hot);">⚠️ Suppression irréversible</h2>
+        <p id="modalSuppDesc" style="line-height: 1.6;">
+            Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.<br>
+            Cette action <strong>ne peut pas être annulée</strong>.
+        </p>
+
+        <details style="margin: 15px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
+            <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder d'abord (recommandé)</summary>
+            <p style="font-size: 13px; margin: 10px 0 5px;">Téléchargez un fichier CSV de secours avant de supprimer :</p>
+            <button type="button" class="secondary" onclick="exporterCSV()" style="font-size: 13px;">📥 Télécharger le CSV</button>
+        </details>
+
+        <div style="margin-top: 20px; text-align: left;">
+            <label for="champConfirmation" style="display: block; font-size: 14px; margin-bottom: 8px;">
+                Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :
+            </label>
+            <input type="text" id="champConfirmation" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;"
+                   placeholder="SUPPRIMER" aria-describedby="champConfirmAide">
+            <div id="champConfirmAide" class="sr-only">Le mot doit être écrit en majuscules sans accent.</div>
+        </div>
+
+        <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+            <button type="button" class="secondary" onclick="fermerModaleSuppression()">Annuler (Échap)</button>
+            <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()" aria-disabled="true">
+                🗑️ Supprimer définitivement (<span id="compteARebours">5</span>s)
+            </button>
+        </div>
+
+        <div id="modalSuppMessage" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -421,22 +440,15 @@ var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
 
-/* =========================================================
-   ANNONCES VOCALES
-   ========================================================= */
+/* ========== ANNONCES VOCALES ========== */
 var audioMuet = (localStorage.getItem('loto_audio_muet') === 'true');
-var derniereComparaison = null; // mémorisée pour relecture
+var derniereComparaison = null;
 
 function initialiserBoutonMuet() {
     var btn = document.getElementById('btnMuet');
     if (!btn) return;
-    if (audioMuet) {
-        btn.textContent = "🔊 Activer le son";
-        btn.setAttribute('aria-pressed', 'false');
-    } else {
-        btn.textContent = "🔇 Muet";
-        btn.setAttribute('aria-pressed', 'true');
-    }
+    if (audioMuet) { btn.textContent = "🔊 Activer le son"; btn.setAttribute('aria-pressed', 'false'); }
+    else { btn.textContent = "🔇 Muet"; btn.setAttribute('aria-pressed', 'true'); }
 }
 
 function basculerMuet() {
@@ -444,60 +456,38 @@ function basculerMuet() {
     localStorage.setItem('loto_audio_muet', audioMuet ? 'true' : 'false');
     var btn = document.getElementById('btnMuet');
     var etat = document.getElementById('etatAudio');
-
     if (audioMuet) {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        btn.textContent = "🔊 Activer le son";
-        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = "🔊 Activer le son"; btn.setAttribute('aria-pressed', 'false');
         if (etat) etat.textContent = "Son désactivé.";
     } else {
-        btn.textContent = "🔇 Muet";
-        btn.setAttribute('aria-pressed', 'true');
+        btn.textContent = "🔇 Muet"; btn.setAttribute('aria-pressed', 'true');
         if (etat) etat.textContent = "Son activé.";
     }
 }
 
-// Lit un texte avec la synthèse vocale du navigateur (FR)
 function lireTexteVocal(texte) {
     if (audioMuet) return;
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(texte);
-    u.lang = 'fr-FR';
-    u.rate = 1.05;
-    u.pitch = 1;
-    // Choix préférentiel d'une voix française si disponible
+    u.lang = 'fr-FR'; u.rate = 1.05; u.pitch = 1;
     var voix = window.speechSynthesis.getVoices().find(function(v) { return v.lang && v.lang.toLowerCase().indexOf('fr') === 0; });
     if (voix) u.voice = voix;
     window.speechSynthesis.speak(u);
 }
 
-/* Annonce le résumé après une comparaison */
 function annoncerResumeComparaison(plages, statsParPlage) {
-    // statsParPlage = [{ nom, exact, miroir, totalBoules }, ...]
     var parties = [];
     statsParPlage.forEach(function(s) {
         parties.push("Plage " + s.nom + " : " + s.exact + " identique" + (s.exact > 1 ? "s" : "") + ", " + s.miroir + " miroir" + (s.miroir > 1 ? "s" : ""));
     });
-    var totalMulti = 0;
-    // On ne recompte pas ici, c'est calculé pendant la génération
     var texte = "Comparaison terminée sur " + plages.length + " plages. " + parties.join(". ") + ".";
-
-    // 1) Annonce lecteur d'écran (aria-live)
     var zone = document.getElementById('annonceComparaison');
-    if (zone) {
-        // Petite temporisation pour que les lecteurs détectent bien le changement
-        zone.textContent = "";
-        setTimeout(function() { zone.textContent = texte; }, 50);
-    }
-
-    // 2) Annonce optionnelle via synthèse vocale (si son actif)
-    if (!audioMuet) {
-        lireTexteVocal(texte);
-    }
+    if (zone) { zone.textContent = ""; setTimeout(function() { zone.textContent = texte; }, 50); }
+    if (!audioMuet) lireTexteVocal(texte);
 }
 
-/* Construit le texte détaillé pour le bouton "Écouter le détail" */
 function construireTexteDetail(plages) {
     if (!plages || plages.length === 0) return "Aucune comparaison à lire.";
     var phrases = ["Détail de la comparaison."];
@@ -506,22 +496,8 @@ function construireTexteDetail(plages) {
         p.data.forEach(function(item) {
             if (!item) return;
             var t = item.data;
-            var labels = [];
-            t.boules.forEach(function(n) {
-                var statut = "normale";
-                var exact = 0, miroir = 0, allMatch = true;
-                plages.forEach(function(otherP) {
-                    if (otherP.id === p.id) return;
-                    var otherItem = otherP.data[item.ligneLocale - 1] // approximatif, mais item est déjà indexé
-                    // On utilise plutôt l'index local dans p.data
-                });
-                labels.push("boule " + n);
-            });
-            // Version simplifiée lisible : "Ligne 45, 12 mars 2024, 11 heures, boules : 12, 34, 7, 56, 78."
             var d = t.date ? new Date(t.date) : null;
-            var dateLisible = d && !isNaN(d.getTime())
-                ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-                : t.date;
+            var dateLisible = d && !isNaN(d.getTime()) ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : t.date;
             phrases.push("Ligne " + item.ligneLocale + ", " + dateLisible + ", " + t.heure + ", jeu " + t.jeu + ". Boules : " + t.boules.join(", ") + ".");
         });
     });
@@ -529,31 +505,22 @@ function construireTexteDetail(plages) {
 }
 
 function lireDetailComparaison() {
-    if (!derniereComparaison) {
-        alert("Lance d'abord une comparaison.");
-        return;
-    }
-    var texte = construireTexteDetail(derniereComparaison);
+    if (!derniereComparaison) { alert("Lance d'abord une comparaison."); return; }
     if (audioMuet) {
-        // même muet, on informe
         var etat = document.getElementById('etatAudio');
         if (etat) etat.textContent = "Son désactivé. Activez le son pour écouter.";
         return;
     }
-    lireTexteVocal(texte);
+    lireTexteVocal(construireTexteDetail(derniereComparaison));
 }
 
-/* =========================================================
-   FIN ANNONCES VOCALES
-   ========================================================= */
-
+/* ========== AUTH ========== */
 function afficherInscription() {
     document.getElementById("form-connexion").style.display = "none";
     document.getElementById("form-inscription").style.display = "block";
     document.getElementById("loginMessage").textContent = "";
     document.getElementById("insEmail").focus();
 }
-
 function afficherConnexion() {
     document.getElementById("form-inscription").style.display = "none";
     document.getElementById("form-connexion").style.display = "block";
@@ -563,17 +530,13 @@ function afficherConnexion() {
 
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
-
     if (session) {
         const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
-
         let role = profil ? profil.role : 'visiteur';
         let dateFin = profil && profil.date_fin_abonnement ? new Date(profil.date_fin_abonnement) : null;
         let dateJour = new Date();
-
         estAdmin = (role === 'admin');
         estAbonne = (role === 'admin') || (dateFin && dateFin > dateJour);
-
         afficherApplication(session.user.email, estAdmin, estAbonne, dateFin);
     } else {
         document.getElementById("login-screen").style.display = "flex";
@@ -586,44 +549,26 @@ async function seConnecter() {
     var email = document.getElementById("loginEmail").value;
     var password = document.getElementById("loginPassword").value;
     var msg = document.getElementById("loginMessage");
-
     if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
     msg.style.color = "var(--primary)"; msg.textContent = "Connexion...";
-
     const { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
-
-    if (error) {
-        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message;
-    } else {
-        msg.style.color = "#27ae60"; msg.textContent = "✅ Connecté !";
-        setTimeout(() => { verifierSession(); }, 500);
-    }
+    if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message; }
+    else { msg.style.color = "#27ae60"; msg.textContent = "✅ Connecté !"; setTimeout(() => { verifierSession(); }, 500); }
 }
 
 async function creerCompte() {
     var email = document.getElementById("insEmail").value;
     var password = document.getElementById("insPassword").value;
     var msg = document.getElementById("loginMessage");
-
     if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
     if (password.length < 6) { msg.style.color = "var(--color-hot)"; msg.textContent = "Le mot de passe doit faire 6 caractères min."; return; }
     msg.style.color = "var(--primary)"; msg.textContent = "Création du compte...";
-
     const { error } = await supabaseClient.auth.signUp({ email: email, password: password });
-
-    if (error) {
-        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message;
-    } else {
-        msg.style.color = "#27ae60"; msg.textContent = "✅ Compte créé ! Connectez-vous.";
-        setTimeout(() => { afficherConnexion(); }, 2000);
-    }
+    if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message; }
+    else { msg.style.color = "#27ae60"; msg.textContent = "✅ Compte créé ! Connectez-vous."; setTimeout(() => { afficherConnexion(); }, 2000); }
 }
 
-function entrerVisiteur() {
-    estAdmin = false;
-    estAbonne = false;
-    afficherApplication("Visiteur", false, false, null);
-}
+function entrerVisiteur() { estAdmin = false; estAbonne = false; afficherApplication("Visiteur", false, false, null); }
 
 async function seDeconnecter() {
     await supabaseClient.auth.signOut();
@@ -642,34 +587,23 @@ async function seDeconnecter() {
 function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app-content").style.display = "block";
-
     var badgeEl = document.getElementById("statusBadge");
-
     if (isAdmin) {
         badgeEl.textContent = "👑 Admin (Illimité)";
         badgeEl.className = "status-badge badge-admin";
         document.body.classList.remove("mode-visiteur");
     } else if (isAbonne && dateFin) {
-        var dateJour = new Date();
-        dateJour.setHours(0,0,0,0);
-        var fin = new Date(dateFin);
-        fin.setHours(0,0,0,0);
+        var dateJour = new Date(); dateJour.setHours(0,0,0,0);
+        var fin = new Date(dateFin); fin.setHours(0,0,0,0);
         var joursRestants = Math.ceil((fin - dateJour) / (1000 * 60 * 60 * 24));
-
-        if (joursRestants <= 1) {
-            badgeEl.textContent = "⚠️ Dernier jour !";
-            badgeEl.className = "status-badge badge-warning";
-        } else {
-            badgeEl.textContent = "⭐ Abonné : " + joursRestants + " jours restants";
-            badgeEl.className = "status-badge badge-abonne";
-        }
+        if (joursRestants <= 1) { badgeEl.textContent = "⚠️ Dernier jour !"; badgeEl.className = "status-badge badge-warning"; }
+        else { badgeEl.textContent = "⭐ Abonné : " + joursRestants + " jours restants"; badgeEl.className = "status-badge badge-abonne"; }
         document.body.classList.remove("mode-visiteur");
     } else {
         badgeEl.textContent = "🚫 Accès Gratuit (Limité)";
         badgeEl.className = "status-badge badge-gratuit";
         document.body.classList.add("mode-visiteur");
     }
-
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
@@ -685,12 +619,8 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
-
     rafraichirDonnees().then(function() {
-        if(document.querySelectorAll('.plage-box').length === 0) {
-            ajouterPlage();
-            ajouterPlage();
-        }
+        if(document.querySelectorAll('.plage-box').length === 0) { ajouterPlage(); ajouterPlage(); }
         actualiserCockpit();
     });
 }
@@ -702,33 +632,20 @@ function contacterAdmin() {
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
   statusEl.textContent = "⏳ Téléchargement...";
-
-  let tousLesTirages = [];
-  let page = 0;
-  let parPage = 1000;
-  let enCours = true;
-
+  let tousLesTirages = [], page = 0, parPage = 1000, enCours = true;
   while (enCours) {
-    let { data, error } = await supabaseClient
-      .from('tirages').select('*')
-      .order('date', { ascending: true })
-      .order('heure', { ascending: true })
+    let { data, error } = await supabaseClient.from('tirages').select('*')
+      .order('date', { ascending: true }).order('heure', { ascending: true })
       .range(page * parPage, (page + 1) * parPage - 1);
-
     if (error) { statusEl.textContent = "❌ Erreur de connexion."; statusEl.style.color = "var(--color-hot)"; return []; }
-
-    if (data.length > 0) { tousLesTirages = tousLesTirages.concat(data); page++; }
-    else { enCours = false; }
+    if (data.length > 0) { tousLesTirages = tousLesTirages.concat(data); page++; } else { enCours = false; }
   }
-
   statusEl.textContent = "✅ Connecté ! (" + tousLesTirages.length + " tirages)";
   statusEl.style.color = "#27ae60";
-
   donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
       return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0) };
   });
-
   return donneesCloud;
 }
 
@@ -742,41 +659,33 @@ async function rafraichirDonnees() {
 function ouvrirOnglet(id, btn) {
   var tabs = document.querySelectorAll('[role="tab"]');
   var panels = document.querySelectorAll('[role="tabpanel"]');
-
   tabs.forEach(function(t) {
     var selected = (t.id === 'tab-' + id);
     t.setAttribute('aria-selected', selected ? 'true' : 'false');
     t.setAttribute('tabindex', selected ? '0' : '-1');
     t.classList.toggle('active', selected);
   });
-  panels.forEach(function(p) {
-    p.classList.toggle('active', p.id === 'onglet-' + id);
-  });
-
+  panels.forEach(function(p) { p.classList.toggle('active', p.id === 'onglet-' + id); });
   if (btn) btn.focus();
-
   if(id === 'cockpit') actualiserCockpit();
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   var tablist = document.querySelector('[role="tablist"]');
-  if (!tablist) return;
-  tablist.addEventListener('keydown', function(e) {
-    var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
-    var idx = tabs.indexOf(document.activeElement);
-    if (idx === -1) return;
-    var next = null;
-    if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
-    if (e.key === 'ArrowLeft')  next = tabs[(idx - 1 + tabs.length) % tabs.length];
-    if (e.key === 'Home')       next = tabs[0];
-    if (e.key === 'End')        next = tabs[tabs.length - 1];
-    if (next) {
-      e.preventDefault();
-      var id = next.id.replace('tab-', '');
-      ouvrirOnglet(id, next);
-    }
-  });
+  if (tablist) {
+    tablist.addEventListener('keydown', function(e) {
+      var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+      var idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      var next = null;
+      if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+      if (e.key === 'ArrowLeft')  next = tabs[(idx - 1 + tabs.length) % tabs.length];
+      if (e.key === 'Home')       next = tabs[0];
+      if (e.key === 'End')        next = tabs[tabs.length - 1];
+      if (next) { e.preventDefault(); ouvrirOnglet(next.id.replace('tab-', ''), next); }
+    });
+  }
   initialiserBoutonMuet();
 });
 
@@ -799,28 +708,20 @@ function afficherSacSelectionne() {
     var tiragesFiltres = getTiragesDuSac(sacId);
     var conteneur = document.getElementById("conteneurSac");
     conteneur.innerHTML = "";
-
     if (tiragesFiltres.length === 0) { conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage.</p>"; return; }
-
     var parDate = {};
     tiragesFiltres.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
-
     var dateLancementStar = new Date("2004-06-16");
     var dateLancementFortune = new Date("2010-04-28");
     var dateLancementDigital = new Date("2023-07-13");
     var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
-
-    var htmlTotal = "";
-    var compteurLigne = 0;
-
+    var htmlTotal = "", compteurLigne = 0;
     datesTriees.forEach(function(dateStr) {
         var tiragesDuJour = parDate[dateStr];
         var dateObj = new Date(dateStr);
         var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
         var htmlJour = "<div class='day-card'><h3 class='day-header'>📅 " + dateFormatee + "</h3>";
-
         var heuresApplicables = toutesLesHeures.filter(function(heure) {
             if (heure === "00H" || heure === "08H" || heure === "20H") return dateObj >= dateLancementDigital;
             if (heure === "11H" || heure === "14H" || heure === "18H") {
@@ -833,19 +734,14 @@ function afficherSacSelectionne() {
             }
             return false;
         });
-
         heuresApplicables.forEach(function(heure) {
             compteurLigne++;
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
-
             htmlJour += "<div class='day-row'><div class='day-time'><span aria-hidden='true'>Ligne " + compteurLigne + "</span><span class='sr-only'>Ligne " + compteurLigne + "</span><br><small>" + heure + "</small></div>";
-
             if (tirage) {
                 var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
                 htmlJour += "<div class='day-game'>" + tirage.jeu + "</div><div class='day-nums'>";
-                tirage.boules.forEach(function(n) {
-                    htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>";
-                });
+                tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>"; });
                 htmlJour += "</div>";
             } else {
                 htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div><div class='day-nums'><span class='ball empty' aria-label='Pas de tirage'>-</span></div>";
@@ -872,17 +768,116 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   }
   if (!date) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules différentes requises."; return; }
-
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
   if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; return; }
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
+/* ========== SUPPRESSION SÉCURISÉE 2 NIVEAUX ========== */
+var motConfirmation = "SUPPRIMER";
+var timerSuppression = null;
+var secondesRestantes = 5;
+var modaleSuppOuverte = false;
+var elementFocusAvantModale = null;
+
 async function toutEffacer() {
     if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
-    if (!confirm("⚠️ Tout supprimer ?")) return;
-    await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees();
+    var nb = donneesCloud.length;
+    if (nb === 0) { alert("Aucune donnée à supprimer."); return; }
+
+    elementFocusAvantModale = document.activeElement;
+    modaleSuppOuverte = true;
+    var modal = document.getElementById("modalSuppression");
+    modal.style.display = "flex";
+    document.getElementById("modalSuppCompteur").textContent = nb.toLocaleString('fr-FR') + " tirage" + (nb > 1 ? "s" : "");
+    document.getElementById("champConfirmation").value = "";
+    document.getElementById("modalSuppMessage").textContent = "";
+
+    var champ = document.getElementById("champConfirmation");
+    champ.addEventListener("input", verifierMotConfirmation);
+    champ.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !document.getElementById("btnConfirmerFinal").disabled) confirmerSuppressionFinale();
+    });
+    champ.focus();
+
+    secondesRestantes = 5;
+    document.getElementById("btnConfirmerFinal").disabled = true;
+    document.getElementById("btnConfirmerFinal").setAttribute('aria-disabled','true');
+    document.getElementById("btnConfirmerFinal").innerHTML = '🗑️ Supprimer définitivement (<span id="compteARebours">' + secondesRestantes + '</span>s)';
+
+    if (timerSuppression) clearInterval(timerSuppression);
+    timerSuppression = setInterval(function() {
+        secondesRestantes--;
+        var el = document.getElementById("compteARebours");
+        if (el) el.textContent = Math.max(0, secondesRestantes);
+        if (secondesRestantes <= 0) { clearInterval(timerSuppression); timerSuppression = null; verifierMotConfirmation(); }
+    }, 1000);
+
+    document.addEventListener("keydown", piegeFocusModale);
+}
+
+function verifierMotConfirmation() {
+    var champ = document.getElementById("champConfirmation");
+    var btn = document.getElementById("btnConfirmerFinal");
+    var val = champ.value.trim().toUpperCase();
+    var motOK = (val === motConfirmation);
+    var delaiOK = (secondesRestantes <= 0);
+    if (motOK && delaiOK) {
+        btn.disabled = false; btn.setAttribute('aria-disabled','false');
+        btn.innerHTML = '🗑️ Supprimer définitivement';
+    } else {
+        btn.disabled = true; btn.setAttribute('aria-disabled','true');
+        var texte = "🗑️ Supprimer définitivement";
+        if (!delaiOK) texte += " (" + Math.max(0, secondesRestantes) + "s)";
+        else if (!motOK) texte += " (mot incorrect)";
+        btn.innerHTML = texte;
+    }
+}
+
+function piegeFocusModale(e) {
+    if (!modaleSuppOuverte) return;
+    if (e.key === "Escape") { e.preventDefault(); fermerModaleSuppression(); return; }
+    if (e.key !== "Tab") return;
+    var modal = document.getElementById("modalSuppression");
+    var focusables = modal.querySelectorAll('button:not([disabled]), input, summary, [tabindex]:not([tabindex="-1"])');
+    if (focusables.length === 0) return;
+    var first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function fermerModaleSuppression() {
+    modaleSuppOuverte = false;
+    document.getElementById("modalSuppression").style.display = "none";
+    if (timerSuppression) { clearInterval(timerSuppression); timerSuppression = null; }
+    document.removeEventListener("keydown", piegeFocusModale);
+    if (elementFocusAvantModale && elementFocusAvantModale.focus) elementFocusAvantModale.focus();
+}
+
+async function confirmerSuppressionFinale() {
+    var msg = document.getElementById("modalSuppMessage");
+    msg.style.color = "var(--color-hot)"; msg.textContent = "⏳ Suppression en cours...";
+    var btn = document.getElementById("btnConfirmerFinal");
+    btn.disabled = true; btn.setAttribute('aria-disabled','true');
+    const { error } = await supabaseClient.from('tirages').delete().neq('id', 0);
+    if (error) { msg.textContent = "❌ Erreur : " + error.message; btn.disabled = false; btn.setAttribute('aria-disabled','false'); return; }
+    msg.style.color = "#27ae60"; msg.textContent = "✅ Tous les tirages ont été supprimés.";
+    await rafraichirDonnees();
+    setTimeout(function() { fermerModaleSuppression(); }, 1500);
+}
+
+function exporterCSV() {
+    if (donneesCloud.length === 0) { alert("Rien à exporter."); return; }
+    var lignes = ["date,heure,jeu,boules"];
+    donneesCloud.forEach(function(t) { lignes.push([t.date, t.heure, t.jeu, '"' + t.boules.join(",") + '"'].join(",")); });
+    var blob = new Blob([lignes.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "loto-benin-sauvegarde-" + new Date().toISOString().slice(0, 10) + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 var nombrePlages = 0;
@@ -892,7 +887,6 @@ function ajouterPlage() {
     var div = document.createElement("div"); div.className = "plage-box"; div.id = "plage-container-" + nombrePlages;
     var colors = ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"]; var couleur = colors[(nombrePlages - 1) % 5];
     div.style.borderTop = "4px solid " + couleur;
-
     div.innerHTML = `<label for="sacNum${nombrePlages}" style="color:${couleur};">Plage ${nombrePlages}</label>
         <select id="sacNum${nombrePlages}">
             <option value="tous">Tous les jeux</option>
@@ -918,81 +912,55 @@ function supprimerPlage(id) { var div = document.getElementById("plage-container
 
 function executerComparateurMulti() {
     var plages = [];
-
     for (var i = 1; i <= nombrePlages; i++) {
         var container = document.getElementById("plage-container-" + i);
         if (!container) continue;
-
         var sacId = document.getElementById("sacNum" + i).value;
         var refLigne = parseInt(document.getElementById("refNum" + i).value, 10);
         var range = parseInt(document.getElementById("refRange" + i).value, 10);
-
         if (isNaN(refLigne)) continue;
-
         var tiragesDuSac = getTiragesDuSac(sacId);
         var startIndex = refLigne - 1;
-
         if (startIndex < 0 || startIndex >= tiragesDuSac.length) { alert("La ligne " + refLigne + " n'existe pas."); return; }
-
         var plage = [];
         var minIdx = Math.max(0, startIndex - range);
         var maxIdx = Math.min(tiragesDuSac.length - 1, startIndex + range);
-
         for (var j = minIdx; j <= maxIdx; j++) { plage.push({ data: tiragesDuSac[j], ligneLocale: j + 1 }); }
-
         plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
     }
-
     if (plages.length < 2) { alert("Il faut au moins 2 plages."); return; }
-
     var maxLines = 0;
     plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
-
     var htmlTotal = "";
-    // Statistiques pour l'annonce vocale
     var statsParPlage = plages.map(function(p) { return { nom: p.id, exact: 0, miroir: 0, totalBoules: 0 }; });
-
     plages.forEach(function(p, pIdx) {
         htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><thead><tr><th scope='col'>Ligne</th><th scope='col'>Numéros</th></tr></thead><tbody>";
-
         for (var l = 0; l < maxLines; l++) {
             var item = p.data[l];
             if (!item) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; }
             else {
                 var t = item.data;
                 htmlTotal += "<tr><td><b>Ligne " + item.ligneLocale + "</b><br><small>" + t.jeu + " " + t.heure + "</small></td><td>";
-
                 t.boules.forEach(function(n) {
                     var matchExactCount = 0, matchTurningCount = 0, allPlagesMatch = true;
                     statsParPlage[pIdx].totalBoules++;
-
                     plages.forEach(function(otherP) {
                         if (otherP.id === p.id) return;
                         var otherItem = otherP.data[l];
-
                         if (otherItem) {
                             var otherT = otherItem.data;
                             var hasExact = otherT.boules.includes(n);
                             var hasTurning = otherT.boules.includes(getTurning(n));
-
                             if (hasExact) matchExactCount++;
                             else if (hasTurning) matchTurningCount++;
                             else allPlagesMatch = false;
                         } else { allPlagesMatch = false; }
                     });
-
-                    var cls = "comp-ball";
-                    var srInfo = "";
+                    var cls = "comp-ball", srInfo = "";
                     if (allPlagesMatch) {
-                        if (matchExactCount === plages.length - 1) {
-                            cls += " match-exact"; srInfo = "identique dans toutes les plages";
-                            statsParPlage[pIdx].exact++;
-                        } else if (matchTurningCount === plages.length - 1) {
-                            cls += " match-turning"; srInfo = "miroir dans toutes les plages";
-                            statsParPlage[pIdx].miroir++;
-                        } else {
-                            cls += " match-multi"; srInfo = "présent dans toutes les plages";
-                        }
+                        if (matchExactCount === plages.length - 1) { cls += " match-exact"; srInfo = "identique dans toutes les plages"; statsParPlage[pIdx].exact++; }
+                        else if (matchTurningCount === plages.length - 1) { cls += " match-turning"; srInfo = "miroir dans toutes les plages"; statsParPlage[pIdx].miroir++; }
+                        else { cls += " match-multi"; srInfo = "présent dans toutes les plages"; }
                     }
                     var label = "Boule " + n + (srInfo ? ", " + srInfo : "") + ". Cliquez pour colorier.";
                     htmlTotal += "<button type='button' class='" + cls + "' onclick='colorierBoule(this)' aria-label='" + label + "'>" + n + "</button>";
@@ -1002,25 +970,18 @@ function executerComparateurMulti() {
         }
         htmlTotal += "</tbody></table></div>";
     });
-
     document.getElementById("resultatComparaison").innerHTML = htmlTotal;
-
-    // Mémorisation pour la lecture détaillée
     derniereComparaison = plages;
-
-    // Annonce vocale du résumé
     annoncerResumeComparaison(plages, statsParPlage);
 }
 
 function getTurning(num) { var s = num.toString().padStart(2, '0'); var inv = parseInt(s.split('').reverse().join(''), 10); return (inv === 0 || inv > 90) ? num : inv; }
 function resetColors() { document.querySelectorAll('.comp-ball').forEach(function(b) { b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = ''; b.style.boxShadow = ''; }); }
-
 function changerCouleur(element, couleur) {
     document.querySelectorAll('.color-btn').forEach(function(btn) { btn.setAttribute('aria-pressed','false'); });
     element.setAttribute('aria-pressed','true');
     couleurActive = couleur === 'annuler' ? 'annuler' : couleur;
 }
-
 function colorierBoule(bouleElement) {
     if (couleurActive === 'annuler') {
         bouleElement.style.backgroundColor = ''; bouleElement.style.color = ''; bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = '';
@@ -1038,7 +999,6 @@ async function traiterTexteColle() {
   msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse...";
   var lignes = texte.split(/\r?\n/); var aInserer = []; var doublons = 0; var erreurs = 0;
   var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020;
-
   lignes.forEach(function(ligne) {
     if (!ligne.trim()) return;
     var ligneMinuscule = ligne.toLowerCase();
@@ -1068,7 +1028,6 @@ async function traiterTexteColle() {
         if (!existeDeja && !existeDansFichier) { aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: "Auto" }); } else { doublons++; }
     } else { erreurs++; }
   });
-
   if (aInserer.length > 0) {
       var taillePaquet = 100; var succes = true;
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
@@ -1084,7 +1043,6 @@ function actualiserCockpit() {
     var jeu = document.getElementById("cockpitJeu").value;
     var heure = document.getElementById("cockpitHeure").value;
     var filtres = donneesCloud.filter(function(t) { return t.jeu === jeu && (heure === "all" || t.heure === heure); });
-
     if (filtres.length === 0) {
         document.getElementById("cockpitPrediction").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
         document.getElementById("cockpitCycles").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
@@ -1095,18 +1053,15 @@ function actualiserCockpit() {
     filtres.forEach(function(t) { t.boules.forEach(function(n) { freq[n]++; }); });
     filtres.forEach(function(t, index) { t.boules.forEach(function(n) { if (ecarts[n] === 0 && index !== 0) ecarts[n] = index; }); });
     if (filtres.length > 0) filtres[0].boules.forEach(function(n) { ecarts[n] = 0; });
-
     var nums = Object.keys(freq).map(function(n) { return { n: parseInt(n), f: freq[n], e: ecarts[n] }; });
     var topChauds = nums.slice().sort(function(a, b) { return b.f - a.f; }).slice(0, 5);
     var topRetards = nums.slice().sort(function(a, b) { return b.e - a.e; }).slice(0, 5);
-
     var htmlPred = "<p><b>🔥 Top 5 Chauds :</b><br>";
     topChauds.forEach(function(x) { htmlPred += "<span class='ball hot' role='img' aria-label='Boule " + x.n + " chaude, " + x.f + " sorties'>" + x.n + "</span> (" + x.f + "x) "; });
     htmlPred += "</p><p style='margin-top:15px;'><b>❄️ Top 5 Retards :</b><br>";
     topRetards.forEach(function(x) { htmlPred += "<span class='ball cold' role='img' aria-label='Boule " + x.n + " froide, retard " + x.e + "'>" + x.n + "</span> (R:" + x.e + ") "; });
     htmlPred += "</p>";
     document.getElementById("cockpitPrediction").innerHTML = htmlPred;
-
     var htmlCycles = "<ul class='stat-list'>";
     topRetards.forEach(function(x) {
         var moyenneGlobale = filtres.length / 90;
