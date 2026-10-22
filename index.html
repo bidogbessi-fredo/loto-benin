@@ -62,56 +62,26 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-  /* --- Topbar avec burger --- */
   .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px; margin-bottom: 10px; }
-  .burger-btn {
-    background: var(--bg-card); color: var(--text-main);
-    border: 1px solid var(--border-color);
-    width: 48px; height: 48px; padding: 0;
-    border-radius: var(--radius-sm); cursor: pointer;
-    font-size: 22px; font-weight: bold;
-    display: inline-flex; align-items: center; justify-content: center;
-    box-shadow: var(--shadow);
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
+  .burger-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 48px; height: 48px; padding: 0; border-radius: var(--radius-sm); cursor: pointer; font-size: 22px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: background 0.2s; flex-shrink: 0; }
   .burger-btn:hover { background: var(--bg-body); }
   .topbar-title { flex: 1; margin: 0; text-align: center; font-size: 22px; }
-  @media (max-width: 768px) {
-    .topbar-title { font-size: 16px; }
-  }
+  @media (max-width: 768px) { .topbar-title { font-size: 16px; } }
 
-  /* --- Drawer (menu latéral) --- */
   .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
   .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
-  .drawer {
-    position: fixed; top: 0; left: 0; height: 100%;
-    width: 300px; max-width: 85vw;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border-color);
-    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-    z-index: 9999;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    display: flex; flex-direction: column;
-    padding: 20px;
-    overflow-y: auto;
-  }
+  .drawer { position: fixed; top: 0; left: 0; height: 100%; width: 300px; max-width: 85vw; background: var(--bg-card); border-right: 1px solid var(--border-color); box-shadow: 4px 0 20px rgba(0,0,0,0.3); z-index: 9999; transform: translateX(-100%); transition: transform 0.25s ease; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
   .drawer.open { transform: translateX(0); }
   @media (prefers-reduced-motion: reduce) { .drawer, .drawer-backdrop { transition: none; } }
-
   .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); }
   .drawer-header h2 { font-size: 18px; margin: 0; color: var(--primary); }
   .drawer-close { background: transparent; color: var(--text-muted); border: none; font-size: 24px; padding: 4px 10px; min-height: auto; box-shadow: none; }
   .drawer-close:hover { background: var(--bg-body); color: var(--color-hot); }
-
   .drawer-section { margin-bottom: 20px; }
   .drawer-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; }
-
   .drawer-nav-btn { display: block; width: 100%; text-align: left; background: transparent; color: var(--text-main); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 4px; min-height: 44px; }
   .drawer-nav-btn:hover { background: var(--bg-body); }
   .drawer-nav-btn[aria-current="page"] { background: var(--primary); color: #fff; font-weight: bold; }
-
   .drawer .status-badge { display: inline-block; margin: 0 0 10px 0; }
   .drawer-deconnexion { width: 100%; padding: 12px; background: var(--color-hot); color: #fff; border: none; border-radius: var(--radius-pill); font-weight: bold; font-size: 15px; cursor: pointer; min-height: 48px; }
   .drawer-deconnexion:hover { background: #c0392b; }
@@ -196,7 +166,6 @@
   .badge-warning { background: var(--color-star); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); color: #000; }
   .badge-gratuit { background: var(--color-hot); box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
 
-  /* Modale de suppression sécurisée */
   .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: modalIn 0.2s ease; }
   @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -216,49 +185,36 @@
 
 <a href="#contenu-principal" class="skip-link">Aller au contenu principal</a>
 
-<!-- ================= ÉCRAN DE CONNEXION & INSCRIPTION ================= -->
 <div id="login-screen" role="dialog" aria-modal="true" aria-labelledby="loginTitre">
     <div class="login-box">
         <h1 id="loginTitre" style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Portail d'accès</p>
-
         <div id="form-connexion">
             <label for="loginEmail" class="sr-only">Adresse email</label>
             <input type="email" id="loginEmail" placeholder="Adresse email" autocomplete="username" required>
-
             <label for="loginPassword" class="sr-only">Mot de passe</label>
             <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password" required>
-
             <button class="btn-principal" onclick="seConnecter()">Se connecter</button>
             <button class="btn-visiteur" onclick="entrerVisiteur()">👁️ Entrer en mode Visiteur</button>
-
             <button class="lien-switch" onclick="afficherInscription()">Pas encore de compte ? S'inscrire</button>
         </div>
-
         <div id="form-inscription">
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Créez votre compte pour accéder aux analyses.</p>
             <label for="insEmail" class="sr-only">Nouvelle adresse email</label>
             <input type="email" id="insEmail" placeholder="Nouvelle adresse email" autocomplete="email" required>
-
             <label for="insPassword" class="sr-only">Mot de passe (6 caractères minimum)</label>
             <input type="password" id="insPassword" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password" required>
-
             <button class="btn-inscription" onclick="creerCompte()">Créer mon compte</button>
-
             <button class="lien-switch" onclick="afficherConnexion()">Déjà un compte ? Se connecter</button>
         </div>
-
         <div id="loginMessage" role="alert" aria-live="polite" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
     </div>
 </div>
 
-<!-- ================= APPLICATION ================= -->
 <main id="contenu-principal">
 <div id="app-content">
     <div class="topbar">
-        <button type="button" class="burger-btn" id="btnBurger"
-                aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu"
-                onclick="ouvrirDrawer()">☰</button>
+        <button type="button" class="burger-btn" id="btnBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu" onclick="ouvrirDrawer()">☰</button>
         <h1 class="topbar-title">🎰 Loto Bénin</h1>
         <span id="statusBadge" class="status-badge" role="status" aria-live="polite" style="margin:0;">Chargement...</span>
     </div>
@@ -272,20 +228,16 @@
       <button class="tab-btn" role="tab" id="tab-labo" aria-controls="onglet-labo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('labo', this)">🧪 Laboratoire</button>
     </div>
 
-    <!-- ====== ONGLET 1 : COMPILATION ====== -->
     <div id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
       <div class="card admin-only">
         <h2>➕ Saisir un tirage</h2>
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
           <label for="jeuSaisie" class="sr-only">Jeu</label>
           <select id="jeuSaisie" aria-label="Choisir le jeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
-
           <label for="heureSaisie" class="sr-only">Heure du tirage</label>
           <select id="heureSaisie" aria-label="Choisir l'heure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
-
           <label for="date" class="sr-only">Date du tirage</label>
           <input type="date" id="date" aria-label="Date du tirage">
-
           <input type="number" id="b1" min="1" max="90" placeholder="B1" aria-label="Boule 1">
           <input type="number" id="b2" min="1" max="90" placeholder="B2" aria-label="Boule 2">
           <input type="number" id="b3" min="1" max="90" placeholder="B3" aria-label="Boule 3">
@@ -301,7 +253,6 @@
           <h2>📜 Compilation par Sac (Résultats)</h2>
           <button class="danger admin-only" onclick="toutEffacer()">🗑️ Tout effacer</button>
         </div>
-
         <label for="selectSac" class="sr-only">Sac à afficher</label>
         <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
             <option value="tous">Vue Globale (Tout mélangé)</option>
@@ -313,7 +264,6 @@
             <option value="Star_Fortune">Sac Star + Fortune</option>
             <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
         </select>
-
         <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
       </div>
 
@@ -327,7 +277,6 @@
       </div>
     </div>
 
-    <!-- ====== ONGLET 2 : COCKPIT ====== -->
     <div id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
       <div class="card" id="lock-cockpit">
         <div class="lock-overlay" id="overlay-cockpit" style="display: none;" role="region" aria-label="Accès restreint">
@@ -335,19 +284,13 @@
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
         </div>
-
         <div id="content-cockpit">
             <h2>🚀 Cockpit & Simulation</h2>
             <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                <label><b>Jeu :</b>
-                  <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select>
-                </label>
-                <label><b>Créneau :</b>
-                  <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
-                </label>
+                <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
+                <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
                 <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
             </div>
-
             <div class="cockpit-grid">
                 <div class="cockpit-card" style="border-left-color: var(--color-hot);">
                     <h4>🎯 Prédiction</h4>
@@ -364,7 +307,6 @@
       </div>
     </div>
 
-    <!-- ====== ONGLET 3 : COMPARATEUR ====== -->
     <div id="onglet-comparateur" class="tab-content" role="tabpanel" aria-labelledby="tab-comparateur" tabindex="0">
       <div class="card" id="lock-comparateur">
         <div class="lock-overlay" id="overlay-comparateur" style="display: none;" role="region" aria-label="Accès restreint">
@@ -372,7 +314,6 @@
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
         </div>
-
         <div id="content-comparateur">
             <h2>⚖️ Comparateur Multi-Plages</h2>
             <div id="plages-config" class="plages-config"></div>
@@ -380,7 +321,6 @@
                 <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
                 <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
             </div>
-
             <div class="palette" role="toolbar" aria-label="Palette de couleurs">
                 <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
                 <button class="color-btn" aria-pressed="true" aria-label="Rouge" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></button>
@@ -392,20 +332,17 @@
                 <button class="color-btn" aria-pressed="false" aria-label="Gomme" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</button>
                 <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
             </div>
-
             <div class="audio-bar" role="group" aria-label="Options audio du comparateur">
                 <button type="button" id="btnLireDetail" onclick="lireDetailComparaison()">🔊 Écouter le détail</button>
                 <button type="button" id="btnMuet" class="secondary" onclick="basculerMuet()" aria-pressed="false">🔇 Muet</button>
                 <span id="etatAudio" class="sr-only" role="status" aria-live="polite"></span>
             </div>
-
             <div id="annonceComparaison" class="sr-only" role="status" aria-live="polite"></div>
             <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
         </div>
       </div>
     </div>
 
-    <!-- ====== ONGLET 4 : LABORATOIRE ====== -->
     <div id="onglet-labo" class="tab-content" role="tabpanel" aria-labelledby="tab-labo" tabindex="0">
       <div class="card" id="lock-labo">
         <div class="lock-overlay" id="overlay-labo" style="display: none;" role="region" aria-label="Accès restreint">
@@ -413,7 +350,6 @@
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
         </div>
-
         <div id="content-labo">
             <h2>🧪 Laboratoire d'Analyse</h2>
             <div class="lab-grid">
@@ -446,20 +382,17 @@
 </div>
 </main>
 
-<!-- ================= DRAWER (menu latéral) ================= -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="fermerDrawer()" aria-hidden="true"></div>
 <aside class="drawer" id="drawerMenu" role="dialog" aria-modal="true" aria-labelledby="drawerTitre">
     <div class="drawer-header">
         <h2 id="drawerTitre">🎰 Menu</h2>
         <button type="button" class="drawer-close" onclick="fermerDrawer()" aria-label="Fermer le menu">✕</button>
     </div>
-
     <div class="drawer-section">
         <h3>Mon compte</h3>
         <span class="status-badge" id="drawerBadge">Chargement...</span>
         <button type="button" class="drawer-deconnexion" onclick="seDeconnecterDepuisDrawer()">🚪 Déconnexion</button>
     </div>
-
     <div class="drawer-section">
         <h3>Navigation</h3>
         <button type="button" class="drawer-nav-btn" data-onglet="saisie" onclick="ouvrirOngletDepuisDrawer('saisie')">📝 Compilation</button>
@@ -469,7 +402,6 @@
     </div>
 </aside>
 
-<!-- ================= MODALE DE SUPPRESSION SÉCURISÉE ================= -->
 <div id="modalSuppression" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSuppTitre" aria-describedby="modalSuppDesc" style="display: none;">
     <div class="modal-box">
         <h2 id="modalSuppTitre" style="color: var(--color-hot);">⚠️ Suppression irréversible</h2>
@@ -477,13 +409,11 @@
             Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.<br>
             Cette action <strong>ne peut pas être annulée</strong>.
         </p>
-
         <details style="margin: 15px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
             <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder d'abord (recommandé)</summary>
             <p style="font-size: 13px; margin: 10px 0 5px;">Téléchargez un fichier CSV de secours avant de supprimer :</p>
             <button type="button" class="secondary" onclick="exporterCSV()" style="font-size: 13px;">📥 Télécharger le CSV</button>
         </details>
-
         <div style="margin-top: 20px; text-align: left;">
             <label for="champConfirmation" style="display: block; font-size: 14px; margin-bottom: 8px;">
                 Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :
@@ -493,14 +423,12 @@
                    placeholder="SUPPRIMER" aria-describedby="champConfirmAide">
             <div id="champConfirmAide" class="sr-only">Le mot doit être écrit en majuscules sans accent.</div>
         </div>
-
         <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
             <button type="button" class="secondary" onclick="fermerModaleSuppression()">Annuler (Échap)</button>
             <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()" aria-disabled="true">
                 🗑️ Supprimer définitivement (<span id="compteARebours">5</span>s)
             </button>
         </div>
-
         <div id="modalSuppMessage" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
     </div>
 </div>
@@ -516,6 +444,33 @@ var donneesCloud = [];
 var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
+
+/* ========== DATES CLÉS DU LOTO BÉNIN ========== */
+var DATE_LANCEMENT_STAR    = new Date("2004-06-16");
+var DATE_LANCEMENT_FORTUNE = new Date("2010-04-28");
+var DATE_LANCEMENT_DIGITAL = new Date("2023-07-13");
+var DATE_AJOUT_11H         = new Date("2023-07-13");
+var DATE_AJOUT_08H         = new Date("2026-08-13");
+
+// Horaires par jeu selon la date
+function heuresPourJeu(jeu, dateObj) {
+    if (jeu === 'Star') {
+        if (dateObj < DATE_LANCEMENT_STAR) return [];
+        if (dateObj < DATE_AJOUT_11H) return ["14H", "18H"];
+        return ["11H", "14H", "18H"];
+    }
+    if (jeu === 'Fortune') {
+        if (dateObj < DATE_LANCEMENT_FORTUNE) return [];
+        if (dateObj < DATE_AJOUT_11H) return ["14H", "18H"];
+        return ["11H", "14H", "18H"];
+    }
+    if (jeu === 'Digital') {
+        if (dateObj < DATE_LANCEMENT_DIGITAL) return [];
+        if (dateObj < DATE_AJOUT_08H) return ["00H", "20H"];
+        return ["00H", "08H", "20H"];
+    }
+    return [];
+}
 
 /* ========== ANNONCES VOCALES ========== */
 var audioMuet = (localStorage.getItem('loto_audio_muet') === 'true');
@@ -591,7 +546,7 @@ function lireDetailComparaison() {
     lireTexteVocal(construireTexteDetail(derniereComparaison));
 }
 
-/* ========== DRAWER (menu latéral) ========== */
+/* ========== DRAWER ========== */
 var drawerOuvert = false;
 var focusAvantDrawer = null;
 
@@ -601,19 +556,16 @@ function ouvrirDrawer() {
     var drawer = document.getElementById('drawerMenu');
     var backdrop = document.getElementById('drawerBackdrop');
     var btnBurger = document.getElementById('btnBurger');
-
     drawer.classList.add('open');
     backdrop.classList.add('open');
     backdrop.setAttribute('aria-hidden', 'false');
     btnBurger.setAttribute('aria-expanded', 'true');
-
     var drawerBadge = document.getElementById('drawerBadge');
     var mainBadge = document.getElementById('statusBadge');
     if (drawerBadge && mainBadge) {
         drawerBadge.textContent = mainBadge.textContent;
         drawerBadge.className = mainBadge.className;
     }
-
     var ongletActif = document.querySelector('.tab-content.active');
     if (ongletActif) {
         var id = ongletActif.id.replace('onglet-', '');
@@ -622,12 +574,10 @@ function ouvrirDrawer() {
             else b.removeAttribute('aria-current');
         });
     }
-
     setTimeout(function() {
         var closeBtn = drawer.querySelector('.drawer-close');
         if (closeBtn) closeBtn.focus();
     }, 50);
-
     document.addEventListener('keydown', piegeFocusDrawer);
 }
 
@@ -869,55 +819,89 @@ function getTiragesDuSac(sacId) {
     });
 }
 
+/* ========== COMPILATION PAR SAC (CORRIGÉE) ========== */
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var tiragesFiltres = getTiragesDuSac(sacId);
     var conteneur = document.getElementById("conteneurSac");
     conteneur.innerHTML = "";
     if (tiragesFiltres.length === 0) { conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage.</p>"; return; }
+
     var parDate = {};
     tiragesFiltres.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
-    var dateLancementStar = new Date("2004-06-16");
-    var dateLancementFortune = new Date("2010-04-28");
-    var dateLancementDigital = new Date("2023-07-13");
-    var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
-    var htmlTotal = "", compteurLigne = 0;
+
+    function jeuxDuSac(id) {
+        if (id === 'tous') return ['Star', 'Fortune', 'Digital'];
+        if (id === 'Star') return ['Star'];
+        if (id === 'Fortune') return ['Fortune'];
+        if (id === 'Digital') return ['Digital'];
+        if (id === 'Star_Digital') return ['Star', 'Digital'];
+        if (id === 'Fortune_Digital') return ['Fortune', 'Digital'];
+        if (id === 'Star_Fortune') return ['Star', 'Fortune'];
+        if (id === 'Star_Fortune_Digital') return ['Star', 'Fortune', 'Digital'];
+        return [];
+    }
+    var jeuxAutorises = jeuxDuSac(sacId);
+    var sacUnSeulJeu = (jeuxAutorises.length === 1);
+
+    var htmlTotal = "";
+    var compteurLigne = 0;
+
     datesTriees.forEach(function(dateStr) {
         var tiragesDuJour = parDate[dateStr];
         var dateObj = new Date(dateStr);
-        var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        var htmlJour = "<div class='day-card'><h3 class='day-header'>📅 " + dateFormatee + "</h3>";
-        var heuresApplicables = toutesLesHeures.filter(function(heure) {
-            if (heure === "00H" || heure === "08H" || heure === "20H") return dateObj >= dateLancementDigital;
-            if (heure === "11H" || heure === "14H" || heure === "18H") {
-                if (sacId.includes("Star")) {
-                    if (dateObj < dateLancementStar) return false;
-                    if (sacId.includes("Fortune")) return true;
-                    return true;
-                }
-                if (sacId.includes("Fortune")) return dateObj >= dateLancementFortune;
-            }
-            return false;
+        if (isNaN(dateObj.getTime())) return;
+        var dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Construire le set d'heures valides pour ce jour, selon les jeux autorisés
+        // ET les dates de lancement / ajout d'horaires.
+        var heuresDuJour = new Set();
+        jeuxAutorises.forEach(function(jeu) {
+            var heures = heuresPourJeu(jeu, dateObj);
+            heures.forEach(function(h) { heuresDuJour.add(h); });
         });
-        heuresApplicables.forEach(function(heure) {
-            compteurLigne++;
+        if (heuresDuJour.size === 0) return;
+
+        var heuresTriees = Array.from(heuresDuJour).sort();
+        var htmlJour = "<div class='day-card'><h3 class='day-header'>📅 " + dateFormatee + "</h3>";
+        var lignesAjoutees = 0;
+
+        heuresTriees.forEach(function(heure) {
+            // Chercher un tirage réel (Star et Fortune ne se chevauchent jamais, Digital a ses heures propres)
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
+
+            // En vue globale : n'afficher une ligne vide que si le sac ne contient qu'un seul jeu
+            if (!tirage && !sacUnSeulJeu) return;
+
+            // Déterminer le jeu à afficher sur la ligne vide
+            var jeuPourHeure = null;
+            jeuxAutorises.forEach(function(jeu) {
+                if (heuresPourJeu(jeu, dateObj).indexOf(heure) !== -1 && !jeuPourHeure) jeuPourHeure = jeu;
+            });
+
+            compteurLigne++;
+            lignesAjoutees++;
             htmlJour += "<div class='day-row'><div class='day-time'><span aria-hidden='true'>Ligne " + compteurLigne + "</span><span class='sr-only'>Ligne " + compteurLigne + "</span><br><small>" + heure + "</small></div>";
+
             if (tirage) {
                 var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
                 htmlJour += "<div class='day-game'>" + tirage.jeu + "</div><div class='day-nums'>";
-                tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>"; });
+                tirage.boules.forEach(function(n) {
+                    htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>";
+                });
                 htmlJour += "</div>";
             } else {
-                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div><div class='day-nums'><span class='ball empty' aria-label='Pas de tirage'>-</span></div>";
+                htmlJour += "<div class='day-game' style='color:var(--border-color);'>" + (jeuPourHeure || '-') + "</div><div class='day-nums'><span class='ball empty' aria-label='Pas de tirage'>-</span></div>";
             }
             htmlJour += "</div>";
         });
+
         htmlJour += "</div>";
-        htmlTotal += htmlJour;
+        if (lignesAjoutees > 0) htmlTotal += htmlJour;
     });
-    conteneur.innerHTML = htmlTotal;
+
+    conteneur.innerHTML = htmlTotal || "<p style='color:var(--text-muted);'>Aucun tirage pour ce sac sur la période.</p>";
 }
 
 document.getElementById("btnAjouter").addEventListener("click", async function () {
@@ -1175,15 +1159,12 @@ async function traiterTexteColle() {
     var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3]; var anneeInt = parseInt(annee, 10);
     if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { erreurs++; return; }
     var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
-    var jeuTrouve = "Star"; var heureTrouvee = "00H";
+    var jeuTrouve = "Star"; var heureTrouvee = "14H";
     if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
     else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
     else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
     var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
     if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; }
-    else if (ligneMinuscule.indexOf("digital") !== -1) {
-        if (ligne.indexOf("20") !== -1) heureTrouvee = "20H"; else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
-    }
     var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' ');
     var nombres = []; var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
     if (matchNombres) { for (var i = 0; i < matchNombres.length; i++) { var num = parseInt(matchNombres[i], 10); if (num >= 1 && num <= 90) nombres.push(num); } }
