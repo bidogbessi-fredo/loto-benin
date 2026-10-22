@@ -2,15 +2,17 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loto Bénin - Pro Cockpit</title>
 <style>
   :root {
     --primary: #2980b9; --primary-hover: #1f618d;
     --bg-body: #f0f2f5; --bg-card: #ffffff;
-    --text-main: #2c3e50; --text-muted: #7f8c8d;
+    --text-main: #2c3e50; --text-muted: #5a6b6d; /* contraste renforcé */
     --border-color: #e1e8ed; --shadow: 0 4px 12px rgba(0,0,0,0.05);
     --color-star: #f39c12; --color-fortune: #2980b9; --color-digital: #8e44ad;
     --color-hot: #e74c3c; --color-cold: #3498db;
+    --focus-ring: #ffb300;
     --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px; --radius-pill: 50px;
   }
   @media (prefers-color-scheme: dark) {
@@ -22,41 +24,69 @@
     }
   }
 
+  /* --- ACCESSIBILITÉ : focus visible & skip link --- */
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .skip-link {
+    position: absolute; left: -9999px; top: 8px; z-index: 10000;
+    background: var(--primary); color: #fff; padding: 10px 16px;
+    border-radius: var(--radius-sm); font-weight: bold; text-decoration: none;
+  }
+  .skip-link:focus { left: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
   h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
-  
+
   #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
   .login-box h2 { margin-bottom: 25px; color: var(--primary); }
-  
   #form-inscription { display: none; }
 
-  .login-box input { width: 100%; margin-bottom: 15px; padding: 12px 15px; font-size: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
+  .login-box input { width: 100%; margin-bottom: 15px; padding: 12px 15px; font-size: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); }
   .login-box button { width: 100%; margin-top: 10px; padding: 12px 20px; font-weight: bold; border-radius: var(--radius-pill); cursor: pointer; border: none; transition: 0.2s;}
   .btn-principal { background: var(--primary); color: white; }
   .btn-principal:hover { background: var(--primary-hover); }
   .btn-visiteur { background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
   .btn-visiteur:hover { background: var(--border-color) !important; }
   .btn-inscription { background: var(--color-star) !important; color: white !important; }
-  
-  .lien-switch { display: block; margin-top: 20px; font-size: 14px; color: var(--primary); cursor: pointer; text-decoration: underline; }
+
+  .lien-switch { display: block; margin-top: 20px; font-size: 14px; color: var(--primary); cursor: pointer; text-decoration: underline; background: none; border: none; width: 100%; text-align: center; }
   .lien-switch:hover { color: var(--primary-hover); }
 
   #app-content { display: none; }
   .card { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); }
-  input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; }
-  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
+  input, button, select, textarea { padding: 12px 15px; font-size: 15px; margin: 4px 2px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--primary); }
   input[type=number] { width: 70px; text-align: center; font-weight: bold; }
-  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; border-radius: var(--radius-pill); padding: 10px 20px; transition: 0.2s; }
+  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; border-radius: var(--radius-pill); padding: 10px 20px; transition: 0.2s; min-height: 44px; }
   button:hover { background: var(--primary-hover); transform: translateY(-1px); }
   button.secondary { background: var(--text-muted); }
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
-  
+
+  /* --- ONGLETS ACCESSIBLES --- */
   .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center;}
-  .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; position: relative;}
+  .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; position: relative; min-height: 44px;}
   .tab-btn:hover { background: var(--bg-body); }
-  .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(41,128,185,0.3); }
+  .tab-btn[aria-selected="true"] { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(41,128,185,0.3); }
   .tab-content { display: none; animation: fadeIn 0.3s ease; }
   .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -65,7 +95,7 @@
   th, td { border-bottom: 1px solid var(--border-color); padding: 12px 10px; text-align: center; }
   th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
   tr:last-child td { border-bottom: none; }
-  
+
   .ball { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.2) 100%), var(--primary); color: white; font-weight: bold; margin: 0 3px; font-size: 15px; box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.2); text-shadow: 1px 1px 2px rgba(0,0,0,0.4); transition: transform 0.2s; }
   .ball:hover { transform: scale(1.1); }
   .ball.star { background: linear-gradient(135deg, #f1c40f, #e67e22); }
@@ -75,7 +105,7 @@
   .ball.cold { background: linear-gradient(135deg, #3498db, #2980b9); }
   .ball.empty { background: transparent; box-shadow: none; color: var(--border-color); font-size: 24px; }
 
-  .comp-ball { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--bg-body); color: var(--text-muted); border: 2px solid var(--border-color); font-weight: bold; margin: 0 3px; font-size: 15px; cursor: pointer; user-select: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+  .comp-ball { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); color: var(--text-muted); border: 2px solid var(--border-color); font-weight: bold; margin: 0 3px; font-size: 15px; cursor: pointer; user-select: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); padding: 0; }
   .comp-ball:active { transform: scale(0.9); }
   .comp-ball.match-exact { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; border-color: #1e8449; box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); transform: scale(1.1); }
   .comp-ball.match-turning { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; border-color: #6c3483; box-shadow: 0 0 10px rgba(155, 89, 182, 0.6); transform: scale(1.1); }
@@ -94,41 +124,40 @@
   .cockpit-card h4 { margin-top: 0; margin-bottom: 15px; color: var(--text-main); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
   .stat-list { list-style: none; padding: 0; margin: 0; }
   .stat-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color); font-size: 14px;}
-  
+
   .sac-selector { padding: 15px; font-size: 16px; border-radius: var(--radius-pill); border: 2px solid var(--primary); background: var(--bg-card); font-weight: bold; width: 100%; max-width: 500px; margin-bottom: 20px; color: var(--text-main);}
-  
+
   .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .lab-box { background: var(--bg-body); border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius-md); }
   .result-box { margin-top: 15px; padding: 15px; background: var(--bg-card); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); box-shadow: var(--shadow);}
-  
+
   .comp-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px;}
   .comp-col { flex: 1; min-width: 350px; background: var(--bg-card); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow); }
   .comp-table { width: 100%; font-size: 14px; border-collapse: collapse; }
   .comp-table td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center;}
   .comp-table th { padding: 10px; border-bottom: 2px solid var(--border-color); background: transparent;}
-  
+
   .plages-config { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
   .plage-box { background: var(--bg-body); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 10px; min-width: 250px;}
-  
+
   .palette { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 20px; padding: 15px; background: var(--bg-body); border-radius: var(--radius-lg); flex-wrap: wrap;}
-  .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+  .color-btn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); padding: 0; }
   .color-btn:active { transform: scale(0.9); }
-  .color-btn.active { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+  .color-btn[aria-pressed="true"] { border-color: var(--text-main); transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
   .mode-visiteur .admin-only { display: none !important; }
 
   .premium-locked { position: relative; min-height: 400px; overflow: hidden; }
   .premium-locked > *:not(.lock-overlay) { filter: blur(8px); pointer-events: none; user-select: none; opacity: 0.5;}
-  .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); z-index: 10; border-radius: var(--radius-lg); text-align: center; padding: 20px;}
+  .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); z-index: 10; border-radius: var(--radius-lg); text-align: center; padding: 20px;}
   .lock-overlay h2 { color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 10px;}
   .lock-overlay p { color: white; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); margin-bottom: 20px;}
   .lock-overlay button { background: var(--color-star); color: #fff; font-size: 18px; padding: 15px 30px; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.5);}
 
-  /* --- LE BADGE DE STATUT --- */
   .status-badge { display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: bold; color: white; margin-right: 15px; vertical-align: middle;}
   .badge-admin { background: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
   .badge-abonne { background: var(--primary); box-shadow: 0 0 10px rgba(41, 128, 185, 0.4); }
-  .badge-warning { background: var(--color-star); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); }
+  .badge-warning { background: var(--color-star); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); color: #000; }
   .badge-gratuit { background: var(--color-hot); box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
 
   @media (max-width: 768px) {
@@ -142,71 +171,87 @@
 </head>
 <body>
 
+<!-- Lien d'évitement pour lecteurs d'écran / clavier -->
+<a href="#contenu-principal" class="skip-link">Aller au contenu principal</a>
+
 <!-- ================= ÉCRAN DE CONNEXION & INSCRIPTION ================= -->
-<div id="login-screen">
+<div id="login-screen" role="dialog" aria-modal="true" aria-labelledby="loginTitre">
     <div class="login-box">
-        <h1 style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
+        <h1 id="loginTitre" style="color: var(--primary); margin-bottom: 5px;">🎰 Loto Bénin</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Portail d'accès</p>
-        
+
         <div id="form-connexion">
-            <input type="email" id="loginEmail" placeholder="Adresse email" required>
-            <input type="password" id="loginPassword" placeholder="Mot de passe" required>
-            
+            <label for="loginEmail" class="sr-only">Adresse email</label>
+            <input type="email" id="loginEmail" placeholder="Adresse email" autocomplete="username" required>
+
+            <label for="loginPassword" class="sr-only">Mot de passe</label>
+            <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password" required>
+
             <button class="btn-principal" onclick="seConnecter()">Se connecter</button>
             <button class="btn-visiteur" onclick="entrerVisiteur()">👁️ Entrer en mode Visiteur</button>
-            
-            <span class="lien-switch" onclick="afficherInscription()">Pas encore de compte ? S'inscrire</span>
+
+            <button class="lien-switch" onclick="afficherInscription()">Pas encore de compte ? S'inscrire</button>
         </div>
 
         <div id="form-inscription">
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Créez votre compte pour accéder aux analyses.</p>
-            <input type="email" id="insEmail" placeholder="Nouvelle adresse email" required>
-            <input type="password" id="insPassword" placeholder="Mot de passe (6 caractères min.)" required>
-            
+            <label for="insEmail" class="sr-only">Nouvelle adresse email</label>
+            <input type="email" id="insEmail" placeholder="Nouvelle adresse email" autocomplete="email" required>
+
+            <label for="insPassword" class="sr-only">Mot de passe (6 caractères minimum)</label>
+            <input type="password" id="insPassword" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password" required>
+
             <button class="btn-inscription" onclick="creerCompte()">Créer mon compte</button>
-            
-            <span class="lien-switch" onclick="afficherConnexion()">Déjà un compte ? Se connecter</span>
+
+            <button class="lien-switch" onclick="afficherConnexion()">Déjà un compte ? Se connecter</button>
         </div>
-        
-        <div id="loginMessage" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
+
+        <div id="loginMessage" role="alert" aria-live="polite" style="margin-top: 15px; font-size: 14px; font-weight: bold;"></div>
     </div>
 </div>
 
 <!-- ================= APPLICATION ================= -->
+<main id="contenu-principal">
 <div id="app-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
         <h1>🎰 Loto Bénin - Pro Cockpit</h1>
         <div style="text-align: right;">
-            <span id="statusBadge" class="status-badge">Chargement...</span>
+            <span id="statusBadge" class="status-badge" role="status" aria-live="polite">Chargement...</span>
             <button class="danger" onclick="seDeconnecter()" style="font-size: 13px;">Déconnexion</button>
         </div>
     </div>
-    
-    <p id="statusCloud" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
 
-    <div class="tabs">
-      <button class="tab-btn active" onclick="ouvrirOnglet('saisie')">📝 Compilation</button>
-      <button class="tab-btn" onclick="ouvrirOnglet('cockpit')">🚀 Cockpit</button>
-      <button class="tab-btn" onclick="ouvrirOnglet('comparateur')">⚖️ Comparateur</button>
-      <button class="tab-btn" onclick="ouvrirOnglet('labo')">🧪 Laboratoire</button>
+    <p id="statusCloud" role="status" aria-live="polite" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
+
+    <div class="tabs" role="tablist" aria-label="Navigation principale">
+      <button class="tab-btn" role="tab" id="tab-saisie" aria-controls="onglet-saisie" aria-selected="true" tabindex="0" onclick="ouvrirOnglet('saisie', this)">📝 Compilation</button>
+      <button class="tab-btn" role="tab" id="tab-cockpit" aria-controls="onglet-cockpit" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('cockpit', this)">🚀 Cockpit</button>
+      <button class="tab-btn" role="tab" id="tab-comparateur" aria-controls="onglet-comparateur" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('comparateur', this)">⚖️ Comparateur</button>
+      <button class="tab-btn" role="tab" id="tab-labo" aria-controls="onglet-labo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('labo', this)">🧪 Laboratoire</button>
     </div>
 
     <!-- ====== ONGLET 1 : COMPILATION ====== -->
-    <div id="onglet-saisie" class="tab-content active">
+    <div id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
       <div class="card admin-only">
         <h2>➕ Saisir un tirage</h2>
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
-          <select id="jeuSaisie"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
-          <select id="heureSaisie"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
-          <input type="date" id="date">
-          <input type="number" id="b1" min="1" max="90" placeholder="B1">
-          <input type="number" id="b2" min="1" max="90" placeholder="B2">
-          <input type="number" id="b3" min="1" max="90" placeholder="B3">
-          <input type="number" id="b4" min="1" max="90" placeholder="B4">
-          <input type="number" id="b5" min="1" max="90" placeholder="B5">
+          <label for="jeuSaisie" class="sr-only">Jeu</label>
+          <select id="jeuSaisie" aria-label="Choisir le jeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+
+          <label for="heureSaisie" class="sr-only">Heure du tirage</label>
+          <select id="heureSaisie" aria-label="Choisir l'heure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
+
+          <label for="date" class="sr-only">Date du tirage</label>
+          <input type="date" id="date" aria-label="Date du tirage">
+
+          <input type="number" id="b1" min="1" max="90" placeholder="B1" aria-label="Boule 1">
+          <input type="number" id="b2" min="1" max="90" placeholder="B2" aria-label="Boule 2">
+          <input type="number" id="b3" min="1" max="90" placeholder="B3" aria-label="Boule 3">
+          <input type="number" id="b4" min="1" max="90" placeholder="B4" aria-label="Boule 4">
+          <input type="number" id="b5" min="1" max="90" placeholder="B5" aria-label="Boule 5">
           <button id="btnAjouter">Ajouter</button>
         </div>
-        <div class="msg" id="message" style="color: var(--color-hot); margin-top:10px;"></div>
+        <div class="msg" id="message" role="alert" aria-live="polite" style="color: var(--color-hot); margin-top:10px;"></div>
       </div>
 
       <div class="card">
@@ -214,7 +259,8 @@
           <h2>📜 Compilation par Sac (Résultats)</h2>
           <button class="danger admin-only" onclick="toutEffacer()">🗑️ Tout effacer</button>
         </div>
-        
+
+        <label for="selectSac" class="sr-only">Sac à afficher</label>
         <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
             <option value="tous">Vue Globale (Tout mélangé)</option>
             <option value="Star">Star Bénin (Seul)</option>
@@ -228,20 +274,21 @@
 
         <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
       </div>
-      
+
       <div class="card admin-only">
         <h2>📁 Importer des résultats</h2>
+        <label for="texteAImporter" class="sr-only">Données brutes à importer</label>
         <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
         <br>
         <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Importer</button>
-        <div class="msg" id="importMessage" style="margin-top: 10px;"></div>
+        <div class="msg" id="importMessage" role="alert" aria-live="polite" style="margin-top: 10px;"></div>
       </div>
     </div>
 
     <!-- ====== ONGLET 2 : COCKPIT ====== -->
-    <div id="onglet-cockpit" class="tab-content">
-      <div class="card premium-locked" id="lock-cockpit">
-        <div class="lock-overlay" id="overlay-cockpit" style="display: none;">
+    <div id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
+      <div class="card" id="lock-cockpit">
+        <div class="lock-overlay" id="overlay-cockpit" style="display: none;" role="region" aria-label="Accès restreint">
             <h2>🔒 Accès Abonné Requis</h2>
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
@@ -250,8 +297,12 @@
         <div id="content-cockpit">
             <h2>🚀 Cockpit & Simulation</h2>
             <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
-                <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
+                <label><b>Jeu :</b>
+                  <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select>
+                </label>
+                <label><b>Créneau :</b>
+                  <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
+                </label>
                 <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
             </div>
 
@@ -260,7 +311,7 @@
                     <h4>🎯 Prédiction</h4>
                     <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
                     <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
-                    <div id="grilleGeneree" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
+                    <div id="grilleGeneree" aria-live="polite" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
                 </div>
                 <div class="cockpit-card" style="border-left-color: var(--color-cold);">
                     <h4>🔄 Cycles (Retards)</h4>
@@ -272,9 +323,9 @@
     </div>
 
     <!-- ====== ONGLET 3 : COMPARATEUR ====== -->
-    <div id="onglet-comparateur" class="tab-content">
-      <div class="card premium-locked" id="lock-comparateur">
-        <div class="lock-overlay" id="overlay-comparateur" style="display: none;">
+    <div id="onglet-comparateur" class="tab-content" role="tabpanel" aria-labelledby="tab-comparateur" tabindex="0">
+      <div class="card" id="lock-comparateur">
+        <div class="lock-overlay" id="overlay-comparateur" style="display: none;" role="region" aria-label="Accès restreint">
             <h2>🔒 Accès Abonné Requis</h2>
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
@@ -283,32 +334,32 @@
         <div id="content-comparateur">
             <h2>⚖️ Comparateur Multi-Plages</h2>
             <div id="plages-config" class="plages-config"></div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
                 <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
             </div>
-            
-            <div class="palette">
+
+            <div class="palette" role="toolbar" aria-label="Palette de couleurs">
                 <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
-                <div class="color-btn active" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></div>
-                <div class="color-btn" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></div>
-                <div class="color-btn" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></div>
-                <div class="color-btn" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></div>
-                <div class="color-btn" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></div>
+                <button class="color-btn" aria-pressed="true" aria-label="Rouge" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></button>
+                <button class="color-btn" aria-pressed="false" aria-label="Bleu" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></button>
+                <button class="color-btn" aria-pressed="false" aria-label="Vert" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></button>
+                <button class="color-btn" aria-pressed="false" aria-label="Jaune" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></button>
+                <button class="color-btn" aria-pressed="false" aria-label="Rose" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></button>
                 <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
-                <div class="color-btn" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</div>
+                <button class="color-btn" aria-pressed="false" aria-label="Gomme" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</button>
                 <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
             </div>
 
-            <div id="resultatComparaison" class="comp-container"></div>
+            <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
         </div>
       </div>
     </div>
 
     <!-- ====== ONGLET 4 : LABORATOIRE ====== -->
-    <div id="onglet-labo" class="tab-content">
-      <div class="card premium-locked" id="lock-labo">
-        <div class="lock-overlay" id="overlay-labo" style="display: none;">
+    <div id="onglet-labo" class="tab-content" role="tabpanel" aria-labelledby="tab-labo" tabindex="0">
+      <div class="card" id="lock-labo">
+        <div class="lock-overlay" id="overlay-labo" style="display: none;" role="region" aria-label="Accès restreint">
             <h2>🔒 Accès Abonné Requis</h2>
             <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
             <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
@@ -319,28 +370,32 @@
             <div class="lab-grid">
               <div class="lab-box">
                 <h3>1. Analyse d'un tirage</h3>
+                <label for="selectTirageLabo" class="sr-only">Sélectionner un tirage</label>
                 <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
                 <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                   <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
                   <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme (+)</button>
                   <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">🔢 Théosophie</button>
                 </div>
-                <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
+                <div id="resultatOperations" class="result-box" role="status" aria-live="polite" style="font-weight: normal;">Sélectionnez un tirage.</div>
               </div>
               <div class="lab-box">
                 <h3>2. Multi-Draws</h3>
-                <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;"></select>
+                <label for="selectMultiTirages" class="sr-only">Sélectionner plusieurs tirages</label>
+                <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;" aria-describedby="multiAide"></select>
+                <span id="multiAide" class="sr-only">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs tirages.</span>
                 <div style="margin-top: 15px; display:flex; gap:10px;">
                   <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
                   <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
                 </div>
-                <div id="resultatLaboAvance" class="result-box" style="margin-top:15px; font-weight: normal;"></div>
+                <div id="resultatLaboAvance" class="result-box" role="status" aria-live="polite" style="margin-top:15px; font-weight: normal;"></div>
               </div>
             </div>
         </div>
       </div>
     </div>
 </div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -349,7 +404,7 @@ const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
 const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-var donneesCloud = []; 
+var donneesCloud = [];
 var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
@@ -358,31 +413,34 @@ function afficherInscription() {
     document.getElementById("form-connexion").style.display = "none";
     document.getElementById("form-inscription").style.display = "block";
     document.getElementById("loginMessage").textContent = "";
+    document.getElementById("insEmail").focus();
 }
 
 function afficherConnexion() {
     document.getElementById("form-inscription").style.display = "none";
     document.getElementById("form-connexion").style.display = "block";
     document.getElementById("loginMessage").textContent = "";
+    document.getElementById("loginEmail").focus();
 }
 
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    
+
     if (session) {
-        const { data: profil, error: errProfil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
-        
+        const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
+
         let role = profil ? profil.role : 'visiteur';
         let dateFin = profil && profil.date_fin_abonnement ? new Date(profil.date_fin_abonnement) : null;
         let dateJour = new Date();
-        
+
         estAdmin = (role === 'admin');
         estAbonne = (role === 'admin') || (dateFin && dateFin > dateJour);
-        
+
         afficherApplication(session.user.email, estAdmin, estAbonne, dateFin);
     } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("app-content").style.display = "none";
+        document.getElementById("loginEmail").focus();
     }
 }
 
@@ -390,11 +448,11 @@ async function seConnecter() {
     var email = document.getElementById("loginEmail").value;
     var password = document.getElementById("loginPassword").value;
     var msg = document.getElementById("loginMessage");
-    
+
     if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
     msg.style.color = "var(--primary)"; msg.textContent = "Connexion...";
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
 
     if (error) {
         msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + error.message;
@@ -408,12 +466,12 @@ async function creerCompte() {
     var email = document.getElementById("insEmail").value;
     var password = document.getElementById("insPassword").value;
     var msg = document.getElementById("loginMessage");
-    
+
     if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
     if (password.length < 6) { msg.style.color = "var(--color-hot)"; msg.textContent = "Le mot de passe doit faire 6 caractères min."; return; }
     msg.style.color = "var(--primary)"; msg.textContent = "Création du compte...";
 
-    const { data, error } = await supabaseClient.auth.signUp({ email: email, password: password });
+    const { error } = await supabaseClient.auth.signUp({ email: email, password: password });
 
     if (error) {
         msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message;
@@ -445,22 +503,20 @@ async function seDeconnecter() {
 function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app-content").style.display = "block";
-    
+
     var badgeEl = document.getElementById("statusBadge");
-    
-    // --- GESTION DU BADGE DE STATUT ---
+
     if (isAdmin) {
         badgeEl.textContent = "👑 Admin (Illimité)";
         badgeEl.className = "status-badge badge-admin";
         document.body.classList.remove("mode-visiteur");
     } else if (isAbonne && dateFin) {
-        // Calcul des jours restants
         var dateJour = new Date();
         dateJour.setHours(0,0,0,0);
         var fin = new Date(dateFin);
         fin.setHours(0,0,0,0);
         var joursRestants = Math.ceil((fin - dateJour) / (1000 * 60 * 60 * 24));
-        
+
         if (joursRestants <= 1) {
             badgeEl.textContent = "⚠️ Dernier jour !";
             badgeEl.className = "status-badge badge-warning";
@@ -474,20 +530,24 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
         badgeEl.className = "status-badge badge-gratuit";
         document.body.classList.add("mode-visiteur");
     }
-    
+
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
+        var content = document.getElementById('content-' + id);
         var card = document.getElementById('lock-' + id);
         if (isAdmin || isAbonne) {
             if(overlay) overlay.style.display = "none";
             if(card) card.classList.remove('premium-locked');
+            if(content) { content.removeAttribute('aria-hidden'); content.removeAttribute('inert'); }
         } else {
             if(overlay) overlay.style.display = "flex";
             if(card) card.classList.add('premium-locked');
+            // Neutralise le contenu flouté pour lecteurs d'écran et clavier
+            if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
-    
+
     rafraichirDonnees().then(function() {
         if(document.querySelectorAll('.plage-box').length === 0) {
             ajouterPlage();
@@ -504,7 +564,7 @@ function contacterAdmin() {
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
   statusEl.textContent = "⏳ Téléchargement...";
-  
+
   let tousLesTirages = [];
   let page = 0;
   let parPage = 1000;
@@ -519,18 +579,18 @@ async function chargerDepuisCloud() {
 
     if (error) { statusEl.textContent = "❌ Erreur de connexion."; statusEl.style.color = "var(--color-hot)"; return []; }
 
-    if (data.length > 0) { tousLesTirages = tousLesTirages.concat(data); page++; } 
+    if (data.length > 0) { tousLesTirages = tousLesTirages.concat(data); page++; }
     else { enCours = false; }
   }
-  
+
   statusEl.textContent = "✅ Connecté ! (" + tousLesTirages.length + " tirages)";
   statusEl.style.color = "#27ae60";
-  
+
   donneesCloud = tousLesTirages.map(function(item) {
       var boulesArray = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
       return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: boulesArray, somme: boulesArray.reduce(function(a, b) { return a + b; }, 0) };
   });
-  
+
   return donneesCloud;
 }
 
@@ -541,15 +601,47 @@ async function rafraichirDonnees() {
   if(document.getElementById('onglet-labo').classList.contains('active')) { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
 
-function ouvrirOnglet(id) {
-  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('onglet-' + id).classList.add('active');
-  event.currentTarget.classList.add('active');
-  
+/* --- ONGLETS ACCESSIBLES --- */
+function ouvrirOnglet(id, btn) {
+  var tabs = document.querySelectorAll('[role="tab"]');
+  var panels = document.querySelectorAll('[role="tabpanel"]');
+
+  tabs.forEach(function(t) {
+    var selected = (t.id === 'tab-' + id);
+    t.setAttribute('aria-selected', selected ? 'true' : 'false');
+    t.setAttribute('tabindex', selected ? '0' : '-1');
+    t.classList.toggle('active', selected);
+  });
+  panels.forEach(function(p) {
+    p.classList.toggle('active', p.id === 'onglet-' + id);
+  });
+
+  if (btn) btn.focus();
+
   if(id === 'cockpit') actualiserCockpit();
   if(id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); }
 }
+
+// Navigation clavier ← / → / Home / End sur les onglets
+document.addEventListener('DOMContentLoaded', function() {
+  var tablist = document.querySelector('[role="tablist"]');
+  if (!tablist) return;
+  tablist.addEventListener('keydown', function(e) {
+    var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+    var idx = tabs.indexOf(document.activeElement);
+    if (idx === -1) return;
+    var next = null;
+    if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+    if (e.key === 'ArrowLeft')  next = tabs[(idx - 1 + tabs.length) % tabs.length];
+    if (e.key === 'Home')       next = tabs[0];
+    if (e.key === 'End')        next = tabs[tabs.length - 1];
+    if (next) {
+      e.preventDefault();
+      var id = next.id.replace('tab-', '');
+      ouvrirOnglet(id, next);
+    }
+  });
+});
 
 function getTiragesDuSac(sacId) {
     return donneesCloud.filter(function(t) {
@@ -583,21 +675,21 @@ function afficherSacSelectionne() {
     var toutesLesHeures = ["00H", "08H", "11H", "14H", "18H", "20H"];
 
     var htmlTotal = "";
-    var compteurLigne = 0; 
+    var compteurLigne = 0;
 
     datesTriees.forEach(function(dateStr) {
         var tiragesDuJour = parDate[dateStr];
         var dateObj = new Date(dateStr);
         var dateFormatee = isNaN(dateObj.getTime()) ? dateStr : dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
-        var htmlJour = "<div class='day-card'><div class='day-header'>📅 " + dateFormatee + "</div>";
+
+        var htmlJour = "<div class='day-card'><h3 class='day-header'>📅 " + dateFormatee + "</h3>";
 
         var heuresApplicables = toutesLesHeures.filter(function(heure) {
             if (heure === "00H" || heure === "08H" || heure === "20H") return dateObj >= dateLancementDigital;
             if (heure === "11H" || heure === "14H" || heure === "18H") {
                 if (sacId.includes("Star")) {
                     if (dateObj < dateLancementStar) return false;
-                    if (sacId.includes("Fortune")) return true; 
+                    if (sacId.includes("Fortune")) return true;
                     return true;
                 }
                 if (sacId.includes("Fortune")) return dateObj >= dateLancementFortune;
@@ -606,18 +698,20 @@ function afficherSacSelectionne() {
         });
 
         heuresApplicables.forEach(function(heure) {
-            compteurLigne++; 
+            compteurLigne++;
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
 
-            htmlJour += "<div class='day-row'><div class='day-time'>Ligne " + compteurLigne + "<br><small>" + heure + "</small></div>";
-            
+            htmlJour += "<div class='day-row'><div class='day-time'><span aria-hidden='true'>Ligne " + compteurLigne + "</span><span class='sr-only'>Ligne " + compteurLigne + "</span><br><small>" + heure + "</small></div>";
+
             if (tirage) {
                 var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
                 htmlJour += "<div class='day-game'>" + tirage.jeu + "</div><div class='day-nums'>";
-                tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "'>" + n + "</span>"; });
+                tirage.boules.forEach(function(n) {
+                    htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>";
+                });
                 htmlJour += "</div>";
             } else {
-                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div><div class='day-nums'><span class='ball empty'>-</span></div>";
+                htmlJour += "<div class='day-game' style='color:var(--border-color);'>-</div><div class='day-nums'><span class='ball empty' aria-label='Pas de tirage'>-</span></div>";
             }
             htmlJour += "</div>";
         });
@@ -641,17 +735,17 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   }
   if (!date) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : date requise."; return; }
   if (new Set(boules).size !== 5) { msg.style.color = "var(--color-hot)"; msg.textContent = "Erreur : boules différentes requises."; return; }
-  
+
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
   if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; return; }
   for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
-async function toutEffacer() { 
+async function toutEffacer() {
     if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
-    if (!confirm("⚠️ Tout supprimer ?")) return; 
-    await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees(); 
+    if (!confirm("⚠️ Tout supprimer ?")) return;
+    await supabaseClient.from('tirages').delete().neq('id', 0); await rafraichirDonnees();
 }
 
 var nombrePlages = 0;
@@ -661,8 +755,8 @@ function ajouterPlage() {
     var div = document.createElement("div"); div.className = "plage-box"; div.id = "plage-container-" + nombrePlages;
     var colors = ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"]; var couleur = colors[(nombrePlages - 1) % 5];
     div.style.borderTop = "4px solid " + couleur;
-    
-    div.innerHTML = `<label style="color:${couleur};">Plage ${nombrePlages}</label>
+
+    div.innerHTML = `<label for="sacNum${nombrePlages}" style="color:${couleur};">Plage ${nombrePlages}</label>
         <select id="sacNum${nombrePlages}">
             <option value="tous">Tous les jeux</option>
             <option value="Star">Star Bénin</option>
@@ -674,7 +768,9 @@ function ajouterPlage() {
             <option value="Star_Fortune_Digital">Star + Fortune + Digital</option>
         </select>
         <div style="display:flex; gap:5px; margin-top:5px;">
+            <label for="refNum${nombrePlages}" class="sr-only">Ligne de référence de la plage ${nombrePlages}</label>
             <input type="number" id="refNum${nombrePlages}" placeholder="Ligne N°" style="width:80px;">
+            <label for="refRange${nombrePlages}" class="sr-only">Nombre de lignes de la plage ${nombrePlages}</label>
             <select id="refRange${nombrePlages}" style="flex:1;"><option value="10">10 lignes</option><option value="20">20 lignes</option><option value="30" selected>30 lignes</option><option value="40">40 lignes</option></select>
         </div>
         <button class="danger" style="font-size:12px; padding:5px; margin-top:5px;" onclick="supprimerPlage(${nombrePlages})">Retirer</button>`;
@@ -685,89 +781,101 @@ function supprimerPlage(id) { var div = document.getElementById("plage-container
 
 function executerComparateurMulti() {
     var plages = [];
-    
+
     for (var i = 1; i <= nombrePlages; i++) {
-        var container = document.getElementById("plage-container-" + i); 
-        if (!container) continue; 
-        
+        var container = document.getElementById("plage-container-" + i);
+        if (!container) continue;
+
         var sacId = document.getElementById("sacNum" + i).value;
         var refLigne = parseInt(document.getElementById("refNum" + i).value, 10);
         var range = parseInt(document.getElementById("refRange" + i).value, 10);
-        
+
         if (isNaN(refLigne)) continue;
 
         var tiragesDuSac = getTiragesDuSac(sacId);
         var startIndex = refLigne - 1;
-        
+
         if (startIndex < 0 || startIndex >= tiragesDuSac.length) { alert("La ligne " + refLigne + " n'existe pas."); return; }
 
         var plage = [];
-        var minIdx = Math.max(0, startIndex - range); 
+        var minIdx = Math.max(0, startIndex - range);
         var maxIdx = Math.min(tiragesDuSac.length - 1, startIndex + range);
-        
+
         for (var j = minIdx; j <= maxIdx; j++) { plage.push({ data: tiragesDuSac[j], ligneLocale: j + 1 }); }
-        
+
         plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: plage, color: ["#2980b9", "#d35400", "#c0392b", "#27ae60", "#8e44ad"][(i-1)%5] });
     }
 
     if (plages.length < 2) { alert("Il faut au moins 2 plages."); return; }
 
-    var maxLines = 0; 
+    var maxLines = 0;
     plages.forEach(function(p) { if (p.data.length > maxLines) maxLines = p.data.length; });
-    
+
     var htmlTotal = "";
-    
+
     plages.forEach(function(p) {
-        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><tr><th>Ligne</th><th>Numéros</th></tr>";
-        
+        htmlTotal += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><thead><tr><th scope='col'>Ligne</th><th scope='col'>Numéros</th></tr></thead><tbody>";
+
         for (var l = 0; l < maxLines; l++) {
             var item = p.data[l];
-            if (!item) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; } 
+            if (!item) { htmlTotal += "<tr><td><i>-</i></td><td>-</td></tr>"; }
             else {
                 var t = item.data;
                 htmlTotal += "<tr><td><b>Ligne " + item.ligneLocale + "</b><br><small>" + t.jeu + " " + t.heure + "</small></td><td>";
-                
+
                 t.boules.forEach(function(n) {
                     var matchExactCount = 0, matchTurningCount = 0, allPlagesMatch = true;
-                    
+
                     plages.forEach(function(otherP) {
-                        if (otherP.id === p.id) return; 
-                        var otherItem = otherP.data[l]; 
-                        
+                        if (otherP.id === p.id) return;
+                        var otherItem = otherP.data[l];
+
                         if (otherItem) {
                             var otherT = otherItem.data;
-                            var hasExact = otherT.boules.includes(n); 
+                            var hasExact = otherT.boules.includes(n);
                             var hasTurning = otherT.boules.includes(getTurning(n));
-                            
-                            if (hasExact) matchExactCount++; 
-                            else if (hasTurning) matchTurningCount++; 
-                            else allPlagesMatch = false; 
+
+                            if (hasExact) matchExactCount++;
+                            else if (hasTurning) matchTurningCount++;
+                            else allPlagesMatch = false;
                         } else { allPlagesMatch = false; }
                     });
-                    
+
                     var cls = "comp-ball";
+                    var srInfo = "";
                     if (allPlagesMatch) {
-                        if (matchExactCount === plages.length - 1) cls += " match-exact";
-                        else if (matchTurningCount === plages.length - 1) cls += " match-turning";
-                        else cls += " match-multi";
+                        if (matchExactCount === plages.length - 1) { cls += " match-exact"; srInfo = "identique dans toutes les plages"; }
+                        else if (matchTurningCount === plages.length - 1) { cls += " match-turning"; srInfo = "miroir dans toutes les plages"; }
+                        else { cls += " match-multi"; srInfo = "présent dans toutes les plages"; }
                     }
-                    htmlTotal += "<span class='" + cls + "' onclick='colorierBoule(this)'>" + n + "</span>";
+                    var label = "Boule " + n + (srInfo ? ", " + srInfo : "") + ". Cliquez pour colorier.";
+                    htmlTotal += "<button type='button' class='" + cls + "' onclick='colorierBoule(this)' aria-label='" + label + "'>" + n + "</button>";
                 });
                 htmlTotal += "</td></tr>";
             }
         }
-        htmlTotal += "</table></div>";
+        htmlTotal += "</tbody></table></div>";
     });
-    
+
     document.getElementById("resultatComparaison").innerHTML = htmlTotal;
 }
 
 function getTurning(num) { var s = num.toString().padStart(2, '0'); var inv = parseInt(s.split('').reverse().join(''), 10); return (inv === 0 || inv > 90) ? num : inv; }
 function resetColors() { document.querySelectorAll('.comp-ball').forEach(function(b) { b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = ''; b.style.boxShadow = ''; }); }
-function changerCouleur(element, couleur) { document.querySelectorAll('.color-btn').forEach(function(btn) { btn.classList.remove('active'); }); element.classList.add('active'); couleurActive = couleur === 'annuler' ? 'annuler' : couleur; }
+
+function changerCouleur(element, couleur) {
+    document.querySelectorAll('.color-btn').forEach(function(btn) { btn.setAttribute('aria-pressed','false'); });
+    element.setAttribute('aria-pressed','true');
+    couleurActive = couleur === 'annuler' ? 'annuler' : couleur;
+}
+
 function colorierBoule(bouleElement) {
-    if (couleurActive === 'annuler') { bouleElement.style.backgroundColor = ''; bouleElement.style.color = ''; bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = ''; } 
-    else { bouleElement.style.backgroundColor = couleurActive; bouleElement.style.color = '#fff'; bouleElement.style.borderColor = '#333'; bouleElement.style.boxShadow = '0 0 8px ' + couleurActive; bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; }
+    if (couleurActive === 'annuler') {
+        bouleElement.style.backgroundColor = ''; bouleElement.style.color = ''; bouleElement.style.borderColor = ''; bouleElement.style.boxShadow = '';
+    } else {
+        bouleElement.style.backgroundColor = couleurActive; bouleElement.style.color = '#fff'; bouleElement.style.borderColor = '#333';
+        bouleElement.style.boxShadow = '0 0 8px ' + couleurActive; bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
+    }
 }
 
 async function traiterTexteColle() {
@@ -777,13 +885,14 @@ async function traiterTexteColle() {
   if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
   msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse...";
   var lignes = texte.split(/\r?\n/); var aInserer = []; var doublons = 0; var erreurs = 0;
-  var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020; 
+  var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020;
+
   lignes.forEach(function(ligne) {
-    if (!ligne.trim()) return; 
+    if (!ligne.trim()) return;
     var ligneMinuscule = ligne.toLowerCase();
     if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
     var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/; var matchDate = ligne.match(regexDate);
-    if (!matchDate) { erreurs++; return; } 
+    if (!matchDate) { erreurs++; return; }
     var jour = parseInt(matchDate[1], 10); var mois = parseInt(matchDate[2], 10);
     var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3]; var anneeInt = parseInt(annee, 10);
     if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { erreurs++; return; }
@@ -793,11 +902,11 @@ async function traiterTexteColle() {
     else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
     else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
     var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
-    if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; } 
+    if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; }
     else if (ligneMinuscule.indexOf("digital") !== -1) {
         if (ligne.indexOf("20") !== -1) heureTrouvee = "20H"; else if (ligne.indexOf("08") !== -1 || ligne.indexOf("8") !== -1) heureTrouvee = "08H";
     }
-    var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' '); 
+    var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' ');
     var nombres = []; var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
     if (matchNombres) { for (var i = 0; i < matchNombres.length; i++) { var num = parseInt(matchNombres[i], 10); if (num >= 1 && num <= 90) nombres.push(num); } }
     var boules = nombres.slice(0, 5); if (boules.length < 5) boules = nombres.slice(-5);
@@ -807,6 +916,7 @@ async function traiterTexteColle() {
         if (!existeDeja && !existeDansFichier) { aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: "Auto" }); } else { doublons++; }
     } else { erreurs++; }
   });
+
   if (aInserer.length > 0) {
       var taillePaquet = 100; var succes = true;
       for (var i = 0; i < aInserer.length; i += taillePaquet) {
@@ -814,15 +924,15 @@ async function traiterTexteColle() {
           let { error } = await supabaseClient.from('tirages').insert(paquet);
           if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; succes = false; break; }
       }
-      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
-  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage."; }
+      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés (" + doublons + " doublons, " + erreurs + " erreurs)."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
+  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage (" + doublons + " doublons, " + erreurs + " erreurs)."; }
 }
 
 function actualiserCockpit() {
     var jeu = document.getElementById("cockpitJeu").value;
     var heure = document.getElementById("cockpitHeure").value;
     var filtres = donneesCloud.filter(function(t) { return t.jeu === jeu && (heure === "all" || t.heure === heure); });
-    
+
     if (filtres.length === 0) {
         document.getElementById("cockpitPrediction").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
         document.getElementById("cockpitCycles").innerHTML = "<p style='color:var(--text-muted);'>Pas de données.</p>";
@@ -837,17 +947,17 @@ function actualiserCockpit() {
     var nums = Object.keys(freq).map(function(n) { return { n: parseInt(n), f: freq[n], e: ecarts[n] }; });
     var topChauds = nums.slice().sort(function(a, b) { return b.f - a.f; }).slice(0, 5);
     var topRetards = nums.slice().sort(function(a, b) { return b.e - a.e; }).slice(0, 5);
-    
+
     var htmlPred = "<p><b>🔥 Top 5 Chauds :</b><br>";
-    topChauds.forEach(function(x) { htmlPred += "<span class='ball hot'>" + x.n + "</span> (" + x.f + "x) "; });
+    topChauds.forEach(function(x) { htmlPred += "<span class='ball hot' role='img' aria-label='Boule " + x.n + " chaude, " + x.f + " sorties'>" + x.n + "</span> (" + x.f + "x) "; });
     htmlPred += "</p><p style='margin-top:15px;'><b>❄️ Top 5 Retards :</b><br>";
-    topRetards.forEach(function(x) { htmlPred += "<span class='ball cold'>" + x.n + "</span> (R:" + x.e + ") "; });
+    topRetards.forEach(function(x) { htmlPred += "<span class='ball cold' role='img' aria-label='Boule " + x.n + " froide, retard " + x.e + "'>" + x.n + "</span> (R:" + x.e + ") "; });
     htmlPred += "</p>";
     document.getElementById("cockpitPrediction").innerHTML = htmlPred;
 
     var htmlCycles = "<ul class='stat-list'>";
     topRetards.forEach(function(x) {
-        var moyenneGlobale = filtres.length / 90; 
+        var moyenneGlobale = filtres.length / 90;
         var enZone = x.e > moyenneGlobale ? "<span style='color:var(--color-hot); font-weight:bold;'>🔴 Zone !</span>" : "<span style='color:var(--text-muted);'>⚪ Normal</span>";
         htmlCycles += "<li><b>" + x.n + "</b> <span>Retard: " + x.e + " | " + enZone + "</span></li>";
     });
