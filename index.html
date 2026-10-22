@@ -167,10 +167,43 @@
   .badge-gratuit { background: var(--color-hot); box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
 
   .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: modalIn 0.2s ease; }
+  .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
   @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   @media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
-  #btnConfirmerFinal:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  #btnConfirmerFinal:disabled, #btnConfirmerPeriode:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Modale "Supprimer par période" */
+  .modal-box-period { border-top: 6px solid var(--color-star); }
+  .periode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
+  @media (max-width: 500px) { .periode-grid { grid-template-columns: 1fr; } }
+  .periode-grid label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+  .periode-grid input, .periode-grid select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-main); }
+  .raccourcis-periode { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 15px; }
+  .raccourcis-periode button { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); font-size: 12px; padding: 6px 12px; border-radius: var(--radius-pill); min-height: auto; }
+  .raccourcis-periode button:hover { background: var(--border-color); color: var(--text-main); transform: none; }
+  .apercu-periode { background: var(--bg-body); padding: 14px; border-radius: var(--radius-md); margin: 15px 0; font-size: 14px; border-left: 4px solid var(--primary); }
+  .apercu-periode.alerte { border-left-color: var(--color-hot); background: #fff5f5; color: var(--color-hot); font-weight: bold; }
+  @media (prefers-color-scheme: dark) { .apercu-periode.alerte { background: #2a1414; } }
+  .apercu-periode .compteur { font-size: 20px; font-weight: bold; }
+
+  /* Modale "Conflits d'import" */
+  .modal-box-conflit { border-top: 6px solid var(--primary); max-width: 650px; }
+  .conflit-resume { display: flex; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+  .conflit-stat { flex: 1; min-width: 100px; padding: 12px; border-radius: var(--radius-md); text-align: center; background: var(--bg-body); }
+  .conflit-stat .num { font-size: 24px; font-weight: bold; display: block; }
+  .conflit-stat.nouveaux { border-left: 4px solid #27ae60; }
+  .conflit-stat.nouveaux .num { color: #27ae60; }
+  .conflit-stat.conflits { border-left: 4px solid var(--color-star); }
+  .conflit-stat.conflits .num { color: var(--color-star); }
+  .conflit-stat.invalides { border-left: 4px solid var(--color-hot); }
+  .conflit-stat.invalides .num { color: var(--color-hot); }
+  .conflit-detail { max-height: 200px; overflow-y: auto; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm); font-family: monospace; font-size: 12px; margin: 10px 0; }
+  .conflit-detail .ligne-conflit { padding: 6px 0; border-bottom: 1px dashed var(--border-color); line-height: 1.5; }
+  .conflit-detail .ligne-conflit:last-child { border-bottom: none; }
+  .conflit-detail .ancien { color: var(--text-muted); text-decoration: line-through; }
+  .conflit-detail .nouveau { color: var(--color-star); font-weight: bold; }
+  .conflit-choix { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: flex-end; }
+  .conflit-choix button { min-height: 48px; }
 
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
@@ -249,9 +282,12 @@
       </div>
 
       <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-          <h2>📜 Compilation par Sac (Résultats)</h2>
-          <button class="danger admin-only" onclick="toutEffacer()">🗑️ Tout effacer</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+          <h2 style="margin: 0;">📜 Compilation par Sac (Résultats)</h2>
+          <div class="admin-only" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="warning" onclick="ouvrirModaleSuppressionPeriode()" style="font-size: 13px;">📅 Supprimer par période</button>
+            <button class="danger" onclick="toutEffacer()" style="font-size: 13px;">🗑️ Tout effacer</button>
+          </div>
         </div>
         <label for="selectSac" class="sr-only">Sac à afficher</label>
         <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
@@ -272,7 +308,7 @@
         <label for="texteAImporter" class="sr-only">Données brutes à importer</label>
         <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
         <br>
-        <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Importer</button>
+        <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Analyser et importer</button>
         <div class="msg" id="importMessage" role="alert" aria-live="polite" style="margin-top: 10px;"></div>
       </div>
     </div>
@@ -433,6 +469,87 @@
     </div>
 </div>
 
+<!-- ===== MODALE : Suppression par période ===== -->
+<div id="modalSuppressionPeriode" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalPeriodeTitre" style="display: none;">
+  <div class="modal-box modal-box-period">
+    <h2 id="modalPeriodeTitre" style="color: var(--color-star);">📅 Supprimer par période</h2>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">
+      Choisissez une plage de dates et éventuellement un jeu. Un aperçu du nombre de tirages concernés s'affiche en temps réel.
+    </p>
+    <div class="periode-grid">
+      <div>
+        <label for="periodeDebut">Date de début</label>
+        <input type="date" id="periodeDebut" oninput="previsualiserPeriode()">
+      </div>
+      <div>
+        <label for="periodeFin">Date de fin</label>
+        <input type="date" id="periodeFin" oninput="previsualiserPeriode()">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label for="periodeJeu">Filtrer par jeu</label>
+        <select id="periodeJeu" onchange="previsualiserPeriode()">
+          <option value="tous">Tous les jeux</option>
+          <option value="Star">Star uniquement</option>
+          <option value="Fortune">Fortune uniquement</option>
+          <option value="Digital">Digital uniquement</option>
+        </select>
+      </div>
+    </div>
+    <div class="raccourcis-periode">
+      <button type="button" onclick="appliquerRaccourciPeriode('ceMois')">Ce mois-ci</button>
+      <button type="button" onclick="appliquerRaccourciPeriode('moisDernier')">Mois dernier</button>
+      <button type="button" onclick="appliquerRaccourciPeriode('cetteAnnee')">Cette année</button>
+      <button type="button" onclick="appliquerRaccourciPeriode('anneeDerniere')">Année dernière</button>
+    </div>
+    <div class="apercu-periode" id="apercuPeriode"><span class="compteur">0</span> tirage(s) seront supprimés.</div>
+    <details style="margin: 10px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
+      <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder la période (CSV)</summary>
+      <p style="font-size: 13px; margin: 10px 0 5px;">Télécharger uniquement les tirages de cette période :</p>
+      <button type="button" class="secondary" onclick="exporterCSVPeriode()" style="font-size: 13px;">📥 Télécharger le CSV</button>
+    </details>
+    <div style="margin-top: 20px; text-align: left;">
+      <label for="champConfirmationPeriode" style="display: block; font-size: 14px; margin-bottom: 8px;">
+        Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :
+      </label>
+      <input type="text" id="champConfirmationPeriode" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;"
+             placeholder="SUPPRIMER" oninput="verifierMotConfirmationPeriode()">
+    </div>
+    <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+      <button type="button" class="secondary" onclick="fermerModaleSuppressionPeriode()">Annuler (Échap)</button>
+      <button type="button" class="danger" id="btnConfirmerPeriode" disabled onclick="confirmerSuppressionPeriode()" aria-disabled="true">
+        🗑️ Supprimer la période (<span id="compteAReboursPeriode">5</span>s)
+      </button>
+    </div>
+    <div id="messagePeriode" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+  </div>
+</div>
+
+<!-- ===== MODALE : Conflits d'import ===== -->
+<div id="modalConflitImport" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalConflitTitre" style="display: none;">
+  <div class="modal-box modal-box-conflit">
+    <h2 id="modalConflitTitre" style="color: var(--primary);">📥 Résumé de l'import</h2>
+    <p style="font-size: 13px; color: var(--text-muted);">Analyse terminée. Vérifiez le résumé et choisissez quoi faire des conflits.</p>
+    <div class="conflit-resume">
+      <div class="conflit-stat nouveaux"><span class="num" id="statNouveaux">0</span><span style="font-size: 12px;">nouveaux</span></div>
+      <div class="conflit-stat conflits"><span class="num" id="statConflits">0</span><span style="font-size: 12px;">conflits</span></div>
+      <div class="conflit-stat invalides"><span class="num" id="statInvalides">0</span><span style="font-size: 12px;">invalides</span></div>
+    </div>
+    <details id="detailsConflits" style="margin: 10px 0;">
+      <summary style="cursor: pointer; font-weight: bold;">🔍 Voir le détail des conflits</summary>
+      <div class="conflit-detail" id="listeConflits"></div>
+      <p style="font-size: 12px; color: var(--text-muted); margin: 5px 0;">Seuls les 10 premiers conflits sont affichés. Tous les conflits seront traités selon votre choix.</p>
+    </details>
+    <p style="margin: 20px 0 10px; font-weight: bold;">Que faire des <span id="nbConflitsQuestion">0</span> conflits ?</p>
+    <div class="conflit-choix">
+      <button type="button" class="secondary" onclick="annulerImport()">❌ Annuler</button>
+      <button type="button" class="warning" onclick="executerImport('ignorer')">⏭️ Ignorer les conflits</button>
+      <button type="button" class="danger" onclick="executerImport('ecraser')" id="btnEcraser">🔄 Écraser les anciens</button>
+    </div>
+    <div id="messageConflit" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -452,7 +569,6 @@ var DATE_LANCEMENT_DIGITAL = new Date("2023-07-13");
 var DATE_AJOUT_11H         = new Date("2023-07-13");
 var DATE_AJOUT_08H         = new Date("2026-08-13");
 
-// Horaires par jeu selon la date
 function heuresPourJeu(jeu, dateObj) {
     if (jeu === 'Star') {
         if (dateObj < DATE_LANCEMENT_STAR) return [];
@@ -562,10 +678,7 @@ function ouvrirDrawer() {
     btnBurger.setAttribute('aria-expanded', 'true');
     var drawerBadge = document.getElementById('drawerBadge');
     var mainBadge = document.getElementById('statusBadge');
-    if (drawerBadge && mainBadge) {
-        drawerBadge.textContent = mainBadge.textContent;
-        drawerBadge.className = mainBadge.className;
-    }
+    if (drawerBadge && mainBadge) { drawerBadge.textContent = mainBadge.textContent; drawerBadge.className = mainBadge.className; }
     var ongletActif = document.querySelector('.tab-content.active');
     if (ongletActif) {
         var id = ongletActif.id.replace('onglet-', '');
@@ -574,10 +687,7 @@ function ouvrirDrawer() {
             else b.removeAttribute('aria-current');
         });
     }
-    setTimeout(function() {
-        var closeBtn = drawer.querySelector('.drawer-close');
-        if (closeBtn) closeBtn.focus();
-    }, 50);
+    setTimeout(function() { var closeBtn = drawer.querySelector('.drawer-close'); if (closeBtn) closeBtn.focus(); }, 50);
     document.addEventListener('keydown', piegeFocusDrawer);
 }
 
@@ -605,16 +715,8 @@ function piegeFocusDrawer(e) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
-function ouvrirOngletDepuisDrawer(id) {
-    fermerDrawer();
-    var btnCible = document.getElementById('tab-' + id);
-    ouvrirOnglet(id, btnCible);
-}
-
-function seDeconnecterDepuisDrawer() {
-    fermerDrawer();
-    seDeconnecter();
-}
+function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); var btnCible = document.getElementById('tab-' + id); ouvrirOnglet(id, btnCible); }
+function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
 
 /* ========== AUTH ========== */
 function afficherInscription() {
@@ -691,8 +793,7 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     document.getElementById("app-content").style.display = "block";
     var badgeEl = document.getElementById("statusBadge");
     if (isAdmin) {
-        badgeEl.textContent = "👑 Admin";
-        badgeEl.className = "status-badge badge-admin";
+        badgeEl.textContent = "👑 Admin"; badgeEl.className = "status-badge badge-admin";
         document.body.classList.remove("mode-visiteur");
     } else if (isAbonne && dateFin) {
         var dateJour = new Date(); dateJour.setHours(0,0,0,0);
@@ -702,11 +803,9 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
         else { badgeEl.textContent = "⭐ " + joursRestants + "j"; badgeEl.className = "status-badge badge-abonne"; }
         document.body.classList.remove("mode-visiteur");
     } else {
-        badgeEl.textContent = "🚫 Gratuit";
-        badgeEl.className = "status-badge badge-gratuit";
+        badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit";
         document.body.classList.add("mode-visiteur");
     }
-
     var drawerBadge = document.getElementById('drawerBadge');
     if (drawerBadge) {
         if (isAdmin) { drawerBadge.textContent = "👑 Admin (Illimité)"; drawerBadge.className = "status-badge badge-admin"; }
@@ -718,7 +817,6 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             else { drawerBadge.textContent = "⭐ Abonné : " + jr + " jours restants"; drawerBadge.className = "status-badge badge-abonne"; }
         } else { drawerBadge.textContent = "🚫 Accès Gratuit (Limité)"; drawerBadge.className = "status-badge badge-gratuit"; }
     }
-
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
@@ -734,16 +832,13 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
-
     rafraichirDonnees().then(function() {
         if(document.querySelectorAll('.plage-box').length === 0) { ajouterPlage(); ajouterPlage(); }
         actualiserCockpit();
     });
 }
 
-function contacterAdmin() {
-    window.open("https://wa.me/22900000000?text=Bonjour,%20je%20souhaite%20m'abonner.", "_blank");
-}
+function contacterAdmin() { window.open("https://wa.me/22900000000?text=Bonjour,%20je%20souhaite%20m'abonner.", "_blank"); }
 
 async function chargerDepuisCloud() {
   var statusEl = document.getElementById("statusCloud");
@@ -819,18 +914,15 @@ function getTiragesDuSac(sacId) {
     });
 }
 
-/* ========== COMPILATION PAR SAC (CORRIGÉE) ========== */
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var tiragesFiltres = getTiragesDuSac(sacId);
     var conteneur = document.getElementById("conteneurSac");
     conteneur.innerHTML = "";
     if (tiragesFiltres.length === 0) { conteneur.innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage.</p>"; return; }
-
     var parDate = {};
     tiragesFiltres.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var datesTriees = Object.keys(parDate).sort(function(a, b) { return a.localeCompare(b); });
-
     function jeuxDuSac(id) {
         if (id === 'tous') return ['Star', 'Fortune', 'Digital'];
         if (id === 'Star') return ['Star'];
@@ -844,63 +936,43 @@ function afficherSacSelectionne() {
     }
     var jeuxAutorises = jeuxDuSac(sacId);
     var sacUnSeulJeu = (jeuxAutorises.length === 1);
-
-    var htmlTotal = "";
-    var compteurLigne = 0;
-
+    var htmlTotal = "", compteurLigne = 0;
     datesTriees.forEach(function(dateStr) {
         var tiragesDuJour = parDate[dateStr];
         var dateObj = new Date(dateStr);
         if (isNaN(dateObj.getTime())) return;
         var dateFormatee = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-        // Construire le set d'heures valides pour ce jour, selon les jeux autorisés
-        // ET les dates de lancement / ajout d'horaires.
         var heuresDuJour = new Set();
         jeuxAutorises.forEach(function(jeu) {
             var heures = heuresPourJeu(jeu, dateObj);
             heures.forEach(function(h) { heuresDuJour.add(h); });
         });
         if (heuresDuJour.size === 0) return;
-
         var heuresTriees = Array.from(heuresDuJour).sort();
         var htmlJour = "<div class='day-card'><h3 class='day-header'>📅 " + dateFormatee + "</h3>";
         var lignesAjoutees = 0;
-
         heuresTriees.forEach(function(heure) {
-            // Chercher un tirage réel (Star et Fortune ne se chevauchent jamais, Digital a ses heures propres)
             var tirage = tiragesDuJour.find(function(t) { return t.heure === heure; });
-
-            // En vue globale : n'afficher une ligne vide que si le sac ne contient qu'un seul jeu
             if (!tirage && !sacUnSeulJeu) return;
-
-            // Déterminer le jeu à afficher sur la ligne vide
             var jeuPourHeure = null;
             jeuxAutorises.forEach(function(jeu) {
                 if (heuresPourJeu(jeu, dateObj).indexOf(heure) !== -1 && !jeuPourHeure) jeuPourHeure = jeu;
             });
-
-            compteurLigne++;
-            lignesAjoutees++;
+            compteurLigne++; lignesAjoutees++;
             htmlJour += "<div class='day-row'><div class='day-time'><span aria-hidden='true'>Ligne " + compteurLigne + "</span><span class='sr-only'>Ligne " + compteurLigne + "</span><br><small>" + heure + "</small></div>";
-
             if (tirage) {
                 var c = tirage.jeu === 'Star' ? 'star' : (tirage.jeu === 'Fortune' ? 'fortune' : 'digital');
                 htmlJour += "<div class='day-game'>" + tirage.jeu + "</div><div class='day-nums'>";
-                tirage.boules.forEach(function(n) {
-                    htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>";
-                });
+                tirage.boules.forEach(function(n) { htmlJour += "<span class='ball " + c + "' role='img' aria-label='Boule " + n + " " + tirage.jeu + "'>" + n + "</span>"; });
                 htmlJour += "</div>";
             } else {
                 htmlJour += "<div class='day-game' style='color:var(--border-color);'>" + (jeuPourHeure || '-') + "</div><div class='day-nums'><span class='ball empty' aria-label='Pas de tirage'>-</span></div>";
             }
             htmlJour += "</div>";
         });
-
         htmlJour += "</div>";
         if (lignesAjoutees > 0) htmlTotal += htmlJour;
     });
-
     conteneur.innerHTML = htmlTotal || "<p style='color:var(--text-muted);'>Aucun tirage pour ce sac sur la période.</p>";
 }
 
@@ -924,7 +996,7 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
-/* ========== SUPPRESSION SÉCURISÉE 2 NIVEAUX ========== */
+/* ========== SUPPRESSION TOTALE SÉCURISÉE 2 NIVEAUX ========== */
 var motConfirmation = "SUPPRIMER";
 var timerSuppression = null;
 var secondesRestantes = 5;
@@ -935,27 +1007,22 @@ async function toutEffacer() {
     if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
     var nb = donneesCloud.length;
     if (nb === 0) { alert("Aucune donnée à supprimer."); return; }
-
     elementFocusAvantModale = document.activeElement;
     modaleSuppOuverte = true;
-    var modal = document.getElementById("modalSuppression");
-    modal.style.display = "flex";
+    document.getElementById("modalSuppression").style.display = "flex";
     document.getElementById("modalSuppCompteur").textContent = nb.toLocaleString('fr-FR') + " tirage" + (nb > 1 ? "s" : "");
     document.getElementById("champConfirmation").value = "";
     document.getElementById("modalSuppMessage").textContent = "";
-
     var champ = document.getElementById("champConfirmation");
     champ.addEventListener("input", verifierMotConfirmation);
     champ.addEventListener("keydown", function(e) {
         if (e.key === "Enter" && !document.getElementById("btnConfirmerFinal").disabled) confirmerSuppressionFinale();
     });
     champ.focus();
-
     secondesRestantes = 5;
     document.getElementById("btnConfirmerFinal").disabled = true;
     document.getElementById("btnConfirmerFinal").setAttribute('aria-disabled','true');
     document.getElementById("btnConfirmerFinal").innerHTML = '🗑️ Supprimer définitivement (<span id="compteARebours">' + secondesRestantes + '</span>s)';
-
     if (timerSuppression) clearInterval(timerSuppression);
     timerSuppression = setInterval(function() {
         secondesRestantes--;
@@ -963,7 +1030,6 @@ async function toutEffacer() {
         if (el) el.textContent = Math.max(0, secondesRestantes);
         if (secondesRestantes <= 0) { clearInterval(timerSuppression); timerSuppression = null; verifierMotConfirmation(); }
     }, 1000);
-
     document.addEventListener("keydown", piegeFocusModale);
 }
 
@@ -973,10 +1039,8 @@ function verifierMotConfirmation() {
     var val = champ.value.trim().toUpperCase();
     var motOK = (val === motConfirmation);
     var delaiOK = (secondesRestantes <= 0);
-    if (motOK && delaiOK) {
-        btn.disabled = false; btn.setAttribute('aria-disabled','false');
-        btn.innerHTML = '🗑️ Supprimer définitivement';
-    } else {
+    if (motOK && delaiOK) { btn.disabled = false; btn.setAttribute('aria-disabled','false'); btn.innerHTML = '🗑️ Supprimer définitivement'; }
+    else {
         btn.disabled = true; btn.setAttribute('aria-disabled','true');
         var texte = "🗑️ Supprimer définitivement";
         if (!delaiOK) texte += " (" + Math.max(0, secondesRestantes) + "s)";
@@ -1030,6 +1094,345 @@ function exporterCSV() {
     URL.revokeObjectURL(url);
 }
 
+/* =========================================================
+   IMPORTATION — ANALYSE PUIS CHOIX DE CONFLIT
+   ========================================================= */
+var importEnAttente = null;
+
+async function traiterTexteColle() {
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    var texte = document.getElementById("texteAImporter").value;
+    var msg = document.getElementById("importMessage");
+    if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
+    msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse en cours...";
+
+    var lignes = texte.split(/\r?\n/);
+    var nouveaux = [];
+    var conflits = [];
+    var invalides = 0;
+    var anneeActuelle = new Date().getFullYear();
+    var anneeMaxAcceptee = anneeActuelle + 1;
+    var anneeMinAcceptee = 2004;
+
+    lignes.forEach(function(ligne) {
+        if (!ligne.trim()) return;
+        var ligneMinuscule = ligne.toLowerCase();
+        if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
+        var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
+        var matchDate = ligne.match(regexDate);
+        if (!matchDate) { invalides++; return; }
+        var jour = parseInt(matchDate[1], 10);
+        var mois = parseInt(matchDate[2], 10);
+        var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
+        var anneeInt = parseInt(annee, 10);
+        if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { invalides++; return; }
+        var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
+        var jeuTrouve = "Star";
+        var heureTrouvee = "14H";
+        if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
+        else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
+        else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
+        var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
+        if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; }
+        var texteNettoye = ligne.replace(matchDate[0], ' ')
+            .replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ')
+            .replace(/N[°o]\s*\d+/i, ' ');
+        var nombres = [];
+        var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
+        if (matchNombres) {
+            for (var i = 0; i < matchNombres.length; i++) {
+                var num = parseInt(matchNombres[i], 10);
+                if (num >= 1 && num <= 90) nombres.push(num);
+            }
+        }
+        var boules = nombres.slice(0, 5);
+        if (boules.length < 5) boules = nombres.slice(-5);
+        if (boules.length === 5 && new Set(boules).size === 5) {
+            var nouveau = {
+                date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve,
+                boules: JSON.stringify(boules), numero_tirage: "Auto", _boulesArray: boules
+            };
+            var indexInterne = nouveaux.findIndex(function(t) { return t.date === nouveau.date && t.heure === nouveau.heure && t.jeu === nouveau.jeu; });
+            if (indexInterne !== -1) { nouveaux[indexInterne] = nouveau; return; }
+            var indexConflitInterne = conflits.findIndex(function(c) { return c.nouveau.date === nouveau.date && c.nouveau.heure === nouveau.heure && c.nouveau.jeu === nouveau.jeu; });
+            if (indexConflitInterne !== -1) { conflits[indexConflitInterne].nouveau = nouveau; return; }
+            var existant = donneesCloud.find(function(t) { return t.date === nouveau.date && t.heure === nouveau.heure && t.jeu === nouveau.jeu; });
+            if (existant) {
+                conflits.push({
+                    existant: { id: existant.id, date: existant.date, heure: existant.heure, jeu: existant.jeu, boules: existant.boules },
+                    nouveau: nouveau
+                });
+            } else { nouveaux.push(nouveau); }
+        } else { invalides++; }
+    });
+
+    if (nouveaux.length === 0 && conflits.length === 0) {
+        msg.style.color = "var(--color-star)";
+        msg.textContent = "⚠️ Aucun tirage valide détecté (" + invalides + " invalides).";
+        return;
+    }
+
+    importEnAttente = { nouveaux: nouveaux, conflits: conflits, invalides: invalides };
+    document.getElementById("statNouveaux").textContent = nouveaux.length;
+    document.getElementById("statConflits").textContent = conflits.length;
+    document.getElementById("statInvalides").textContent = invalides;
+    document.getElementById("nbConflitsQuestion").textContent = conflits.length;
+
+    var listeEl = document.getElementById("listeConflits");
+    if (conflits.length === 0) { listeEl.innerHTML = "<p style='color:var(--text-muted);'>Aucun conflit détecté.</p>"; }
+    else {
+        var html = "";
+        conflits.slice(0, 10).forEach(function(c) {
+            var ancien = c.existant.boules.join(", ");
+            var nouveau = c.nouveau._boulesArray.join(", ");
+            html += "<div class='ligne-conflit'>"
+                + "⚠️ <b>" + c.nouveau.date + "</b> · " + c.nouveau.jeu + " · " + c.nouveau.heure + "<br>"
+                + "Ancien : <span class='ancien'>[" + ancien + "]</span><br>"
+                + "Nouveau : <span class='nouveau'>[" + nouveau + "]</span>"
+                + "</div>";
+        });
+        listeEl.innerHTML = html;
+    }
+
+    document.getElementById("btnEcraser").style.display = conflits.length > 0 ? "inline-block" : "none";
+    document.getElementById("modalConflitImport").style.display = "flex";
+    document.getElementById("messageConflit").textContent = "";
+    document.querySelectorAll("#modalConflitImport button").forEach(function(b) { b.disabled = false; });
+    msg.style.color = "var(--text-muted)";
+    msg.textContent = "Analyse terminée, en attente de votre choix.";
+}
+
+async function executerImport(mode) {
+    if (!importEnAttente) return;
+    var msg = document.getElementById("messageConflit");
+    var msgPrincipal = document.getElementById("importMessage");
+    msg.style.color = "var(--primary)"; msg.textContent = "⏳ Traitement en cours...";
+    document.querySelectorAll("#modalConflitImport button").forEach(function(b) { b.disabled = true; });
+
+    var nouveaux = importEnAttente.nouveaux;
+    var conflits = importEnAttente.conflits;
+    var nbAjout = 0, nbEcrase = 0, nbIgnore = 0;
+    var erreur = null;
+
+    if (mode === 'ecraser' && conflits.length > 0) {
+        var tailleBatch = 20;
+        for (var i = 0; i < conflits.length; i += tailleBatch) {
+            var batch = conflits.slice(i, i + tailleBatch);
+            var promesses = batch.map(function(c) {
+                return supabaseClient.from('tirages').update({ boules: c.nouveau.boules }).eq('id', c.existant.id);
+            });
+            var resultats = await Promise.all(promesses);
+            for (var r = 0; r < resultats.length; r++) { if (resultats[r].error) { erreur = resultats[r].error; break; } }
+            if (erreur) break;
+            nbEcrase += batch.length;
+        }
+    } else { nbIgnore = conflits.length; }
+
+    if (erreur === null && nouveaux.length > 0) {
+        var taillePaquet = 100;
+        var aInserer = nouveaux.map(function(t) { return { date: t.date, heure: t.heure, jeu: t.jeu, boules: t.boules, numero_tirage: t.numero_tirage }; });
+        for (var j = 0; j < aInserer.length; j += taillePaquet) {
+            var paquet = aInserer.slice(j, j + taillePaquet);
+            var res = await supabaseClient.from('tirages').insert(paquet);
+            if (res.error) { erreur = res.error; break; }
+            nbAjout += paquet.length;
+        }
+    }
+
+    if (erreur) {
+        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + erreur.message;
+        document.querySelectorAll("#modalConflitImport button").forEach(function(b) { b.disabled = false; });
+        return;
+    }
+
+    var resume = "✅ Import terminé. ";
+    resume += nbAjout + " ajouté(s)";
+    if (mode === 'ecraser') resume += ", " + nbEcrase + " écrasé(s)";
+    else resume += ", " + nbIgnore + " ignoré(s)";
+    resume += ".";
+    msg.style.color = "#27ae60"; msg.textContent = resume;
+    msgPrincipal.style.color = "#27ae60"; msgPrincipal.textContent = resume;
+    importEnAttente = null;
+    document.getElementById("texteAImporter").value = "";
+    setTimeout(function() { document.getElementById("modalConflitImport").style.display = "none"; rafraichirDonnees(); }, 1500);
+}
+
+function annulerImport() {
+    importEnAttente = null;
+    document.getElementById("modalConflitImport").style.display = "none";
+    document.getElementById("importMessage").style.color = "var(--color-star)";
+    document.getElementById("importMessage").textContent = "⏹️ Import annulé, rien n'a été modifié.";
+}
+
+/* =========================================================
+   SUPPRESSION PAR PÉRIODE
+   ========================================================= */
+var timerPeriode = null;
+var secondesPeriode = 5;
+var modalePeriodeOuverte = false;
+var focusAvantPeriode = null;
+
+function ouvrirModaleSuppressionPeriode() {
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    focusAvantPeriode = document.activeElement;
+    modalePeriodeOuverte = true;
+    var aujourdhui = new Date();
+    var debutMois = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 1);
+    document.getElementById("periodeDebut").value = debutMois.toISOString().slice(0, 10);
+    document.getElementById("periodeFin").value = aujourdhui.toISOString().slice(0, 10);
+    document.getElementById("periodeJeu").value = "tous";
+    document.getElementById("champConfirmationPeriode").value = "";
+    document.getElementById("messagePeriode").textContent = "";
+    document.getElementById("modalSuppressionPeriode").style.display = "flex";
+    previsualiserPeriode();
+    document.getElementById("periodeDebut").focus();
+    secondesPeriode = 5;
+    var btn = document.getElementById("btnConfirmerPeriode");
+    btn.disabled = true; btn.setAttribute('aria-disabled', 'true');
+    btn.innerHTML = '🗑️ Supprimer la période (<span id="compteAReboursPeriode">' + secondesPeriode + '</span>s)';
+    if (timerPeriode) clearInterval(timerPeriode);
+    timerPeriode = setInterval(function() {
+        secondesPeriode--;
+        var el = document.getElementById("compteAReboursPeriode");
+        if (el) el.textContent = Math.max(0, secondesPeriode);
+        if (secondesPeriode <= 0) { clearInterval(timerPeriode); timerPeriode = null; verifierMotConfirmationPeriode(); }
+    }, 1000);
+    document.addEventListener("keydown", piegeFocusPeriode);
+}
+
+function fermerModaleSuppressionPeriode() {
+    modalePeriodeOuverte = false;
+    document.getElementById("modalSuppressionPeriode").style.display = "none";
+    if (timerPeriode) { clearInterval(timerPeriode); timerPeriode = null; }
+    document.removeEventListener("keydown", piegeFocusPeriode);
+    if (focusAvantPeriode && focusAvantPeriode.focus) focusAvantPeriode.focus();
+}
+
+function piegeFocusPeriode(e) {
+    if (!modalePeriodeOuverte) return;
+    if (e.key === "Escape") { e.preventDefault(); fermerModaleSuppressionPeriode(); return; }
+    if (e.key !== "Tab") return;
+    var modal = document.getElementById("modalSuppressionPeriode");
+    var focusables = modal.querySelectorAll('button:not([disabled]), input, select, summary, [tabindex]:not([tabindex="-1"])');
+    if (focusables.length === 0) return;
+    var first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function appliquerRaccourciPeriode(type) {
+    var aujourdhui = new Date();
+    var debut, fin;
+    if (type === 'ceMois') {
+        debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 1);
+        fin = aujourdhui;
+    } else if (type === 'moisDernier') {
+        debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() - 1, 1);
+        fin = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 0);
+    } else if (type === 'cetteAnnee') {
+        debut = new Date(aujourdhui.getFullYear(), 0, 1);
+        fin = aujourdhui;
+    } else if (type === 'anneeDerniere') {
+        debut = new Date(aujourdhui.getFullYear() - 1, 0, 1);
+        fin = new Date(aujourdhui.getFullYear() - 1, 11, 31);
+    }
+    if (debut && fin) {
+        document.getElementById("periodeDebut").value = debut.toISOString().slice(0, 10);
+        document.getElementById("periodeFin").value = fin.toISOString().slice(0, 10);
+        previsualiserPeriode();
+    }
+}
+
+function tiragesDansPeriode() {
+    var debut = document.getElementById("periodeDebut").value;
+    var fin = document.getElementById("periodeFin").value;
+    var jeu = document.getElementById("periodeJeu").value;
+    if (!debut || !fin) return [];
+    return donneesCloud.filter(function(t) {
+        if (t.date < debut || t.date > fin) return false;
+        if (jeu !== 'tous' && t.jeu !== jeu) return false;
+        return true;
+    });
+}
+
+function previsualiserPeriode() {
+    var liste = tiragesDansPeriode();
+    var el = document.getElementById("apercuPeriode");
+    var total = donneesCloud.length;
+    var pourcent = total > 0 ? Math.round(liste.length / total * 100) : 0;
+    var avertissement = "";
+    if (total > 0 && liste.length === total && total > 0) {
+        avertissement = " — ⚠️ Cela supprimera TOUTE la base. Utilisez plutôt « Tout effacer ».";
+        el.classList.add('alerte');
+    } else if (pourcent >= 80) {
+        avertissement = " — ⚠️ Cela supprimera " + pourcent + " % de la base.";
+        el.classList.add('alerte');
+    } else { el.classList.remove('alerte'); }
+    el.innerHTML = "<span class='compteur'>" + liste.length + "</span> tirage(s) seront supprimés sur " + total + " au total" + avertissement + ".";
+    verifierMotConfirmationPeriode();
+}
+
+function verifierMotConfirmationPeriode() {
+    var champ = document.getElementById("champConfirmationPeriode");
+    var btn = document.getElementById("btnConfirmerPeriode");
+    if (!champ || !btn) return;
+    var val = champ.value.trim().toUpperCase();
+    var motOK = (val === "SUPPRIMER");
+    var delaiOK = (secondesPeriode <= 0);
+    var liste = tiragesDansPeriode();
+    var nbOK = (liste.length > 0);
+    if (motOK && delaiOK && nbOK) {
+        btn.disabled = false; btn.setAttribute('aria-disabled', 'false');
+        btn.innerHTML = '🗑️ Supprimer ' + liste.length + ' tirage(s)';
+    } else {
+        btn.disabled = true; btn.setAttribute('aria-disabled', 'true');
+        var texte = "🗑️ Supprimer la période";
+        if (!delaiOK) texte += " (" + Math.max(0, secondesPeriode) + "s)";
+        else if (!motOK) texte += " (mot incorrect)";
+        else if (!nbOK) texte += " (aucun tirage)";
+        btn.innerHTML = texte;
+    }
+}
+
+async function confirmerSuppressionPeriode() {
+    var msg = document.getElementById("messagePeriode");
+    var debut = document.getElementById("periodeDebut").value;
+    var fin = document.getElementById("periodeFin").value;
+    var jeu = document.getElementById("periodeJeu").value;
+    var liste = tiragesDansPeriode();
+    if (liste.length === 0) { msg.textContent = "Aucun tirage à supprimer."; return; }
+    msg.style.color = "var(--color-hot)";
+    msg.textContent = "⏳ Suppression de " + liste.length + " tirage(s)...";
+    document.getElementById("btnConfirmerPeriode").disabled = true;
+    let query = supabaseClient.from('tirages').delete().gte('date', debut).lte('date', fin);
+    if (jeu !== 'tous') query = query.eq('jeu', jeu);
+    const { error } = await query;
+    if (error) {
+        msg.textContent = "❌ Erreur : " + error.message;
+        document.getElementById("btnConfirmerPeriode").disabled = false;
+        return;
+    }
+    msg.style.color = "#27ae60";
+    msg.textContent = "✅ " + liste.length + " tirage(s) supprimé(s).";
+    await rafraichirDonnees();
+    setTimeout(fermerModaleSuppressionPeriode, 1500);
+}
+
+function exporterCSVPeriode() {
+    var liste = tiragesDansPeriode();
+    if (liste.length === 0) { alert("Aucun tirage dans cette période."); return; }
+    var lignes = ["date,heure,jeu,boules"];
+    liste.forEach(function(t) { lignes.push([t.date, t.heure, t.jeu, '"' + t.boules.join(",") + '"'].join(",")); });
+    var blob = new Blob([lignes.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "loto-benin-periode-" + document.getElementById("periodeDebut").value + "_" + document.getElementById("periodeFin").value + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/* ========== COMPARATEUR & LABO (INCHANGÉS) ========== */
 var nombrePlages = 0;
 function ajouterPlage() {
     if (nombrePlages >= 5) { alert("Maximum 5 plages."); return; }
@@ -1139,51 +1542,6 @@ function colorierBoule(bouleElement) {
         bouleElement.style.backgroundColor = couleurActive; bouleElement.style.color = '#fff'; bouleElement.style.borderColor = '#333';
         bouleElement.style.boxShadow = '0 0 8px ' + couleurActive; bouleElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
     }
-}
-
-async function traiterTexteColle() {
-  if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
-  var texte = document.getElementById("texteAImporter").value;
-  var msg = document.getElementById("importMessage");
-  if (!texte.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Le cadre est vide."; return; }
-  msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse...";
-  var lignes = texte.split(/\r?\n/); var aInserer = []; var doublons = 0; var erreurs = 0;
-  var anneeActuelle = new Date().getFullYear(); var anneeMaxAcceptee = anneeActuelle + 1; var anneeMinAcceptee = 2020;
-  lignes.forEach(function(ligne) {
-    if (!ligne.trim()) return;
-    var ligneMinuscule = ligne.toLowerCase();
-    if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
-    var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/; var matchDate = ligne.match(regexDate);
-    if (!matchDate) { erreurs++; return; }
-    var jour = parseInt(matchDate[1], 10); var mois = parseInt(matchDate[2], 10);
-    var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3]; var anneeInt = parseInt(annee, 10);
-    if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { erreurs++; return; }
-    var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
-    var jeuTrouve = "Star"; var heureTrouvee = "14H";
-    if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
-    else if (ligneMinuscule.indexOf("fortune") !== -1) jeuTrouve = "Fortune";
-    else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
-    var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
-    if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; }
-    var texteNettoye = ligne.replace(matchDate[0], ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' ');
-    var nombres = []; var matchNombres = texteNettoye.match(/\b\d{1,2}\b/g);
-    if (matchNombres) { for (var i = 0; i < matchNombres.length; i++) { var num = parseInt(matchNombres[i], 10); if (num >= 1 && num <= 90) nombres.push(num); } }
-    var boules = nombres.slice(0, 5); if (boules.length < 5) boules = nombres.slice(-5);
-    if (boules.length === 5 && new Set(boules).size === 5) {
-        var existeDeja = donneesCloud.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
-        var existeDansFichier = aInserer.some(function(t) { return t.date === dateFormatee && t.heure === heureTrouvee && t.jeu === jeuTrouve; });
-        if (!existeDeja && !existeDansFichier) { aInserer.push({ date: dateFormatee, heure: heureTrouvee, jeu: jeuTrouve, boules: JSON.stringify(boules), numero_tirage: "Auto" }); } else { doublons++; }
-    } else { erreurs++; }
-  });
-  if (aInserer.length > 0) {
-      var taillePaquet = 100; var succes = true;
-      for (var i = 0; i < aInserer.length; i += taillePaquet) {
-          var paquet = aInserer.slice(i, i + taillePaquet);
-          let { error } = await supabaseClient.from('tirages').insert(paquet);
-          if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur."; succes = false; break; }
-      }
-      if (succes) { msg.style.color = "#27ae60"; msg.textContent = "✅ Terminé : " + aInserer.length + " ajoutés (" + doublons + " doublons, " + erreurs + " erreurs)."; document.getElementById("texteAImporter").value = ""; await rafraichirDonnees(); }
-  } else { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun nouveau tirage (" + doublons + " doublons, " + erreurs + " erreurs)."; }
 }
 
 function actualiserCockpit() {
