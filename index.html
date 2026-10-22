@@ -62,6 +62,60 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
+  /* --- Topbar avec burger --- */
+  .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px; margin-bottom: 10px; }
+  .burger-btn {
+    background: var(--bg-card); color: var(--text-main);
+    border: 1px solid var(--border-color);
+    width: 48px; height: 48px; padding: 0;
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 22px; font-weight: bold;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow);
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .burger-btn:hover { background: var(--bg-body); }
+  .topbar-title { flex: 1; margin: 0; text-align: center; font-size: 22px; }
+  @media (max-width: 768px) {
+    .topbar-title { font-size: 16px; }
+  }
+
+  /* --- Drawer (menu latéral) --- */
+  .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; left: 0; height: 100%;
+    width: 300px; max-width: 85vw;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    display: flex; flex-direction: column;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .drawer.open { transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .drawer, .drawer-backdrop { transition: none; } }
+
+  .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); }
+  .drawer-header h2 { font-size: 18px; margin: 0; color: var(--primary); }
+  .drawer-close { background: transparent; color: var(--text-muted); border: none; font-size: 24px; padding: 4px 10px; min-height: auto; box-shadow: none; }
+  .drawer-close:hover { background: var(--bg-body); color: var(--color-hot); }
+
+  .drawer-section { margin-bottom: 20px; }
+  .drawer-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; }
+
+  .drawer-nav-btn { display: block; width: 100%; text-align: left; background: transparent; color: var(--text-main); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 4px; min-height: 44px; }
+  .drawer-nav-btn:hover { background: var(--bg-body); }
+  .drawer-nav-btn[aria-current="page"] { background: var(--primary); color: #fff; font-weight: bold; }
+
+  .drawer .status-badge { display: inline-block; margin: 0 0 10px 0; }
+  .drawer-deconnexion { width: 100%; padding: 12px; background: var(--color-hot); color: #fff; border: none; border-radius: var(--radius-pill); font-weight: bold; font-size: 15px; cursor: pointer; min-height: 48px; }
+  .drawer-deconnexion:hover { background: #c0392b; }
+
   .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center;}
   .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; position: relative; min-height: 44px;}
   .tab-btn:hover { background: var(--bg-body); }
@@ -201,12 +255,12 @@
 <!-- ================= APPLICATION ================= -->
 <main id="contenu-principal">
 <div id="app-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-        <h1>🎰 Loto Bénin - Pro Cockpit</h1>
-        <div style="text-align: right;">
-            <span id="statusBadge" class="status-badge" role="status" aria-live="polite">Chargement...</span>
-            <button class="danger" onclick="seDeconnecter()" style="font-size: 13px;">Déconnexion</button>
-        </div>
+    <div class="topbar">
+        <button type="button" class="burger-btn" id="btnBurger"
+                aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu"
+                onclick="ouvrirDrawer()">☰</button>
+        <h1 class="topbar-title">🎰 Loto Bénin</h1>
+        <span id="statusBadge" class="status-badge" role="status" aria-live="polite" style="margin:0;">Chargement...</span>
     </div>
 
     <p id="statusCloud" role="status" aria-live="polite" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
@@ -392,6 +446,29 @@
 </div>
 </main>
 
+<!-- ================= DRAWER (menu latéral) ================= -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="fermerDrawer()" aria-hidden="true"></div>
+<aside class="drawer" id="drawerMenu" role="dialog" aria-modal="true" aria-labelledby="drawerTitre">
+    <div class="drawer-header">
+        <h2 id="drawerTitre">🎰 Menu</h2>
+        <button type="button" class="drawer-close" onclick="fermerDrawer()" aria-label="Fermer le menu">✕</button>
+    </div>
+
+    <div class="drawer-section">
+        <h3>Mon compte</h3>
+        <span class="status-badge" id="drawerBadge">Chargement...</span>
+        <button type="button" class="drawer-deconnexion" onclick="seDeconnecterDepuisDrawer()">🚪 Déconnexion</button>
+    </div>
+
+    <div class="drawer-section">
+        <h3>Navigation</h3>
+        <button type="button" class="drawer-nav-btn" data-onglet="saisie" onclick="ouvrirOngletDepuisDrawer('saisie')">📝 Compilation</button>
+        <button type="button" class="drawer-nav-btn" data-onglet="cockpit" onclick="ouvrirOngletDepuisDrawer('cockpit')">🚀 Cockpit</button>
+        <button type="button" class="drawer-nav-btn" data-onglet="comparateur" onclick="ouvrirOngletDepuisDrawer('comparateur')">⚖️ Comparateur</button>
+        <button type="button" class="drawer-nav-btn" data-onglet="labo" onclick="ouvrirOngletDepuisDrawer('labo')">🧪 Laboratoire</button>
+    </div>
+</aside>
+
 <!-- ================= MODALE DE SUPPRESSION SÉCURISÉE ================= -->
 <div id="modalSuppression" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSuppTitre" aria-describedby="modalSuppDesc" style="display: none;">
     <div class="modal-box">
@@ -514,6 +591,81 @@ function lireDetailComparaison() {
     lireTexteVocal(construireTexteDetail(derniereComparaison));
 }
 
+/* ========== DRAWER (menu latéral) ========== */
+var drawerOuvert = false;
+var focusAvantDrawer = null;
+
+function ouvrirDrawer() {
+    focusAvantDrawer = document.activeElement;
+    drawerOuvert = true;
+    var drawer = document.getElementById('drawerMenu');
+    var backdrop = document.getElementById('drawerBackdrop');
+    var btnBurger = document.getElementById('btnBurger');
+
+    drawer.classList.add('open');
+    backdrop.classList.add('open');
+    backdrop.setAttribute('aria-hidden', 'false');
+    btnBurger.setAttribute('aria-expanded', 'true');
+
+    var drawerBadge = document.getElementById('drawerBadge');
+    var mainBadge = document.getElementById('statusBadge');
+    if (drawerBadge && mainBadge) {
+        drawerBadge.textContent = mainBadge.textContent;
+        drawerBadge.className = mainBadge.className;
+    }
+
+    var ongletActif = document.querySelector('.tab-content.active');
+    if (ongletActif) {
+        var id = ongletActif.id.replace('onglet-', '');
+        document.querySelectorAll('.drawer-nav-btn').forEach(function(b) {
+            if (b.dataset.onglet === id) b.setAttribute('aria-current', 'page');
+            else b.removeAttribute('aria-current');
+        });
+    }
+
+    setTimeout(function() {
+        var closeBtn = drawer.querySelector('.drawer-close');
+        if (closeBtn) closeBtn.focus();
+    }, 50);
+
+    document.addEventListener('keydown', piegeFocusDrawer);
+}
+
+function fermerDrawer() {
+    drawerOuvert = false;
+    var drawer = document.getElementById('drawerMenu');
+    var backdrop = document.getElementById('drawerBackdrop');
+    var btnBurger = document.getElementById('btnBurger');
+    if (drawer) drawer.classList.remove('open');
+    if (backdrop) { backdrop.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); }
+    if (btnBurger) btnBurger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('keydown', piegeFocusDrawer);
+    if (focusAvantDrawer && focusAvantDrawer.focus) focusAvantDrawer.focus();
+}
+
+function piegeFocusDrawer(e) {
+    if (!drawerOuvert) return;
+    if (e.key === 'Escape') { e.preventDefault(); fermerDrawer(); return; }
+    if (e.key !== 'Tab') return;
+    var drawer = document.getElementById('drawerMenu');
+    var focusables = drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusables.length === 0) return;
+    var first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function ouvrirOngletDepuisDrawer(id) {
+    fermerDrawer();
+    var btnCible = document.getElementById('tab-' + id);
+    ouvrirOnglet(id, btnCible);
+}
+
+function seDeconnecterDepuisDrawer() {
+    fermerDrawer();
+    seDeconnecter();
+}
+
 /* ========== AUTH ========== */
 function afficherInscription() {
     document.getElementById("form-connexion").style.display = "none";
@@ -589,21 +741,34 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     document.getElementById("app-content").style.display = "block";
     var badgeEl = document.getElementById("statusBadge");
     if (isAdmin) {
-        badgeEl.textContent = "👑 Admin (Illimité)";
+        badgeEl.textContent = "👑 Admin";
         badgeEl.className = "status-badge badge-admin";
         document.body.classList.remove("mode-visiteur");
     } else if (isAbonne && dateFin) {
         var dateJour = new Date(); dateJour.setHours(0,0,0,0);
         var fin = new Date(dateFin); fin.setHours(0,0,0,0);
         var joursRestants = Math.ceil((fin - dateJour) / (1000 * 60 * 60 * 24));
-        if (joursRestants <= 1) { badgeEl.textContent = "⚠️ Dernier jour !"; badgeEl.className = "status-badge badge-warning"; }
-        else { badgeEl.textContent = "⭐ Abonné : " + joursRestants + " jours restants"; badgeEl.className = "status-badge badge-abonne"; }
+        if (joursRestants <= 1) { badgeEl.textContent = "⚠️ Dernier jour"; badgeEl.className = "status-badge badge-warning"; }
+        else { badgeEl.textContent = "⭐ " + joursRestants + "j"; badgeEl.className = "status-badge badge-abonne"; }
         document.body.classList.remove("mode-visiteur");
     } else {
-        badgeEl.textContent = "🚫 Accès Gratuit (Limité)";
+        badgeEl.textContent = "🚫 Gratuit";
         badgeEl.className = "status-badge badge-gratuit";
         document.body.classList.add("mode-visiteur");
     }
+
+    var drawerBadge = document.getElementById('drawerBadge');
+    if (drawerBadge) {
+        if (isAdmin) { drawerBadge.textContent = "👑 Admin (Illimité)"; drawerBadge.className = "status-badge badge-admin"; }
+        else if (isAbonne && dateFin) {
+            var dateJour2 = new Date(); dateJour2.setHours(0,0,0,0);
+            var fin2 = new Date(dateFin); fin2.setHours(0,0,0,0);
+            var jr = Math.ceil((fin2 - dateJour2) / (1000 * 60 * 60 * 24));
+            if (jr <= 1) { drawerBadge.textContent = "⚠️ Dernier jour !"; drawerBadge.className = "status-badge badge-warning"; }
+            else { drawerBadge.textContent = "⭐ Abonné : " + jr + " jours restants"; drawerBadge.className = "status-badge badge-abonne"; }
+        } else { drawerBadge.textContent = "🚫 Accès Gratuit (Limité)"; drawerBadge.className = "status-badge badge-gratuit"; }
+    }
+
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
@@ -619,6 +784,7 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
+
     rafraichirDonnees().then(function() {
         if(document.querySelectorAll('.plage-box').length === 0) { ajouterPlage(); ajouterPlage(); }
         actualiserCockpit();
