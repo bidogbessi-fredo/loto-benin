@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loto Bénin - Pro Cockpit</title>
+<!-- NOUVEAU : Lien vers le manifest PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2980b9">
 <style>
   :root {
     --primary: #2980b9; --primary-hover: #1f618d;
@@ -262,12 +265,23 @@
   .ana-list { list-style: none; padding: 0; margin: 0; }
   .ana-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
   .ana-list li:last-child { border-bottom: none; }
+  
+  /* NOUVEAU : CSS pour transformer le tableau des utilisateurs en cartes sur mobile */
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
       .day-time { width: 100%; margin-bottom: 5px; }
       .day-game { width: auto; margin-right: 10px; }
       .status-badge { display: block; margin-bottom: 5px; margin-right: 0;}
+      
+      /* Transformation du tableau utilisateur */
+      #tableUtilisateurs thead { display: none; }
+      #tableUtilisateurs, #tableUtilisateurs tbody, #tableUtilisateurs tr, #tableUtilisateurs td { display: block; width: 100%; box-sizing: border-box; }
+      #tableUtilisateurs tr { margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-body); padding: 10px; box-shadow: var(--shadow); }
+      #tableUtilisateurs td { text-align: right; padding: 8px 5px; border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+      #tableUtilisateurs td:last-child { border-bottom: none; padding-top: 15px; }
+      #tableUtilisateurs td::before { content: attr(data-label); font-weight: bold; text-align: left; color: var(--text-muted); margin-right: 15px; }
+      #tableUtilisateurs td input, #tableUtilisateurs td select { margin: 0; width: 60%; text-align: right; }
   }
 </style>
 </head>
@@ -359,7 +373,6 @@
           <h3>👥 Gestion des utilisateurs</h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Gérez les rôles et les abonnements des utilisateurs inscrits.</p>
           
-          <!-- BOUTON BIEN VISIBLE -->
           <button onclick="chargerUtilisateurs()" style="background: var(--primary); color: white; margin-bottom: 15px; width: 100%; max-width: 300px; font-size: 15px;">👥 Afficher / Actualiser la liste des abonnés</button>
           
           <div style="overflow-x: auto;">
@@ -766,6 +779,15 @@ var estAdmin = false;
 var estAbonne = false;
 var modeDemoActif = false;
 
+// NOUVEAU : Enregistrement du Service Worker pour le mode hors-ligne
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker enregistré ! Mode hors-ligne actif.'))
+      .catch(err => console.log('Erreur Service Worker', err));
+  });
+}
+
 (function activerProtectionCopie() {
     document.addEventListener('copy', function(e) {
         var c = e.target;
@@ -1118,11 +1140,13 @@ async function chargerUtilisateursAuto() {
             var badgeTxt = p.role === 'admin' ? 'Admin' : (p.role === 'abonne' ? 'Abonné' : 'Visiteur');
             var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement : '';
             var emailAffiche = p.email ? p.email : "ID: " + p.id.substring(0,8) + "...";
+            
+            // NOUVEAU : Ajout des attributs data-label pour le responsive mobile
             html += "<tr>";
-            html += "<td style='text-align:left;'><b>" + emailAffiche + "</b></td>";
-            html += "<td><span class='status-badge " + badgeClass + "' style='margin:0;'>" + badgeTxt + "</span></td>";
-            html += "<td><input type='date' value='" + dateInputVal + "' id='dateUser_" + p.id + "' style='padding:5px; font-size:12px;'></td>";
-            html += "<td>";
+            html += "<td style='text-align:left;' data-label='Email'><b>" + emailAffiche + "</b></td>";
+            html += "<td data-label='Rôle'><span class='status-badge " + badgeClass + "' style='margin:0;'>" + badgeTxt + "</span></td>";
+            html += "<td data-label='Fin abonnement'><input type='date' value='" + dateInputVal + "' id='dateUser_" + p.id + "' style='padding:5px; font-size:12px;'></td>";
+            html += "<td data-label='Action'>";
             html += "<select id='roleUser_" + p.id + "' style='padding:5px; font-size:12px;'>";
             html += "<option value='visiteur' " + (p.role === 'visiteur' ? 'selected' : '') + ">Visiteur</option>";
             html += "<option value='abonne' " + (p.role === 'abonne' ? 'selected' : '') + ">Abonné</option>";
