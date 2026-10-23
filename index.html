@@ -1090,6 +1090,58 @@ async function actualiserDashboard() {
         var nb = (profils || []).filter(function(p){ if(p.role==='admin') return true; if(!p.date_fin_abonnement) return false; return p.date_fin_abonnement >= aujourdhui; }).length;
         document.getElementById('dashAbonnes').textContent = nb.toLocaleString('fr-FR');
     } catch(e) { document.getElementById('dashAbonnes').textContent = "?"; }
+      // Ajoute cette ligne pour charger la liste automatiquement
+    chargerUtilisateursAuto(); 
+}
+  async function chargerUtilisateursAuto() {
+    if (!estAdmin) return;
+    var tbody = document.getElementById("tbodyUtilisateurs");
+    var table = document.getElementById("tableUtilisateurs");
+    var msg = document.getElementById("msgUtilisateurs");
+    if (!tbody || !table) return;
+
+    tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>";
+    table.style.display = "table";
+
+    try {
+        const { data: profils, error } = await supabaseClient.from('profils').select('*').order('role', { ascending: true });
+        if (error) throw error;
+        
+        if (!profils || profils.length === 0) {
+            msg.style.color = "var(--color-star)";
+            msg.textContent = "Aucun utilisateur trouvé.";
+            return;
+        }
+
+        var html = "";
+        profils.forEach(function(p) {
+            var badgeClass = p.role === 'admin' ? 'badge-admin' : (p.role === 'abonne' ? 'badge-abonne' : 'badge-gratuit');
+            var badgeTxt = p.role === 'admin' ? 'Admin' : (p.role === 'abonne' ? 'Abonné' : 'Visiteur');
+            var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement : '';
+            var emailAffiche = p.email ? p.email : "ID: " + p.id.substring(0,8) + "...";
+
+            html += "<tr>";
+            html += "<td style='text-align:left;'><b>" + emailAffiche + "</b></td>";
+            html += "<td><span class='status-badge " + badgeClass + "' style='margin:0;'>" + badgeTxt + "</span></td>";
+            html += "<td><input type='date' value='" + dateInputVal + "' id='dateUser_" + p.id + "' style='padding:5px; font-size:12px;'></td>";
+            html += "<td>";
+            html += "<select id='roleUser_" + p.id + "' style='padding:5px; font-size:12px;'>";
+            html += "<option value='visiteur' " + (p.role === 'visiteur' ? 'selected' : '') + ">Visiteur</option>";
+            html += "<option value='abonne' " + (p.role === 'abonne' ? 'selected' : '') + ">Abonné</option>";
+            html += "<option value='admin' " + (p.role === 'admin' ? 'selected' : '') + ">Admin</option>";
+            html += "</select> ";
+            html += "<button onclick=\"sauvegarderPrivileges('" + p.id + "', event)\" style='padding:5px 10px; font-size:12px; min-height:auto; background:#27ae60;'>💾 Sauver</button>";
+            html += "</td></tr>";
+        });
+        
+        tbody.innerHTML = html;
+        msg.style.color = "#27ae60";
+        msg.textContent = "✅ " + profils.length + " utilisateur(s) chargé(s).";
+
+    } catch (err) {
+        msg.style.color = "var(--color-hot)";
+        msg.textContent = "❌ Erreur : " + err.message;
+    }
 }
 
 /* GESTION UTILISATEURS */
