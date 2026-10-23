@@ -34,7 +34,24 @@
     *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   }
 
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
+  /* ===== Anti-copie global ===== */
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; -webkit-touch-callout: none; }
+
+  /* Zones sensibles : pas de sélection */
+  #conteneurSac, .cockpit-grid, .comp-container, .lab-box, .result-box,
+  .day-card, .day-nums, .ball, .comp-ball,
+  .tabs, .tab-btn, .status-badge, .sac-selector,
+  .drawer, .topbar-title {
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Les champs de saisie restent copiables */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important;
+  }
+  /* Modales : champs de confirmation copiables */
+  .modal-box, .modal-box input, .modal-box textarea { -webkit-user-select: text; user-select: text; }
+
   h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
 
   #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
@@ -62,6 +79,26 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
+  /* ===== Bandeau alerte expiration ===== */
+  .bandeau-expiration {
+    display: none;
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+    color: #fff; padding: 12px 20px; border-radius: var(--radius-md);
+    margin-bottom: 15px; font-weight: bold; font-size: 14px;
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+    align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap;
+  }
+  .bandeau-expiration.visible { display: flex; animation: pulseBandeau 2s ease-in-out infinite; }
+  .bandeau-expiration.urgent { background: linear-gradient(90deg, #e74c3c, #c0392b); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.5); }
+  .bandeau-expiration button { background: #fff; color: #e74c3c; min-height: auto; padding: 6px 14px; font-size: 13px; }
+  @keyframes pulseBandeau {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bandeau-expiration.visible { animation: none; }
+  }
+
   .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px; margin-bottom: 10px; }
   .burger-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 48px; height: 48px; padding: 0; border-radius: var(--radius-sm); cursor: pointer; font-size: 22px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: background 0.2s; flex-shrink: 0; }
   .burger-btn:hover { background: var(--bg-body); }
@@ -85,6 +122,8 @@
   .drawer .status-badge { display: inline-block; margin: 0 0 10px 0; }
   .drawer-deconnexion { width: 100%; padding: 12px; background: var(--color-hot); color: #fff; border: none; border-radius: var(--radius-pill); font-weight: bold; font-size: 15px; cursor: pointer; min-height: 48px; }
   .drawer-deconnexion:hover { background: #c0392b; }
+  .drawer-export { width: 100%; padding: 12px; background: #27ae60; color: #fff; border: none; border-radius: var(--radius-pill); font-weight: bold; font-size: 14px; cursor: pointer; min-height: 44px; margin-bottom: 8px; }
+  .drawer-export:hover { background: #229954; }
 
   .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center;}
   .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: 0.3s; position: relative; min-height: 44px;}
@@ -166,6 +205,22 @@
   .badge-warning { background: var(--color-star); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); color: #000; }
   .badge-gratuit { background: var(--color-hot); box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
 
+  /* ===== Tableau de bord admin ===== */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 15px; }
+  .dash-card { background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); border-left: 4px solid var(--primary); }
+  .dash-card .num { font-size: 26px; font-weight: bold; color: var(--primary); display: block; }
+  .dash-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .dash-card.star { border-left-color: var(--color-star); }
+  .dash-card.star .num { color: var(--color-star); }
+  .dash-card.fortune { border-left-color: var(--color-fortune); }
+  .dash-card.fortune .num { color: var(--color-fortune); }
+  .dash-card.digital { border-left-color: var(--color-digital); }
+  .dash-card.digital .num { color: var(--color-digital); }
+  .dash-card.abonnes { border-left-color: #27ae60; }
+  .dash-card.abonnes .num { color: #27ae60; }
+  .dash-card.date { border-left-color: var(--color-hot); }
+  .dash-card.date .num { font-size: 16px; color: var(--color-hot); }
+
   .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
   @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -246,6 +301,12 @@
 
 <main id="contenu-principal">
 <div id="app-content">
+    <!-- Bandeau d'alerte expiration -->
+    <div class="bandeau-expiration" id="bandeauExpiration" role="alert" aria-live="assertive">
+        <span id="bandeauTexte">⚠️ Votre abonnement expire bientôt !</span>
+        <button onclick="contacterAdmin()">💬 Renouveler</button>
+    </div>
+
     <div class="topbar">
         <button type="button" class="burger-btn" id="btnBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu" onclick="ouvrirDrawer()">☰</button>
         <h1 class="topbar-title">🎰 Loto Bénin</h1>
@@ -279,6 +340,37 @@
           <button id="btnAjouter">Ajouter</button>
         </div>
         <div class="msg" id="message" role="alert" aria-live="polite" style="color: var(--color-hot); margin-top:10px;"></div>
+      </div>
+
+      <!-- Tableau de bord admin -->
+      <div class="card admin-only" id="dashboardAdmin">
+        <h2>📊 Tableau de bord</h2>
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <span class="num" id="dashTotal">—</span>
+            <span class="label">Total tirages</span>
+          </div>
+          <div class="dash-card star">
+            <span class="num" id="dashStar">—</span>
+            <span class="label">Star</span>
+          </div>
+          <div class="dash-card fortune">
+            <span class="num" id="dashFortune">—</span>
+            <span class="label">Fortune</span>
+          </div>
+          <div class="dash-card digital">
+            <span class="num" id="dashDigital">—</span>
+            <span class="label">Digital</span>
+          </div>
+          <div class="dash-card abonnes">
+            <span class="num" id="dashAbonnes">—</span>
+            <span class="label">Abonnés actifs</span>
+          </div>
+          <div class="dash-card date">
+            <span class="num" id="dashDerniereDate">—</span>
+            <span class="label">Dernière saisie</span>
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -427,6 +519,7 @@
     <div class="drawer-section">
         <h3>Mon compte</h3>
         <span class="status-badge" id="drawerBadge">Chargement...</span>
+        <button type="button" class="drawer-export admin-only" onclick="exporterSauvegardeComplete()">💾 Sauvegarder les données</button>
         <button type="button" class="drawer-deconnexion" onclick="seDeconnecterDepuisDrawer()">🚪 Déconnexion</button>
     </div>
     <div class="drawer-section">
@@ -441,50 +534,31 @@
 <div id="modalSuppression" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSuppTitre" aria-describedby="modalSuppDesc" style="display: none;">
     <div class="modal-box">
         <h2 id="modalSuppTitre" style="color: var(--color-hot);">⚠️ Suppression irréversible</h2>
-        <p id="modalSuppDesc" style="line-height: 1.6;">
-            Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.<br>
-            Cette action <strong>ne peut pas être annulée</strong>.
-        </p>
+        <p id="modalSuppDesc" style="line-height: 1.6;">Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.<br>Cette action <strong>ne peut pas être annulée</strong>.</p>
         <details style="margin: 15px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
             <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder d'abord (recommandé)</summary>
             <p style="font-size: 13px; margin: 10px 0 5px;">Téléchargez un fichier CSV de secours avant de supprimer :</p>
             <button type="button" class="secondary" onclick="exporterCSV()" style="font-size: 13px;">📥 Télécharger le CSV</button>
         </details>
         <div style="margin-top: 20px; text-align: left;">
-            <label for="champConfirmation" style="display: block; font-size: 14px; margin-bottom: 8px;">
-                Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :
-            </label>
-            <input type="text" id="champConfirmation" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                   style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;"
-                   placeholder="SUPPRIMER" aria-describedby="champConfirmAide">
-            <div id="champConfirmAide" class="sr-only">Le mot doit être écrit en majuscules sans accent.</div>
+            <label for="champConfirmation" style="display: block; font-size: 14px; margin-bottom: 8px;">Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :</label>
+            <input type="text" id="champConfirmation" autocomplete="off" autocapitalize="characters" spellcheck="false" style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;" placeholder="SUPPRIMER">
         </div>
         <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
             <button type="button" class="secondary" onclick="fermerModaleSuppression()">Annuler (Échap)</button>
-            <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()" aria-disabled="true">
-                🗑️ Supprimer définitivement (<span id="compteARebours">5</span>s)
-            </button>
+            <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()" aria-disabled="true">🗑️ Supprimer définitivement (<span id="compteARebours">5</span>s)</button>
         </div>
         <div id="modalSuppMessage" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
     </div>
 </div>
 
-<!-- ===== MODALE : Suppression par période ===== -->
 <div id="modalSuppressionPeriode" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalPeriodeTitre" style="display: none;">
   <div class="modal-box modal-box-period">
     <h2 id="modalPeriodeTitre" style="color: var(--color-star);">📅 Supprimer par période</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">
-      Choisissez une plage de dates et éventuellement un jeu. Un aperçu du nombre de tirages concernés s'affiche en temps réel.
-    </p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Choisissez une plage de dates et éventuellement un jeu. Un aperçu du nombre de tirages concernés s'affiche en temps réel.</p>
     <div class="periode-grid">
-      <div>
-        <label for="periodeDebut">Date de début</label>
-        <input type="date" id="periodeDebut" oninput="previsualiserPeriode()">
-      </div>
-      <div>
-        <label for="periodeFin">Date de fin</label>
-        <input type="date" id="periodeFin" oninput="previsualiserPeriode()">
-      </div>
+      <div><label for="periodeDebut">Date de début</label><input type="date" id="periodeDebut" oninput="previsualiserPeriode()"></div>
+      <div><label for="periodeFin">Date de fin</label><input type="date" id="periodeFin" oninput="previsualiserPeriode()"></div>
       <div style="grid-column: 1 / -1;">
         <label for="periodeJeu">Filtrer par jeu</label>
         <select id="periodeJeu" onchange="previsualiserPeriode()">
@@ -508,24 +582,17 @@
       <button type="button" class="secondary" onclick="exporterCSVPeriode()" style="font-size: 13px;">📥 Télécharger le CSV</button>
     </details>
     <div style="margin-top: 20px; text-align: left;">
-      <label for="champConfirmationPeriode" style="display: block; font-size: 14px; margin-bottom: 8px;">
-        Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :
-      </label>
-      <input type="text" id="champConfirmationPeriode" autocomplete="off" autocapitalize="characters" spellcheck="false"
-             style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;"
-             placeholder="SUPPRIMER" oninput="verifierMotConfirmationPeriode()">
+      <label for="champConfirmationPeriode" style="display: block; font-size: 14px; margin-bottom: 8px;">Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :</label>
+      <input type="text" id="champConfirmationPeriode" autocomplete="off" autocapitalize="characters" spellcheck="false" style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;" placeholder="SUPPRIMER" oninput="verifierMotConfirmationPeriode()">
     </div>
     <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
       <button type="button" class="secondary" onclick="fermerModaleSuppressionPeriode()">Annuler (Échap)</button>
-      <button type="button" class="danger" id="btnConfirmerPeriode" disabled onclick="confirmerSuppressionPeriode()" aria-disabled="true">
-        🗑️ Supprimer la période (<span id="compteAReboursPeriode">5</span>s)
-      </button>
+      <button type="button" class="danger" id="btnConfirmerPeriode" disabled onclick="confirmerSuppressionPeriode()" aria-disabled="true">🗑️ Supprimer la période (<span id="compteAReboursPeriode">5</span>s)</button>
     </div>
     <div id="messagePeriode" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
   </div>
 </div>
 
-<!-- ===== MODALE : Conflits d'import ===== -->
 <div id="modalConflitImport" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalConflitTitre" style="display: none;">
   <div class="modal-box modal-box-conflit">
     <h2 id="modalConflitTitre" style="color: var(--primary);">📥 Résumé de l'import</h2>
@@ -562,7 +629,34 @@ var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
 
-/* ========== DATES CLÉS DU LOTO BÉNIN ========== */
+/* ========== ANTI-COPIE ========== */
+(function activerProtectionCopie() {
+    // Bloque Ctrl+C, Ctrl+X sur les zones sensibles
+    document.addEventListener('copy', function(e) {
+        var cible = e.target;
+        if (cible && (cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA' || cible.isContentEditable)) return;
+        if (cible && cible.closest && cible.closest('.modal-box')) return;
+        e.preventDefault();
+        return false;
+    }, true);
+    document.addEventListener('cut', function(e) {
+        var cible = e.target;
+        if (cible && (cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA' || cible.isContentEditable)) return;
+        if (cible && cible.closest && cible.closest('.modal-box')) return;
+        e.preventDefault();
+        return false;
+    }, true);
+    // Bloque menu contextuel (clic droit) hors inputs et modales
+    document.addEventListener('contextmenu', function(e) {
+        var cible = e.target;
+        if (cible && (cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA' || cible.isContentEditable)) return;
+        if (cible && cible.closest && cible.closest('.modal-box')) return;
+        e.preventDefault();
+        return false;
+    }, true);
+})();
+
+/* ========== DATES CLÉS ========== */
 var DATE_LANCEMENT_STAR    = new Date("2004-06-16");
 var DATE_LANCEMENT_FORTUNE = new Date("2010-04-28");
 var DATE_LANCEMENT_DIGITAL = new Date("2023-07-13");
@@ -735,13 +829,31 @@ function afficherConnexion() {
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
-        const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
+        const { data: profil, error: errProfil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
         let role = profil ? profil.role : 'visiteur';
-        let dateFin = profil && profil.date_fin_abonnement ? new Date(profil.date_fin_abonnement) : null;
+        let dateFin = null;
+        let dateValide = false;
+        if (profil && profil.date_fin_abonnement) {
+            dateFin = new Date(profil.date_fin_abonnement);
+            dateValide = !isNaN(dateFin.getTime());
+        }
         let dateJour = new Date();
         estAdmin = (role === 'admin');
-        estAbonne = (role === 'admin') || (dateFin && dateFin > dateJour);
-        afficherApplication(session.user.email, estAdmin, estAbonne, dateFin);
+        // Un abonné doit avoir une date valide ET > aujourd'hui. Sinon → visiteur.
+        estAbonne = (role === 'admin') || (dateValide && dateFin > dateJour);
+
+        // Diagnostic console
+        console.log('[DIAG BADGE]', {
+            email: session.user.email,
+            role: role,
+            date_fin_brute: profil ? profil.date_fin_abonnement : null,
+            date_valide: dateValide,
+            estAdmin: estAdmin,
+            estAbonne: estAbonne,
+            erreur_profil: errProfil ? errProfil.message : null
+        });
+
+        afficherApplication(session.user.email, estAdmin, estAbonne, dateValide ? dateFin : null);
     } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("app-content").style.display = "none";
@@ -784,6 +896,7 @@ async function seDeconnecter() {
     document.getElementById("login-screen").style.display = "flex";
     document.getElementById("app-content").style.display = "none";
     document.body.classList.remove("mode-visiteur");
+    document.getElementById("bandeauExpiration").classList.remove("visible");
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     afficherConnexion();
 }
@@ -792,6 +905,10 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app-content").style.display = "block";
     var badgeEl = document.getElementById("statusBadge");
+    var bandeau = document.getElementById("bandeauExpiration");
+    var bandeauTexte = document.getElementById("bandeauTexte");
+    bandeau.classList.remove("visible", "urgent");
+
     if (isAdmin) {
         badgeEl.textContent = "👑 Admin"; badgeEl.className = "status-badge badge-admin";
         document.body.classList.remove("mode-visiteur");
@@ -799,13 +916,23 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
         var dateJour = new Date(); dateJour.setHours(0,0,0,0);
         var fin = new Date(dateFin); fin.setHours(0,0,0,0);
         var joursRestants = Math.ceil((fin - dateJour) / (1000 * 60 * 60 * 24));
-        if (joursRestants <= 1) { badgeEl.textContent = "⚠️ Dernier jour"; badgeEl.className = "status-badge badge-warning"; }
-        else { badgeEl.textContent = "⭐ " + joursRestants + "j"; badgeEl.className = "status-badge badge-abonne"; }
+        if (joursRestants <= 1) {
+            badgeEl.textContent = "⚠️ Dernier jour"; badgeEl.className = "status-badge badge-warning";
+            bandeau.classList.add("visible", "urgent");
+            bandeauTexte.textContent = "🚨 Dernier jour d'abonnement ! Renouvelez aujourd'hui.";
+        } else if (joursRestants <= 3) {
+            badgeEl.textContent = "⚠️ " + joursRestants + "j"; badgeEl.className = "status-badge badge-warning";
+            bandeau.classList.add("visible");
+            bandeauTexte.textContent = "⚠️ Votre abonnement expire dans " + joursRestants + " jour(s). Pensez à renouveler.";
+        } else {
+            badgeEl.textContent = "⭐ " + joursRestants + "j"; badgeEl.className = "status-badge badge-abonne";
+        }
         document.body.classList.remove("mode-visiteur");
     } else {
         badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit";
         document.body.classList.add("mode-visiteur");
     }
+
     var drawerBadge = document.getElementById('drawerBadge');
     if (drawerBadge) {
         if (isAdmin) { drawerBadge.textContent = "👑 Admin (Illimité)"; drawerBadge.className = "status-badge badge-admin"; }
@@ -817,6 +944,7 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             else { drawerBadge.textContent = "⭐ Abonné : " + jr + " jours restants"; drawerBadge.className = "status-badge badge-abonne"; }
         } else { drawerBadge.textContent = "🚫 Accès Gratuit (Limité)"; drawerBadge.className = "status-badge badge-gratuit"; }
     }
+
     var ongletsPremium = ['cockpit', 'comparateur', 'labo'];
     ongletsPremium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
@@ -832,9 +960,15 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
             if(content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
         }
     });
+
+    // Dashboard admin
+    var dash = document.getElementById('dashboardAdmin');
+    if (dash) dash.style.display = isAdmin ? "block" : "none";
+
     rafraichirDonnees().then(function() {
         if(document.querySelectorAll('.plage-box').length === 0) { ajouterPlage(); ajouterPlage(); }
         actualiserCockpit();
+        if (isAdmin) actualiserDashboard();
     });
 }
 
@@ -865,6 +999,45 @@ async function rafraichirDonnees() {
   afficherSacSelectionne();
   if(document.getElementById('onglet-cockpit').classList.contains('active')) actualiserCockpit();
   if(document.getElementById('onglet-labo').classList.contains('active')) { remplirSelecteurTirage(); remplirSelectMulti(); }
+  if (estAdmin) actualiserDashboard();
+}
+
+async function actualiserDashboard() {
+    if (!estAdmin) return;
+    var total = donneesCloud.length;
+    var nbStar = donneesCloud.filter(function(t) { return t.jeu === 'Star'; }).length;
+    var nbFortune = donneesCloud.filter(function(t) { return t.jeu === 'Fortune'; }).length;
+    var nbDigital = donneesCloud.filter(function(t) { return t.jeu === 'Digital'; }).length;
+
+    document.getElementById('dashTotal').textContent = total.toLocaleString('fr-FR');
+    document.getElementById('dashStar').textContent = nbStar.toLocaleString('fr-FR');
+    document.getElementById('dashFortune').textContent = nbFortune.toLocaleString('fr-FR');
+    document.getElementById('dashDigital').textContent = nbDigital.toLocaleString('fr-FR');
+
+    // Dernière date saisie
+    if (total > 0) {
+        var derniereDate = donneesCloud.reduce(function(max, t) { return t.date > max ? t.date : max; }, donneesCloud[0].date);
+        var d = new Date(derniereDate);
+        document.getElementById('dashDerniereDate').textContent = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+    } else {
+        document.getElementById('dashDerniereDate').textContent = "—";
+    }
+
+    // Abonnés actifs
+    var nbAbonnesEl = document.getElementById('dashAbonnes');
+    try {
+        var aujourdhui = new Date().toISOString().slice(0, 10);
+        const { data: profils, error } = await supabaseClient.from('profils').select('role, date_fin_abonnement');
+        if (error) throw error;
+        var nbActifs = (profils || []).filter(function(p) {
+            if (p.role === 'admin') return true;
+            if (!p.date_fin_abonnement) return false;
+            return p.date_fin_abonnement >= aujourdhui;
+        }).length;
+        nbAbonnesEl.textContent = nbActifs.toLocaleString('fr-FR');
+    } catch (e) {
+        nbAbonnesEl.textContent = "?";
+    }
 }
 
 function ouvrirOnglet(id, btn) {
@@ -996,7 +1169,7 @@ document.getElementById("btnAjouter").addEventListener("click", async function (
   msg.style.color = "#27ae60"; msg.textContent = "✅ Sauvegardé !"; await rafraichirDonnees();
 });
 
-/* ========== SUPPRESSION TOTALE SÉCURISÉE 2 NIVEAUX ========== */
+/* ========== SUPPRESSION TOTALE ========== */
 var motConfirmation = "SUPPRIMER";
 var timerSuppression = null;
 var secondesRestantes = 5;
@@ -1094,10 +1267,55 @@ function exporterCSV() {
     URL.revokeObjectURL(url);
 }
 
-/* =========================================================
-   IMPORTATION — ANALYSE PUIS CHOIX DE CONFLIT
-   ========================================================= */
+function exporterSauvegardeComplete() {
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    if (donneesCloud.length === 0) { alert("Aucune donnée à sauvegarder."); return; }
+    exporterCSV();
+}
+
+/* ========== IMPORT AVEC GESTION DES CONFLITS ========== */
 var importEnAttente = null;
+
+function parseDateExotique(ligne) {
+    var moisMap = {
+        'janv': 1, 'jan': 1, 'janvier': 1,
+        'fevr': 2, 'fev': 2, 'fevrier': 2, 'févr': 2, 'fév': 2, 'février': 2,
+        'mars': 3, 'mar': 3,
+        'avr': 4, 'avril': 4,
+        'mai': 5,
+        'juin': 6,
+        'juil': 7, 'juillet': 7,
+        'aout': 8, 'août': 8,
+        'sept': 9, 'septembre': 9,
+        'oct': 10, 'octobre': 10,
+        'nov': 11, 'novembre': 11,
+        'dec': 12, 'déc': 12, 'decembre': 12, 'décembre': 12
+    };
+    var m;
+
+    // Format ISO 2022-01-12
+    m = ligne.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (m) return { jour: parseInt(m[3], 10), mois: parseInt(m[2], 10), annee: parseInt(m[1], 10) };
+
+    // Format JJ/MM/AAAA ou JJ-MM-AAAA ou JJ.MM.AAAA
+    m = ligne.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/);
+    if (m) {
+        var annee = m[3].length === 2 ? parseInt("20" + m[3], 10) : parseInt(m[3], 10);
+        return { jour: parseInt(m[1], 10), mois: parseInt(m[2], 10), annee: annee };
+    }
+
+    // Format "12 janvier 2022" ou "12 janv. 2022" ou "12 jan 2022"
+    m = ligne.match(/(\d{1,2})(?:er)?\s+([a-zéèûôàç]+)\.?\s+(\d{2,4})/i);
+    if (m) {
+        var moisTexte = m[2].toLowerCase().replace(/[^a-zéèûôàç]/g, '');
+        var moisNum = moisMap[moisTexte];
+        if (moisNum) {
+            var annee2 = m[3].length === 2 ? parseInt("20" + m[3], 10) : parseInt(m[3], 10);
+            return { jour: parseInt(m[1], 10), mois: moisNum, annee: annee2 };
+        }
+    }
+    return null;
+}
 
 async function traiterTexteColle() {
     if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
@@ -1118,15 +1336,12 @@ async function traiterTexteColle() {
         if (!ligne.trim()) return;
         var ligneMinuscule = ligne.toLowerCase();
         if (ligneMinuscule.indexOf("date") !== -1 || ligneMinuscule.indexOf("column") !== -1 || ligneMinuscule.indexOf("benin") !== -1) return;
-        var regexDate = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/;
-        var matchDate = ligne.match(regexDate);
-        if (!matchDate) { invalides++; return; }
-        var jour = parseInt(matchDate[1], 10);
-        var mois = parseInt(matchDate[2], 10);
-        var annee = matchDate[3].length === 2 ? "20" + matchDate[3] : matchDate[3];
-        var anneeInt = parseInt(annee, 10);
-        if (jour < 1 || jour > 31 || mois < 1 || mois > 12 || anneeInt < anneeMinAcceptee || anneeInt > anneeMaxAcceptee) { invalides++; return; }
-        var dateFormatee = annee + "-" + mois.toString().padStart(2, '0') + "-" + jour.toString().padStart(2, '0');
+
+        var d = parseDateExotique(ligne);
+        if (!d) { invalides++; return; }
+        if (d.jour < 1 || d.jour > 31 || d.mois < 1 || d.mois > 12 || d.annee < anneeMinAcceptee || d.annee > anneeMaxAcceptee) { invalides++; return; }
+
+        var dateFormatee = d.annee + "-" + String(d.mois).padStart(2, '0') + "-" + String(d.jour).padStart(2, '0');
         var jeuTrouve = "Star";
         var heureTrouvee = "14H";
         if (ligneMinuscule.indexOf("digital") !== -1) jeuTrouve = "Digital";
@@ -1134,7 +1349,11 @@ async function traiterTexteColle() {
         else if (/\b(jeu|ven|lun|mar)\b/i.test(ligne)) jeuTrouve = "Fortune";
         var matchHeure = ligne.match(/(\d{1,2})\s*[hH]/);
         if (matchHeure) { heureTrouvee = matchHeure[1].padStart(2, '0') + "H"; }
-        var texteNettoye = ligne.replace(matchDate[0], ' ')
+
+        var texteNettoye = ligne
+            .replace(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/, ' ')
+            .replace(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/, ' ')
+            .replace(/\d{1,2}(?:er)?\s+[a-zéèûôàç]+\.?\s+\d{2,4}/i, ' ')
             .replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ')
             .replace(/N[°o]\s*\d+/i, ' ');
         var nombres = [];
@@ -1264,9 +1483,7 @@ function annulerImport() {
     document.getElementById("importMessage").textContent = "⏹️ Import annulé, rien n'a été modifié.";
 }
 
-/* =========================================================
-   SUPPRESSION PAR PÉRIODE
-   ========================================================= */
+/* ========== SUPPRESSION PAR PÉRIODE ========== */
 var timerPeriode = null;
 var secondesPeriode = 5;
 var modalePeriodeOuverte = false;
@@ -1323,19 +1540,10 @@ function piegeFocusPeriode(e) {
 function appliquerRaccourciPeriode(type) {
     var aujourdhui = new Date();
     var debut, fin;
-    if (type === 'ceMois') {
-        debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 1);
-        fin = aujourdhui;
-    } else if (type === 'moisDernier') {
-        debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() - 1, 1);
-        fin = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 0);
-    } else if (type === 'cetteAnnee') {
-        debut = new Date(aujourdhui.getFullYear(), 0, 1);
-        fin = aujourdhui;
-    } else if (type === 'anneeDerniere') {
-        debut = new Date(aujourdhui.getFullYear() - 1, 0, 1);
-        fin = new Date(aujourdhui.getFullYear() - 1, 11, 31);
-    }
+    if (type === 'ceMois') { debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 1); fin = aujourdhui; }
+    else if (type === 'moisDernier') { debut = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() - 1, 1); fin = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 0); }
+    else if (type === 'cetteAnnee') { debut = new Date(aujourdhui.getFullYear(), 0, 1); fin = aujourdhui; }
+    else if (type === 'anneeDerniere') { debut = new Date(aujourdhui.getFullYear() - 1, 0, 1); fin = new Date(aujourdhui.getFullYear() - 1, 11, 31); }
     if (debut && fin) {
         document.getElementById("periodeDebut").value = debut.toISOString().slice(0, 10);
         document.getElementById("periodeFin").value = fin.toISOString().slice(0, 10);
@@ -1407,13 +1615,8 @@ async function confirmerSuppressionPeriode() {
     let query = supabaseClient.from('tirages').delete().gte('date', debut).lte('date', fin);
     if (jeu !== 'tous') query = query.eq('jeu', jeu);
     const { error } = await query;
-    if (error) {
-        msg.textContent = "❌ Erreur : " + error.message;
-        document.getElementById("btnConfirmerPeriode").disabled = false;
-        return;
-    }
-    msg.style.color = "#27ae60";
-    msg.textContent = "✅ " + liste.length + " tirage(s) supprimé(s).";
+    if (error) { msg.textContent = "❌ Erreur : " + error.message; document.getElementById("btnConfirmerPeriode").disabled = false; return; }
+    msg.style.color = "#27ae60"; msg.textContent = "✅ " + liste.length + " tirage(s) supprimé(s).";
     await rafraichirDonnees();
     setTimeout(fermerModaleSuppressionPeriode, 1500);
 }
@@ -1432,7 +1635,7 @@ function exporterCSVPeriode() {
     URL.revokeObjectURL(url);
 }
 
-/* ========== COMPARATEUR & LABO (INCHANGÉS) ========== */
+/* ========== COMPARATEUR & LABO ========== */
 var nombrePlages = 0;
 function ajouterPlage() {
     if (nombrePlages >= 5) { alert("Maximum 5 plages."); return; }
