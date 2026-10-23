@@ -1675,12 +1675,12 @@ function verifierGrille() {
 function initialiserDemo() {
     var grid = document.getElementById('demoGrid'); if (!grid) return;
     var demos = [
-        { titre: '🚀 Cockpit', desc: 'Découvrez les numéros chauds/froids et le générateur sur données fictives.', action: 'demoCockpit()' },
-        { titre: '⚖️ Comparateur', desc: 'Comparez deux plages de tirages fictifs et voyez les identiques/miroirs.', action: 'demoComparateur()' },
-        { titre: '🧪 Laboratoire', desc: 'Analysez un tirage fictif : miroir, somme, théosophie.', action: 'demoLabo()' },
-        { titre: '🔍 Boules', desc: 'Explorez l\\'historique de la boule 12 sur les données de démo.', action: 'demoBoules()' },
-        { titre: '✅ Vérifier', desc: 'Testez la vérification d\\'une grille gagnante sur un tirage fictif.', action: 'demoVerif()' },
-        { titre: '📥 Import', desc: 'Découvrez le principe de la modale de conflit (démo).', action: 'demoImport()' }
+        { titre: '🚀 Cockpit', desc: "Découvrez les numéros chauds/froids et le générateur sur données fictives.", action: 'demoCockpit()' },
+        { titre: '⚖️ Comparateur', desc: "Comparez deux plages de tirages fictifs et voyez les identiques/miroirs.", action: 'demoComparateur()' },
+        { titre: '🧪 Laboratoire', desc: "Analysez un tirage fictif : miroir, somme, théosophie.", action: 'demoLabo()' },
+        { titre: '🔍 Boules', desc: "Explorez l'historique de la boule 12 sur les données de démo.", action: 'demoBoules()' },
+        { titre: '✅ Vérifier', desc: "Testez la vérification d'une grille gagnante sur un tirage fictif.", action: 'demoVerif()' },
+        { titre: '📥 Import', desc: "Découvrez le principe de la modale de conflit (démo).", action: 'demoImport()' }
     ];
     var h = "";
     demos.forEach(function(d){ h += "<div class='demo-card'><span class='demo-badge'>Démo</span><h4>" + d.titre + "</h4><p>" + d.desc + "</p><button onclick='" + d.action + "'>▶ Lancer</button></div>"; });
