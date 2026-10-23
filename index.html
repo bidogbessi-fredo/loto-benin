@@ -35,7 +35,7 @@
   #conteneurSac, .cockpit-grid, .comp-container, .lab-box, .result-box,
   .day-card, .day-nums, .ball, .comp-ball,
   .tabs, .tab-btn, .status-badge, .sac-selector,
-  .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat, .ana-card {
+  .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat, .ana-card, #tableUtilisateurs {
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
     -webkit-touch-callout: none;
   }
@@ -251,8 +251,6 @@
   .demo-card button { width: 100%; font-size: 13px; }
   .demo-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 10px; font-weight: bold; text-transform: uppercase; background: var(--color-star); color: #fff; margin-bottom: 8px; }
   .demo-bandeau { background: linear-gradient(90deg, var(--color-star), #e67e22); color: #fff; padding: 12px 20px; border-radius: var(--radius-md); margin-bottom: 20px; font-weight: bold; font-size: 14px; }
-  
-  /* Onglet Analyses Avancées */
   .analyses-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
   .ana-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-pill); cursor: pointer; font-size: 14px; font-weight: bold; min-height: 40px; }
   .ana-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -264,7 +262,6 @@
   .ana-list { list-style: none; padding: 0; margin: 0; }
   .ana-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
   .ana-list li:last-child { border-bottom: none; }
-
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
@@ -356,6 +353,26 @@
           <div class="dash-card digital"><span class="num" id="dashDigital">—</span><span class="label">Digital</span></div>
           <div class="dash-card abonnes"><span class="num" id="dashAbonnes">—</span><span class="label">Abonnés actifs</span></div>
           <div class="dash-card date"><span class="num" id="dashDerniereDate">—</span><span class="label">Dernière saisie</span></div>
+        </div>
+        
+        <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+          <h3>👥 Gestion des utilisateurs</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Gérez les rôles et les abonnements des utilisateurs inscrits.</p>
+          <button onclick="chargerUtilisateurs(event)" class="secondary" style="margin-bottom: 10px;">🔄 Charger la liste</button>
+          <div style="overflow-x: auto;">
+            <table id="tableUtilisateurs" style="display: none; font-size: 13px;">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Rôle actuel</th>
+                  <th>Date de fin</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyUtilisateurs"></tbody>
+            </table>
+          </div>
+          <div id="msgUtilisateurs" style="margin-top: 10px; font-size: 13px; font-weight: bold;"></div>
         </div>
       </div>
 
@@ -1073,6 +1090,210 @@ async function actualiserDashboard() {
         var nb = (profils || []).filter(function(p){ if(p.role==='admin') return true; if(!p.date_fin_abonnement) return false; return p.date_fin_abonnement >= aujourdhui; }).length;
         document.getElementById('dashAbonnes').textContent = nb.toLocaleString('fr-FR');
     } catch(e) { document.getElementById('dashAbonnes').textContent = "?"; }
+}
+
+/* GESTION UTILISATEURS */
+async function chargerUtilisateurs(event) {
+    var btn = event.target;
+    var oldText = btn.textContent;
+    btn.textContent = "⏳ Chargement...";
+    btn.disabled = true;
+    var msg = document.getElementById("msgUtilisateurs");
+    var table = document.getElementById("tableUtilisateurs");
+    var tbody = document.getElementById("tbodyUtilisateurs");
+    
+    msg.textContent = "";
+    tbody.innerHTML = "";
+
+    try {
+        const { data: profils, error } = await supabaseClient.from('profils').select('*').order('role', { ascending: true });
+        
+        if (error) throw error;
+        if (!profils || profils.length === 0) {
+            msg.style.color = "var(--color-star)";
+            msg.textContent = "Aucun utilisateur trouvé.";
+            table.style.display = "none";
+            return;
+        }
+
+        var html = "";
+        profils.forEach(function(p) {
+            var badgeClass = p.role === 'admin' ? 'badge-admin' : (p.role === 'abonne' ? 'badge-abonne' : 'badge-gratuit');
+            var badgeTxt = p.role === 'admin' ? 'Admin' : (p.role === 'abonne' ? 'Abonné' : 'Visiteur');
+            var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement : '';
+
+            html += "<tr>";
+            html += "<td style='text-align:left;'><b>" + (p.email || 'Inconnu') + "</b></td>";
+            html += "<td><span class='status-badge " + badgeClass + "' style='margin:0;'>" + badgeTxt + "</span></td>";
+            html += "<td><input type='date' value='" + dateInputVal + "' id='dateUser_" + p.id + "' style='padding:5px; font-size:12px;'></td>";
+            html += "<td>";
+            html += "<select id='roleUser_" + p.id + "' style='padding:5px; font-size:12px;'>";
+            html += "<option value='visiteur' " + (p.role === 'visiteur' ? 'selected' : '') + ">Visiteur</option>";
+            html += "<option value='abonne' " + (p.role === 'abonne' ? 'selected' : '') + ">Abonné</option>";
+            html += "<option value='admin' " + (p.role === 'admin' ? 'selected' : '') + ">Admin</option>";
+            html += "</select> ";
+            html += "<button onclick=\"sauvegarderPrivileges('" + p.id + "', event)\" style='padding:5px 10px; font-size:12px; min-height:auto; background:#27ae60;'>💾 Sauver</button>";
+            html += "</td>";
+            html += "</tr>";
+        });
+        
+        tbody.innerHTML = html;
+        table.style.display = "table";
+        msg.style.color = "#27ae60";
+        msg.textContent = "✅ " + profils.length + " utilisateur(s) chargé(s).";
+
+    } catch (err) {
+        msg.style.color = "var(--color-hot)";
+        msg.textContent = "❌ Erreur : " + err.message;
+    } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+}
+
+async function sauvegarderPrivileges(userId, event) {
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    
+    var selectRole = document.getElementById("roleUser_" + userId);
+    var inputDate = document.getElementById("dateUser_" + userId);
+    var nouveauRole = selectRole.value;
+    var nouvelleDate = inputDate.value || null;
+    
+    if (userId === (await supabaseClient.auth.getUser()).data.user.id && nouveauRole !== 'admin') {
+        if (!confirm("⚠️ Attention, vous allez retirer votre propre statut d'administrateur. Confirmer ?")) return;
+    }
+
+    var btn = event.target;
+    var oldText = btn.textContent;
+    btn.textContent = "⏳...";
+    btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient.from('profils').update({
+            role: nouveauRole,
+            date_fin_abonnement: nouvelleDate
+        }).eq('id', userId);
+
+        if (error) throw error;
+
+        btn.textContent = "✅ OK";
+        btn.style.background = "#27ae60";
+        setTimeout(function() { btn.textContent = oldText; btn.style.background = ""; btn.disabled = false; }, 2000);
+        
+        if (userId === (await supabaseClient.auth.getUser()).data.user.id) {
+            verifierSession();
+        }
+
+    } catch (err) {
+        alert("❌ Erreur : " + err.message);
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+}
+
+/* =========================================================
+   ANALYSES AVANCÉES
+   ========================================================= */
+function changerOngletAnalyse(id, btn) {
+    document.querySelectorAll('.ana-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.ana-content').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('ana-' + id).classList.add('active');
+}
+
+function executerAnalyses() {
+    var jeu = document.getElementById('anaJeu').value;
+    var source = (modeDemoActif ? DONNEES_DEMO : donneesCloud).filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
+    if (source.length < 5) {
+        document.getElementById('anaPairesTop10').innerHTML = "<li>Pas assez de données.</li>";
+        return;
+    }
+    var paires = {}, trios = {};
+    source.forEach(function(t) {
+        var b = t.boules;
+        for (var i = 0; i < b.length; i++) {
+            for (var j = i + 1; j < b.length; j++) {
+                var p = [b[i], b[j]].sort(function(a, c) { return a - c; }).join("-");
+                paires[p] = (paires[p] || 0) + 1;
+            }
+        }
+        for (var k = 0; k < b.length; k++) {
+            for (var l = k + 1; l < b.length; l++) {
+                for (var m = l + 1; m < b.length; m++) {
+                    var tr = [b[k], b[l], b[m]].sort(function(a, c) { return a - c; }).join("-");
+                    trios[tr] = (trios[tr] || 0) + 1;
+                }
+            }
+        }
+    });
+    var topP = Object.keys(paires).map(function(k) { return { n: k, c: paires[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
+    var topT = Object.keys(trios).map(function(k) { return { n: k, c: trios[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
+    var htmlP = "";
+    topP.forEach(function(p) { htmlP += "<li><b>" + p.n.replace("-", " + ") + "</b> <span class='status-badge badge-abonne'>" + p.c + " fois</span></li>"; });
+    document.getElementById('anaPairesTop10').innerHTML = htmlP || "<li>Aucune paire.</li>";
+    var htmlT = "";
+    topT.forEach(function(p) { htmlT += "<li><b>" + p.n.replace(/-/g, " + ") + "</b> <span class='status-badge badge-warning'>" + p.c + " fois</span></li>"; });
+    document.getElementById('anaTriosTop10').innerHTML = htmlT || "<li>Aucun trio.</li>";
+
+    var positions = [[], [], [], [], []];
+    source.forEach(function(t) {
+        var triees = t.boules.slice().sort(function(a, b) { return a - b; });
+        triees.forEach(function(b, idx) { if (idx < 5) positions[idx].push(b); });
+    });
+    var htmlPos = "";
+    positions.forEach(function(pos, idx) {
+        if (pos.length === 0) return;
+        var somme = pos.reduce(function(a, b) { return a + b; }, 0);
+        var moyenne = (somme / pos.length).toFixed(1);
+        var min = Math.min.apply(null, pos);
+        var max = Math.max.apply(null, pos);
+        htmlPos += "<div class='ana-card'><h4>Position " + (idx + 1) + "</h4><ul class='ana-list'>";
+        htmlPos += "<li>Moyenne <b>" + moyenne + "</b></li>";
+        htmlPos += "<li>Minimum <b>" + min + "</b></li>";
+        htmlPos += "<li>Maximum <b>" + max + "</b></li>";
+        htmlPos += "</ul></div>";
+    });
+    document.getElementById('anaPositionsContainer').innerHTML = htmlPos;
+
+    var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    var parJour = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    source.forEach(function(t) {
+        var d = new Date(t.date);
+        if (!isNaN(d.getTime())) {
+            var jourIdx = d.getDay();
+            t.boules.forEach(function(b) { parJour[jourIdx].push(b); });
+        }
+    });
+    var htmlJours = "";
+    for (var j = 0; j < 7; j++) {
+        var boulesDuJour = parJour[j];
+        if (boulesDuJour.length === 0) continue;
+        var freqJ = {};
+        boulesDuJour.forEach(function(b) { freqJ[b] = (freqJ[b] || 0) + 1; });
+        var top3 = Object.keys(freqJ).sort(function(a, b) { return freqJ[b] - freqJ[a]; }).slice(0, 3);
+        htmlJours += "<div class='ana-card'><h4>" + jours[j] + " (" + (boulesDuJour.length / 5) + " tirages)</h4><ul class='ana-list'>";
+        top3.forEach(function(n) { htmlJours += "<li>Boule <b>" + n + "</b> <span>sortie " + freqJ[n] + " fois</span></li>"; });
+        htmlJours += "</ul></div>";
+    }
+    document.getElementById('anaJoursContainer').innerHTML = htmlJours;
+
+    var heuresGroupees = {};
+    source.forEach(function(t) {
+        if (!heuresGroupees[t.heure]) heuresGroupees[t.heure] = [];
+        t.boules.forEach(function(b) { heuresGroupees[t.heure].push(b); });
+    });
+    var htmlHeures = "";
+    var heuresTriees = Object.keys(heuresGroupees).sort();
+    heuresTriees.forEach(function(h) {
+        var boulesH = heuresGroupees[h];
+        var freqH = {};
+        boulesH.forEach(function(b) { freqH[b] = (freqH[b] || 0) + 1; });
+        var top3 = Object.keys(freqH).sort(function(a, b) { return freqH[b] - freqH[a]; }).slice(0, 3);
+        htmlHeures += "<div class='ana-card'><h4>Créneau " + h + " (" + (boulesH.length / 5) + " tirages)</h4><ul class='ana-list'>";
+        top3.forEach(function(n) { htmlHeures += "<li>Boule <b>" + n + "</b> <span>sortie " + freqH[n] + " fois</span></li>"; });
+        htmlHeures += "</ul></div>";
+    });
+    document.getElementById('anaHeuresContainer').innerHTML = htmlHeures;
 }
 
 var _ouvrirOnglet = function(id, btn) {
