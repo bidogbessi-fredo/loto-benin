@@ -35,7 +35,7 @@
   #conteneurSac, .cockpit-grid, .comp-container, .lab-box, .result-box,
   .day-card, .day-nums, .ball, .comp-ball,
   .tabs, .tab-btn, .status-badge, .sac-selector,
-  .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat {
+  .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat, .ana-card {
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
     -webkit-touch-callout: none;
   }
@@ -251,6 +251,20 @@
   .demo-card button { width: 100%; font-size: 13px; }
   .demo-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 10px; font-weight: bold; text-transform: uppercase; background: var(--color-star); color: #fff; margin-bottom: 8px; }
   .demo-bandeau { background: linear-gradient(90deg, var(--color-star), #e67e22); color: #fff; padding: 12px 20px; border-radius: var(--radius-md); margin-bottom: 20px; font-weight: bold; font-size: 14px; }
+  
+  /* Onglet Analyses Avancées */
+  .analyses-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+  .ana-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-pill); cursor: pointer; font-size: 14px; font-weight: bold; min-height: 40px; }
+  .ana-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .ana-content { display: none; }
+  .ana-content.active { display: block; animation: fadeIn 0.3s ease; }
+  .ana-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+  .ana-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; box-shadow: var(--shadow); }
+  .ana-card h4 { margin: 0 0 10px; font-size: 15px; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+  .ana-list { list-style: none; padding: 0; margin: 0; }
+  .ana-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
+  .ana-list li:last-child { border-bottom: none; }
+
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
@@ -309,6 +323,7 @@
       <button class="tab-btn" role="tab" id="tab-labo" aria-controls="onglet-labo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('labo', this)">🧪 Laboratoire</button>
       <button class="tab-btn" role="tab" id="tab-boules" aria-controls="onglet-boules" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('boules', this)">🔍 Boules</button>
       <button class="tab-btn" role="tab" id="tab-verif" aria-controls="onglet-verif" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('verif', this)">✅ Vérifier</button>
+      <button class="tab-btn" role="tab" id="tab-analyses" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('analyses', this)">📊 Analyses</button>
       <button class="tab-btn" role="tab" id="tab-demo" aria-controls="onglet-demo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('demo', this)">🎬 Démo</button>
     </div>
 
@@ -538,6 +553,67 @@
       </div>
     </div>
 
+    <div id="onglet-analyses" class="tab-content" role="tabpanel" aria-labelledby="tab-analyses" tabindex="0">
+      <div class="card premium-locked" id="lock-analyses">
+        <div class="lock-overlay" id="overlay-analyses" style="display: none;" role="region" aria-label="Accès restreint">
+          <h2>🔒 Accès Abonné Requis</h2>
+          <p>Les analyses avancées sont réservées aux abonnés.</p>
+          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
+        </div>
+        <div id="content-analyses">
+          <h2>📊 Analyses Avancées</h2>
+          <p style="color: var(--text-muted); font-size: 14px;">Filtrez par jeu, puis explorez les tendances profondes des tirages.</p>
+          
+          <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+            <label><b>Jeu à analyser :</b></label>
+            <select id="anaJeu" onchange="executerAnalyses()" style="font-size: 16px; font-weight: bold;">
+              <option value="tous">Tous les jeux</option>
+              <option value="Star">Star Bénin</option>
+              <option value="Fortune">Fortune Bénin</option>
+              <option value="Digital">Digital Bénin</option>
+            </select>
+            <button onclick="executerAnalyses()" class="secondary">🔄 Actualiser</button>
+          </div>
+
+          <div class="analyses-tabs" role="tablist">
+            <button class="ana-btn active" onclick="changerOngletAnalyse('paires', this)">🤝 Paires & Trios</button>
+            <button class="ana-btn" onclick="changerOngletAnalyse('positions', this)">📍 Écarts par Position</button>
+            <button class="ana-btn" onclick="changerOngletAnalyse('jours', this)">📅 Par Jour</button>
+            <button class="ana-btn" onclick="changerOngletAnalyse('heures', this)">⏰ Par Créneau</button>
+          </div>
+
+          <div id="ana-paires" class="ana-content active">
+            <div class="ana-grid">
+              <div class="ana-card">
+                <h4>🥇 Top 10 des Paires fréquentes</h4>
+                <ul class="ana-list" id="anaPairesTop10"></ul>
+              </div>
+              <div class="ana-card">
+                <h4>🥉 Top 10 des Trios fréquents</h4>
+                <ul class="ana-list" id="anaTriosTop10"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="ana-positions" class="ana-content">
+            <p style="font-size: 13px; color: var(--text-muted);">Découvrez le comportement des numéros selon leur position de sortie (1ère boule, 2ème boule, etc.).</p>
+            <div class="ana-grid" id="anaPositionsContainer"></div>
+          </div>
+
+          <div id="ana-jours" class="ana-content">
+            <p style="font-size: 13px; color: var(--text-muted);">Quels sont les numéros qui sortent le plus souvent un jour spécifique de la semaine ?</p>
+            <div class="ana-grid" id="anaJoursContainer"></div>
+          </div>
+
+          <div id="ana-heures" class="ana-content">
+            <p style="font-size: 13px; color: var(--text-muted);">Quels sont les numéros qui dominent à chaque créneau horaire ?</p>
+            <div class="ana-grid" id="anaHeuresContainer"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <div id="onglet-demo" class="tab-content" role="tabpanel" aria-labelledby="tab-demo" tabindex="0">
       <div class="card">
         <div class="demo-bandeau">🎬 Mode Démo — Données fictives à but pédagogique. Aucune donnée réelle n'est utilisée ou modifiée.</div>
@@ -572,6 +648,7 @@
         <button type="button" class="drawer-nav-btn" data-onglet="labo" onclick="ouvrirOngletDepuisDrawer('labo')">🧪 Laboratoire</button>
         <button type="button" class="drawer-nav-btn" data-onglet="boules" onclick="ouvrirOngletDepuisDrawer('boules')">🔍 Boules</button>
         <button type="button" class="drawer-nav-btn" data-onglet="verif" onclick="ouvrirOngletDepuisDrawer('verif')">✅ Vérifier</button>
+        <button type="button" class="drawer-nav-btn" data-onglet="analyses" onclick="ouvrirOngletDepuisDrawer('analyses')">📊 Analyses</button>
         <button type="button" class="drawer-nav-btn" data-onglet="demo" onclick="ouvrirOngletDepuisDrawer('demo')">🎬 Démo</button>
     </div>
 </aside>
@@ -835,7 +912,7 @@ function piegeFocusDrawer(e) {
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
-function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); var b = document.getElementById('tab-' + id); ouvrirOnglet(id, b); }
+function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); var b = document.getElementById('tab-' + id); _ouvrirOnglet(id, b); }
 function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
 
 function afficherInscription() {
@@ -862,7 +939,6 @@ async function verifierSession() {
         }
         estAdmin = (role === 'admin');
         estAbonne = (role === 'admin') || (dateValide && dateFin > new Date());
-        console.log('[DIAG BADGE]', { email: session.user.email, role: role, estAdmin: estAdmin, estAbonne: estAbonne, dateValide: dateValide });
         afficherApplication(session.user.email, estAdmin, estAbonne, dateValide ? dateFin : null);
     } else {
         document.getElementById("login-screen").style.display = "flex";
@@ -928,7 +1004,7 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     }
     var db = document.getElementById('drawerBadge');
     if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
-    var premium = ['cockpit', 'comparateur', 'labo', 'boules', 'verif'];
+    var premium = ['cockpit', 'comparateur', 'labo', 'boules', 'verif', 'analyses'];
     premium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
         var content = document.getElementById('content-' + id);
@@ -1015,6 +1091,7 @@ var _ouvrirOnglet = function(id, btn) {
   if (id === 'boules') remplirBoulesGrid();
   if (id === 'demo') initialiserDemo();
   if (id === 'verif') { var d = document.getElementById('verifDate'); if (d && !d.value) d.value = new Date().toISOString().slice(0,10); }
+  if (id === 'analyses') { setTimeout(executerAnalyses, 100); }
 };
 function ouvrirOnglet(id, btn) { _ouvrirOnglet(id, btn); }
 
@@ -1261,12 +1338,12 @@ async function traiterTexteColle() {
     document.getElementById("statConflits").textContent = cf.length;
     document.getElementById("statInvalides").textContent = inv;
     document.getElementById("nbConflitsQuestion").textContent = cf.length;
-    var ll = document.getElementById("listeConflits");
-    if (cf.length === 0) ll.innerHTML = "<p style='color:var(--text-muted);'>Aucun conflit.</p>";
+    var ll2 = document.getElementById("listeConflits");
+    if (cf.length === 0) ll2.innerHTML = "<p style='color:var(--text-muted);'>Aucun conflit.</p>";
     else {
         var h = "";
         cf.slice(0,10).forEach(function(c){ h += "<div class='ligne-conflit'>⚠️ <b>" + c.nouveau.date + "</b> · " + c.nouveau.jeu + " · " + c.nouveau.heure + "<br>Ancien : <span class='ancien'>[" + c.existant.boules.join(", ") + "]</span><br>Nouveau : <span class='nouveau'>[" + c.nouveau._b.join(", ") + "]</span></div>"; });
-        ll.innerHTML = h;
+        ll2.innerHTML = h;
     }
     document.getElementById("btnEcraser").style.display = cf.length > 0 ? "inline-block" : "none";
     document.getElementById("modalConflitImport").style.display = "flex";
@@ -1301,9 +1378,9 @@ async function executerImport(mode) {
         }
     }
     if (err) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + err.message; document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; }); return; }
-    var res = "✅ Terminé. " + nbA + " ajouté(s)" + (mode==='ecraser' ? ", " + nbE + " écrasé(s)" : ", " + nbI + " ignoré(s)") + ".";
-    msg.style.color = "#27ae60"; msg.textContent = res;
-    mp.style.color = "#27ae60"; mp.textContent = res;
+    var res2 = "✅ Terminé. " + nbA + " ajouté(s)" + (mode==='ecraser' ? ", " + nbE + " écrasé(s)" : ", " + nbI + " ignoré(s)") + ".";
+    msg.style.color = "#27ae60"; msg.textContent = res2;
+    mp.style.color = "#27ae60"; mp.textContent = res2;
     importAttente = null;
     document.getElementById("texteAImporter").value = "";
     setTimeout(function(){ document.getElementById("modalConflitImport").style.display = "none"; rafraichirDonnees(); }, 1500);
@@ -1729,6 +1806,107 @@ function demoVerif() {
     }, 200);
 }
 function demoImport() { alert("La démo d'import montre le principe de la modale de conflit. En mode réel, collez vos données dans l'onglet Compilation (admin). Aucune donnée n'a été modifiée."); }
+
+function changerOngletAnalyse(id, btn) {
+    document.querySelectorAll('.ana-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.ana-content').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('ana-' + id).classList.add('active');
+}
+function executerAnalyses() {
+    var jeu = document.getElementById('anaJeu').value;
+    var source = (modeDemoActif ? DONNEES_DEMO : donneesCloud).filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
+    if (source.length < 5) {
+        document.getElementById('anaPairesTop10').innerHTML = "<li>Pas assez de données.</li>";
+        return;
+    }
+    var paires = {}, trios = {};
+    source.forEach(function(t) {
+        var b = t.boules;
+        for (var i = 0; i < b.length; i++) {
+            for (var j = i + 1; j < b.length; j++) {
+                var p = [b[i], b[j]].sort(function(a, c) { return a - c; }).join("-");
+                paires[p] = (paires[p] || 0) + 1;
+            }
+        }
+        for (var k = 0; k < b.length; k++) {
+            for (var l = k + 1; l < b.length; l++) {
+                for (var m = l + 1; m < b.length; m++) {
+                    var tr = [b[k], b[l], b[m]].sort(function(a, c) { return a - c; }).join("-");
+                    trios[tr] = (trios[tr] || 0) + 1;
+                }
+            }
+        }
+    });
+    var topP = Object.keys(paires).map(function(k) { return { n: k, c: paires[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
+    var topT = Object.keys(trios).map(function(k) { return { n: k, c: trios[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
+    var htmlP = "";
+    topP.forEach(function(p) { htmlP += "<li><b>" + p.n.replace("-", " + ") + "</b> <span class='status-badge badge-abonne'>" + p.c + " fois</span></li>"; });
+    document.getElementById('anaPairesTop10').innerHTML = htmlP || "<li>Aucune paire.</li>";
+    var htmlT = "";
+    topT.forEach(function(p) { htmlT += "<li><b>" + p.n.replace(/-/g, " + ") + "</b> <span class='status-badge badge-warning'>" + p.c + " fois</span></li>"; });
+    document.getElementById('anaTriosTop10').innerHTML = htmlT || "<li>Aucun trio.</li>";
+
+    var positions = [[], [], [], [], []];
+    source.forEach(function(t) {
+        var triees = t.boules.slice().sort(function(a, b) { return a - b; });
+        triees.forEach(function(b, idx) { if (idx < 5) positions[idx].push(b); });
+    });
+    var htmlPos = "";
+    positions.forEach(function(pos, idx) {
+        if (pos.length === 0) return;
+        var somme = pos.reduce(function(a, b) { return a + b; }, 0);
+        var moyenne = (somme / pos.length).toFixed(1);
+        var min = Math.min.apply(null, pos);
+        var max = Math.max.apply(null, pos);
+        htmlPos += "<div class='ana-card'><h4>Position " + (idx + 1) + "</h4><ul class='ana-list'>";
+        htmlPos += "<li>Moyenne <b>" + moyenne + "</b></li>";
+        htmlPos += "<li>Minimum <b>" + min + "</b></li>";
+        htmlPos += "<li>Maximum <b>" + max + "</b></li>";
+        htmlPos += "</ul></div>";
+    });
+    document.getElementById('anaPositionsContainer').innerHTML = htmlPos;
+
+    var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    var parJour = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    source.forEach(function(t) {
+        var d = new Date(t.date);
+        if (!isNaN(d.getTime())) {
+            var jourIdx = d.getDay();
+            t.boules.forEach(function(b) { parJour[jourIdx].push(b); });
+        }
+    });
+    var htmlJours = "";
+    for (var j = 0; j < 7; j++) {
+        var boulesDuJour = parJour[j];
+        if (boulesDuJour.length === 0) continue;
+        var freqJ = {};
+        boulesDuJour.forEach(function(b) { freqJ[b] = (freqJ[b] || 0) + 1; });
+        var top3 = Object.keys(freqJ).sort(function(a, b) { return freqJ[b] - freqJ[a]; }).slice(0, 3);
+        htmlJours += "<div class='ana-card'><h4>" + jours[j] + " (" + (boulesDuJour.length / 5) + " tirages)</h4><ul class='ana-list'>";
+        top3.forEach(function(n) { htmlJours += "<li>Boule <b>" + n + "</b> <span>sortie " + freqJ[n] + " fois</span></li>"; });
+        htmlJours += "</ul></div>";
+    }
+    document.getElementById('anaJoursContainer').innerHTML = htmlJours;
+
+    var heuresGroupees = {};
+    source.forEach(function(t) {
+        if (!heuresGroupees[t.heure]) heuresGroupees[t.heure] = [];
+        t.boules.forEach(function(b) { heuresGroupees[t.heure].push(b); });
+    });
+    var htmlHeures = "";
+    var heuresTriees = Object.keys(heuresGroupees).sort();
+    heuresTriees.forEach(function(h) {
+        var boulesH = heuresGroupees[h];
+        var freqH = {};
+        boulesH.forEach(function(b) { freqH[b] = (freqH[b] || 0) + 1; });
+        var top3 = Object.keys(freqH).sort(function(a, b) { return freqH[b] - freqH[a]; }).slice(0, 3);
+        htmlHeures += "<div class='ana-card'><h4>Créneau " + h + " (" + (boulesH.length / 5) + " tirages)</h4><ul class='ana-list'>";
+        top3.forEach(function(n) { htmlHeures += "<li>Boule <b>" + n + "</b> <span>sortie " + freqH[n] + " fois</span></li>"; });
+        htmlHeures += "</ul></div>";
+    });
+    document.getElementById('anaHeuresContainer').innerHTML = htmlHeures;
+}
 
 document.getElementById("date").valueAsDate = new Date();
 verifierSession();
