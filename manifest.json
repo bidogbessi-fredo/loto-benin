@@ -1,0 +1,21 @@
+{
+  "name": "Loto Bénin Pro Cockpit",
+  "short_name": "Loto Bénin",
+  "description": "Analyse et statistiques avancées du Loto Bénin",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#2980b9",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3014/3014473.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3014/3014473.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
