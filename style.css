@@ -256,12 +256,22 @@
   .ana-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
   .ana-list li:last-child { border-bottom: none; }
 
-  /* NOUVEAU : Recherche de boules */
+  /* Styles pour la recherche et l'historique */
   .rech-input-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
   .rech-input-group label { font-size: 11px; color: var(--text-muted); }
   .rech-input-group input, .rech-input-group select { width: 70px; text-align: center; padding: 10px 5px; font-size: 16px; font-weight: bold; }
-  .rech-result-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .rech-result-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .rech-result-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--primary); }
+  .histo-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border-color); }
+  .histo-row.target { background: rgba(41, 128, 185, 0.1); border-left: 4px solid var(--primary); }
+  .histo-row .h-date { width: 90px; font-size: 12px; color: var(--text-muted); }
+  .histo-row .h-heure { width: 40px; font-weight: bold; font-size: 13px; }
+  .histo-row .h-boules { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+  .histo-row .ball.target-boule { border: 3px solid #fff; box-shadow: 0 0 10px #fff; transform: scale(1.1); }
   
+  .comp-tag { background: var(--bg-card); border: 1px solid var(--primary); border-radius: var(--radius-pill); padding: 5px 10px; font-size: 12px; display: flex; align-items: center; gap: 8px; margin: 0 5px 5px 0; }
+  .comp-tag button { background: transparent; color: var(--color-hot); border: none; padding: 0; min-height: auto; font-size: 14px; cursor: pointer; }
+
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
       .day-row { flex-wrap: wrap; }
