@@ -577,7 +577,7 @@ function analyserSuivi() {
 }
 
 /* =========================================================
-   CHERCHEUR DE BOULES (AVEC HISTORIQUE)
+   CHERCHEUR DE BOULES (AVEC HISTORIQUE ET LIGNES)
    ========================================================= */
 function initialiserRecherche() {
     var container = document.getElementById('rechBoulesContainer');
@@ -630,7 +630,7 @@ function executerRecherche() {
     var container = document.getElementById('rechBoulesContainer');
     var inputs = container.querySelectorAll('.rech-input-group');
     
-    dernieresBoulesCherchees = []; // Reset
+    dernieresBoulesCherchees = []; 
     var criteres = [];
     inputs.forEach(function(div) {
         var num = parseInt(div.querySelector('.rech-num').value, 10);
@@ -669,12 +669,17 @@ function executerRecherche() {
     if (rechercheResultatsActifs.length === 0) {
         html = "<p style='color: var(--text-muted); text-align: center; padding: 20px;'>Aucun tirage ne correspond à ces critères.</p>";
     } else {
-        rechercheResultatsActifs.forEach(function(t, idx) {
+        rechercheResultatsActifs.forEach(function(t) {
             var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-            // On passe l'index du tirage dans le tableau global donneesCloud
-            var indexGlobal = donneesCloud.indexOf(t);
-            html += "<div class='rech-result-card' onclick='ouvrirHistorique(" + indexGlobal + ")'>";
-            html += "<div><b>" + t.date + "</b> <small style='color:var(--text-muted);'>(" + t.heure + ")</small><br><span style='font-size:12px; color:var(--color-"+c+");'>" + t.jeu + "</span></div>";
+            
+            // CALCUL DES NUMÉROS DE LIGNE
+            var indexGlobal = donneesCloud.indexOf(t) + 1;
+            var tiragesJeu = donneesCloud.filter(function(x) { return x.jeu === t.jeu; });
+            var indexJeu = tiragesJeu.indexOf(t) + 1;
+
+            html += "<div class='rech-result-card' onclick='ouvrirHistorique(" + (indexGlobal - 1) + ")'>";
+            html += "<div><b>Ligne " + indexGlobal + "</b> <small style='color:var(--text-muted);'>(Ligne " + t.jeu + " " + indexJeu + ")</small><br>";
+            html += "<span style='font-size:12px; color:var(--text-muted);'>" + t.date + " (" + t.heure + ")</span> <span style='font-size:12px; font-weight:bold; color:var(--color-"+c+");'>" + t.jeu + "</span></div>";
             html += "<div>";
             t.boules.forEach(function(b) {
                 var isCible = dernieresBoulesCherchees.indexOf(b) !== -1;
@@ -691,15 +696,12 @@ function ouvrirHistorique(indexGlobal) {
     indexGlobalTirageHistorique = indexGlobal;
     tirageActifHistorique = donneesCloud[indexGlobal];
     
-    // Trouver 10 tirages avant et 10 après du même jeu
     var jeuCible = tirageActifHistorique.jeu;
     var avant = [], apres = [];
     
-    // Avant
     for (var i = indexGlobal - 1; i >= 0 && avant.length < 10; i--) {
         if (donneesCloud[i].jeu === jeuCible) avant.unshift(donneesCloud[i]);
     }
-    // Après
     for (var j = indexGlobal + 1; j < donneesCloud.length && apres.length < 10; j++) {
         if (donneesCloud[j].jeu === jeuCible) apres.push(donneesCloud[j]);
     }
@@ -711,7 +713,13 @@ function ouvrirHistorique(indexGlobal) {
         var isTarget = (t === tirageActifHistorique);
         var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
         
+        // CALCUL DES NUMÉROS DE LIGNE POUR L'HISTORIQUE
+        var idxG = donneesCloud.indexOf(t) + 1;
+        var tJeu = donneesCloud.filter(function(x) { return x.jeu === t.jeu; });
+        var idxJ = tJeu.indexOf(t) + 1;
+
         html += "<div class='histo-row " + (isTarget ? "target" : "") + "'>";
+        html += "<div class='h-date' style='font-weight:bold;'>L." + idxG + "<br><small style='font-weight:normal;'>L." + t.jeu + " " + idxJ + "</small></div>";
         html += "<div class='h-date'>" + t.date + "</div>";
         html += "<div class='h-heure'>" + t.heure + "</div>";
         html += "<div class='h-boules'>";
@@ -733,7 +741,6 @@ function ouvrirHistorique(indexGlobal) {
 function ajouterTirageActifAuComparateur() {
     if (!tirageActifHistorique) return;
     
-    // Vérifier si déjà ajouté
     var existe = tiragesComparateur.some(function(t) { return t.id === tirageActifHistorique.id; });
     if (existe) {
         alert("Ce tirage est déjà dans le comparateur.");
@@ -744,7 +751,6 @@ function ajouterTirageActifAuComparateur() {
     mettreAJourZoneComparaison();
     document.getElementById('modalHistorique').style.display = 'none';
     
-    // Ouvrir l'onglet comparateur
     fermerDrawer();
     _ouvrirOnglet('comparateur', document.getElementById('tab-comparateur'));
 }
@@ -762,9 +768,10 @@ function mettreAJourZoneComparaison() {
     liste.innerHTML = "";
     
     tiragesComparateur.forEach(function(t, idx) {
+        var indexGlobal = donneesCloud.indexOf(t) + 1;
         var div = document.createElement('div');
         div.className = "comp-tag";
-        div.innerHTML = "<b>" + t.date + "</b> (" + t.jeu + " " + t.heure + ") " +
+        div.innerHTML = "<b>Ligne " + indexGlobal + "</b> (" + t.date + " | " + t.jeu + " " + t.heure + ") " +
                         "<button onclick='retirerDuComparateur(" + idx + ")' aria-label='Retirer'>✕</button>";
         liste.appendChild(div);
     });
@@ -1332,7 +1339,6 @@ function supprimerPlage(id) { var d = document.getElementById("plage-container-"
 function executerComparateurMulti() {
     var plages = [];
     
-    // 1. Ajouter les tirages sélectionnés depuis le chercheur
     if (tiragesComparateur.length > 0) {
         plages.push({
             id: "Sélection",
@@ -1342,7 +1348,6 @@ function executerComparateurMulti() {
         });
     }
 
-    // 2. Ajouter les plages manuelles
     for (var i=1;i<=nPlages;i++) {
         var c = document.getElementById("plage-container-" + i); if (!c) continue;
         var s = document.getElementById("sacNum" + i).value;
@@ -1356,7 +1361,7 @@ function executerComparateurMulti() {
         plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
     }
 
-    if (plages.length < 2) { alert("Il faut au moins 2 colonnes au total (Sélection ou Plages manuelles)."); return; }
+    if (plages.length < 2) { alert("Il faut au moins 2 colonnes au total."); return; }
     var ml = 0; plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
     var html = "", stats = plages.map(function(p){ return { nom: p.id, exact: 0, miroir: 0 }; });
     plages.forEach(function(p, pIdx) {
