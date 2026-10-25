@@ -8,6 +8,13 @@ var estAdmin = false;
 var estAbonne = false;
 var modeDemoActif = false;
 
+// Variables pour le Chercheur et le Comparateur
+var rechercheResultatsActifs = [];
+var dernieresBoulesCherchees = [];
+var tiragesComparateur = [];
+var tirageActifHistorique = null;
+var indexGlobalTirageHistorique = null;
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
@@ -274,6 +281,7 @@ function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
     }
     var db = document.getElementById('drawerBadge');
     if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
+    
     var premium = ['cockpit', 'comparateur', 'labo', 'boules', 'recherche', 'verif', 'analyses'];
     premium.forEach(function(id) {
         var overlay = document.getElementById('overlay-' + id);
@@ -326,7 +334,6 @@ async function rafraichirDonnees() {
   if (document.getElementById('onglet-cockpit').classList.contains('active')) actualiserCockpit();
   if (document.getElementById('onglet-labo').classList.contains('active')) { remplirSelecteurTirage(); remplirSelectMulti(); }
   if (document.getElementById('onglet-boules').classList.contains('active')) remplirBoulesGrid();
-  if (document.getElementById('onglet-recherche').classList.contains('active')) { /* reset ou rien */ }
   if (estAdmin) { actualiserDashboard(); }
 }
 async function actualiserDashboard() {
@@ -368,7 +375,10 @@ async function chargerUtilisateursAuto() {
         profils.forEach(function(p) {
             var badgeClass = p.role === 'admin' ? 'badge-admin' : (p.role === 'abonne' ? 'badge-abonne' : 'badge-gratuit');
             var badgeTxt = p.role === 'admin' ? 'Admin' : (p.role === 'abonne' ? 'Abonné' : 'Visiteur');
-            var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement : '';
+            
+            // FIX : On coupe la chaîne à 'T' pour ne garder que la date (YYYY-MM-DD)
+            var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
+            
             var emailAffiche = p.email ? p.email : "ID: " + p.id.substring(0,8) + "...";
             
             html += "<tr>";
@@ -442,7 +452,6 @@ function chercherBanker() {
 
     var totalTirages = tiragesJeu.length;
 
-    // --- MÉTHODE 1 : Le plus en retard (Cycles) ---
     var ecarts = {};
     for (var i = 1; i <= 90; i++) ecarts[i] = totalTirages;
 
@@ -456,7 +465,6 @@ function chercherBanker() {
         if (ecarts[n] > maxEcart) { maxEcart = ecarts[n]; numRetard = n; }
     }
 
-    // --- MÉTHODE 2 : Le plus régulier (Fréquence) ---
     var freq = {};
     for (var f = 1; f <= 90; f++) freq[f] = 0;
     tiragesJeu.forEach(function(t) { t.boules.forEach(function(b) { freq[b]++; }); });
@@ -466,7 +474,6 @@ function chercherBanker() {
         if (freq[m] > maxFreq) { maxFreq = freq[m]; numFrequent = m; }
     }
 
-    // --- MÉTHODE 3 : Le suiveur (Analyse du dernier tirage) ---
     var dernierTirage = tiragesJeu[totalTirages - 1];
     var suiveurs = {};
     
@@ -482,7 +489,6 @@ function chercherBanker() {
         if (suiveurs[s] > maxSuivi) { maxSuivi = suiveurs[s]; topSuiveur = s; }
     }
 
-    // --- AFFICHAGE ---
     resultatBox.style.display = 'block';
     
     document.getElementById('bankerRetard').innerHTML = 
@@ -512,7 +518,6 @@ function remplirSuiviDeclencheur() {
     var sel = document.getElementById('suiviDeclencheur');
     if (!sel) return;
     sel.innerHTML = "<option value=''>Sélectionnez un tirage déclencheur...</option>";
-    // On affiche les 50 derniers tirages pour ne pas surcharger
     var limit = Math.max(0, donneesCloud.length - 50);
     for (var i = donneesCloud.length - 1; i >= limit; i--) {
         var t = donneesCloud[i];
@@ -531,12 +536,11 @@ function analyserSuivi() {
     var declencheur = donneesCloud[idx];
     var resultats = {};
     
-    // On analyse les 5 tirages suivants qui ont le MÊME jeu
     var tiragesSuivants = [];
     for (var i = idx + 1; i < donneesCloud.length; i++) {
         if (donneesCloud[i].jeu === declencheur.jeu) {
             tiragesSuivants.push(donneesCloud[i]);
-            if (tiragesSuivants.length === 5) break; // On s'arrête à 5 tirages après
+            if (tiragesSuivants.length === 5) break;
         }
     }
 
@@ -573,7 +577,7 @@ function analyserSuivi() {
 }
 
 /* =========================================================
-   CHERCHEUR DE BOULES (NOUVEAU)
+   CHERCHEUR DE BOULES (AVEC HISTORIQUE)
    ========================================================= */
 function initialiserRecherche() {
     var container = document.getElementById('rechBoulesContainer');
@@ -591,8 +595,6 @@ function ajouterChampRecherche() {
     div.className = 'rech-input-group';
     
     var posOptions = "";
-    var posDisabled = !document.getElementById('rechPositionActive').checked ? "disabled" : "";
-    
     if (document.getElementById('rechPositionActive').checked) {
         posOptions = "<select class='rech-pos'><option value='0'>Peu importe</option><option value='1'>1ère</option><option value='2'>2ème</option><option value='3'>3ème</option><option value='4'>4ème</option><option value='5'>5ème</option></select>";
     }
@@ -628,12 +630,14 @@ function executerRecherche() {
     var container = document.getElementById('rechBoulesContainer');
     var inputs = container.querySelectorAll('.rech-input-group');
     
+    dernieresBoulesCherchees = []; // Reset
     var criteres = [];
     inputs.forEach(function(div) {
         var num = parseInt(div.querySelector('.rech-num').value, 10);
         var pos = usePos ? parseInt(div.querySelector('.rech-pos').value, 10) : 0;
         if (!isNaN(num) && num >= 1 && num <= 90) {
             criteres.push({ num: num, pos: pos });
+            dernieresBoulesCherchees.push(num);
         }
     });
 
@@ -643,7 +647,7 @@ function executerRecherche() {
     }
 
     var source = donneesCloud.filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
-    var resultats = [];
+    rechercheResultatsActifs = [];
 
     source.forEach(function(t) {
         var match = true;
@@ -654,34 +658,130 @@ function executerRecherche() {
             if (indexBoule === -1) { match = false; break; } 
             if (c.pos > 0 && indexBoule !== (c.pos - 1)) { match = false; break; }
         }
-        if (match) resultats.push(t);
+        if (match) rechercheResultatsActifs.push(t);
     });
 
     var box = document.getElementById('resultatRecherche');
     box.style.display = 'block';
-    document.getElementById('rechCompteur').textContent = resultats.length;
+    document.getElementById('rechCompteur').textContent = rechercheResultatsActifs.length;
     
     var html = "";
-    if (resultats.length === 0) {
+    if (rechercheResultatsActifs.length === 0) {
         html = "<p style='color: var(--text-muted); text-align: center; padding: 20px;'>Aucun tirage ne correspond à ces critères.</p>";
     } else {
-        resultats.forEach(function(t) {
+        rechercheResultatsActifs.forEach(function(t, idx) {
             var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-            html += "<div class='rech-result-card'>";
+            // On passe l'index du tirage dans le tableau global donneesCloud
+            var indexGlobal = donneesCloud.indexOf(t);
+            html += "<div class='rech-result-card' onclick='ouvrirHistorique(" + indexGlobal + ")'>";
             html += "<div><b>" + t.date + "</b> <small style='color:var(--text-muted);'>(" + t.heure + ")</small><br><span style='font-size:12px; color:var(--color-"+c+");'>" + t.jeu + "</span></div>";
             html += "<div>";
             t.boules.forEach(function(b) {
-                var isCible = criteres.some(function(crit) { return crit.num === b; });
+                var isCible = dernieresBoulesCherchees.indexOf(b) !== -1;
                 html += "<span class='ball " + c + "' style='" + (isCible ? "border: 3px solid #fff; box-shadow: 0 0 10px #fff;" : "") + "'>" + b + "</span>";
             });
-            html += "</div></div>";
+            html += "</div><div style='color:var(--primary); font-size:20px;'>➔</div></div>";
         });
     }
     document.getElementById('rechListe').innerHTML = html;
 }
 
+function ouvrirHistorique(indexGlobal) {
+    if (indexGlobal < 0 || indexGlobal >= donneesCloud.length) return;
+    indexGlobalTirageHistorique = indexGlobal;
+    tirageActifHistorique = donneesCloud[indexGlobal];
+    
+    // Trouver 10 tirages avant et 10 après du même jeu
+    var jeuCible = tirageActifHistorique.jeu;
+    var avant = [], apres = [];
+    
+    // Avant
+    for (var i = indexGlobal - 1; i >= 0 && avant.length < 10; i--) {
+        if (donneesCloud[i].jeu === jeuCible) avant.unshift(donneesCloud[i]);
+    }
+    // Après
+    for (var j = indexGlobal + 1; j < donneesCloud.length && apres.length < 10; j++) {
+        if (donneesCloud[j].jeu === jeuCible) apres.push(donneesCloud[j]);
+    }
+
+    var contexte = avant.concat([tirageActifHistorique]).concat(apres);
+    
+    var html = "";
+    contexte.forEach(function(t) {
+        var isTarget = (t === tirageActifHistorique);
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        
+        html += "<div class='histo-row " + (isTarget ? "target" : "") + "'>";
+        html += "<div class='h-date'>" + t.date + "</div>";
+        html += "<div class='h-heure'>" + t.heure + "</div>";
+        html += "<div class='h-boules'>";
+        t.boules.forEach(function(b) {
+            var isCible = dernieresBoulesCherchees.indexOf(b) !== -1;
+            var extraClass = isCible ? " target-boule" : "";
+            html += "<span class='ball " + c + extraClass + "'>" + b + "</span>";
+        });
+        html += "</div></div>";
+    });
+    
+    document.getElementById('histoContent').innerHTML = html;
+    document.getElementById('modalHistorique').style.display = 'flex';
+}
+
 /* =========================================================
-   AUTRES FONCTIONS (inchangées)
+   COMPARATEUR AVEC SÉLECTION DU CHERCHEUR
+   ========================================================= */
+function ajouterTirageActifAuComparateur() {
+    if (!tirageActifHistorique) return;
+    
+    // Vérifier si déjà ajouté
+    var existe = tiragesComparateur.some(function(t) { return t.id === tirageActifHistorique.id; });
+    if (existe) {
+        alert("Ce tirage est déjà dans le comparateur.");
+        return;
+    }
+    
+    tiragesComparateur.push(tirageActifHistorique);
+    mettreAJourZoneComparaison();
+    document.getElementById('modalHistorique').style.display = 'none';
+    
+    // Ouvrir l'onglet comparateur
+    fermerDrawer();
+    _ouvrirOnglet('comparateur', document.getElementById('tab-comparateur'));
+}
+
+function mettreAJourZoneComparaison() {
+    var zone = document.getElementById('zoneComparaison');
+    var liste = document.getElementById('listeComparaison');
+    
+    if (tiragesComparateur.length === 0) {
+        zone.style.display = 'none';
+        return;
+    }
+    
+    zone.style.display = 'block';
+    liste.innerHTML = "";
+    
+    tiragesComparateur.forEach(function(t, idx) {
+        var div = document.createElement('div');
+        div.className = "comp-tag";
+        div.innerHTML = "<b>" + t.date + "</b> (" + t.jeu + " " + t.heure + ") " +
+                        "<button onclick='retirerDuComparateur(" + idx + ")' aria-label='Retirer'>✕</button>";
+        liste.appendChild(div);
+    });
+}
+
+function retirerDuComparateur(idx) {
+    tiragesComparateur.splice(idx, 1);
+    mettreAJourZoneComparaison();
+}
+
+function viderZoneComparaison() {
+    tiragesComparateur = [];
+    mettreAJourZoneComparaison();
+}
+
+/* =========================================================
+   AUTRES FONCTIONS
    ========================================================= */
 function changerOngletAnalyse(id, btn) {
     document.querySelectorAll('.ana-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -803,6 +903,7 @@ var _ouvrirOnglet = function(id, btn) {
   if (id === 'verif') { var d = document.getElementById('verifDate'); if (d && !d.value) d.value = new Date().toISOString().slice(0,10); }
   if (id === 'analyses') { setTimeout(executerAnalyses, 100); }
   if (id === 'recherche') { initialiserRecherche(); }
+  if (id === 'comparateur') { mettreAJourZoneComparaison(); }
 };
 function ouvrirOnglet(id, btn) { _ouvrirOnglet(id, btn); }
 
@@ -1230,6 +1331,18 @@ function ajouterPlage() {
 function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
 function executerComparateurMulti() {
     var plages = [];
+    
+    // 1. Ajouter les tirages sélectionnés depuis le chercheur
+    if (tiragesComparateur.length > 0) {
+        plages.push({
+            id: "Sélection",
+            nomSac: "🎯 Chercheur",
+            data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1 }; }),
+            color: "#e74c3c"
+        });
+    }
+
+    // 2. Ajouter les plages manuelles
     for (var i=1;i<=nPlages;i++) {
         var c = document.getElementById("plage-container-" + i); if (!c) continue;
         var s = document.getElementById("sacNum" + i).value;
@@ -1242,7 +1355,8 @@ function executerComparateurMulti() {
         for (var j=mn;j<=mx;j++) p.push({ data: td[j], ligneLocale: j+1 });
         plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
     }
-    if (plages.length < 2) { alert("Il faut 2 plages."); return; }
+
+    if (plages.length < 2) { alert("Il faut au moins 2 colonnes au total (Sélection ou Plages manuelles)."); return; }
     var ml = 0; plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
     var html = "", stats = plages.map(function(p){ return { nom: p.id, exact: 0, miroir: 0 }; });
     plages.forEach(function(p, pIdx) {
@@ -1251,7 +1365,7 @@ function executerComparateurMulti() {
             var it = p.data[l];
             if (!it) { html += "<tr><td><i>-</i></td><td>-</td></tr>"; continue; }
             var t = it.data;
-            html += "<tr><td><b>L." + it.ligneLocale + "</b><br><small>" + t.jeu + " " + t.heure + "</small></td><td>";
+            html += "<tr><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + " | " + t.jeu + " " + t.heure + "</small></td><td>";
             t.boules.forEach(function(n) {
                 var me = 0, mt = 0, am = true;
                 plages.forEach(function(o) {
