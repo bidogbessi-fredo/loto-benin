@@ -255,6 +255,12 @@
   .ana-list { list-style: none; padding: 0; margin: 0; }
   .ana-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; }
   .ana-list li:last-child { border-bottom: none; }
+
+  /* NOUVEAU : Recherche de boules */
+  .rech-input-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .rech-input-group label { font-size: 11px; color: var(--text-muted); }
+  .rech-input-group input, .rech-input-group select { width: 70px; text-align: center; padding: 10px 5px; font-size: 16px; font-weight: bold; }
+  .rech-result-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
   
   @media (max-width: 768px) {
       .lab-grid { grid-template-columns: 1fr; }
