@@ -56,6 +56,7 @@
       <button class="tab-btn" role="tab" id="tab-comparateur" aria-controls="onglet-comparateur" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('comparateur', this)">⚖️ Comparateur</button>
       <button class="tab-btn" role="tab" id="tab-labo" aria-controls="onglet-labo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('labo', this)">🧪 Laboratoire</button>
       <button class="tab-btn" role="tab" id="tab-boules" aria-controls="onglet-boules" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('boules', this)">🔍 Boules</button>
+      <button class="tab-btn" role="tab" id="tab-recherche" aria-controls="onglet-recherche" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('recherche', this)">🕵️ Chercheur</button>
       <button class="tab-btn" role="tab" id="tab-verif" aria-controls="onglet-verif" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('verif', this)">✅ Vérifier</button>
       <button class="tab-btn" role="tab" id="tab-analyses" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('analyses', this)">📊 Analyses</button>
       <button class="tab-btn" role="tab" id="tab-demo" aria-controls="onglet-demo" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('demo', this)">🎬 Démo</button>
@@ -95,9 +96,7 @@
         <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
           <h3>👥 Gestion des utilisateurs</h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Gérez les rôles et les abonnements des utilisateurs inscrits.</p>
-          
           <button onclick="chargerUtilisateurs()" style="background: var(--primary); color: white; margin-bottom: 15px; width: 100%; max-width: 300px; font-size: 15px;">👥 Afficher / Actualiser la liste des abonnés</button>
-          
           <div style="overflow-x: auto;">
             <table id="tableUtilisateurs" style="display: none; font-size: 13px;">
               <thead>
@@ -246,6 +245,54 @@
                 <div id="resultatLaboAvance" class="result-box" role="status" aria-live="polite" style="margin-top:15px; font-weight: normal;"></div>
               </div>
             </div>
+
+            <!-- NOUVEAU : Outil Banker -->
+            <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+              <h3>🎯 Chasseur de Bankers</h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Trouvez le numéro le plus susceptible de sortir au prochain tirage selon différentes stratégies.</p>
+              
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <select id="bankerJeu" style="flex: 1; min-width: 150px;">
+                  <option value="Star">Loto Star</option>
+                  <option value="Fortune">Loto Fortune</option>
+                  <option value="Digital">Loto Digital</option>
+                </select>
+                <button onclick="chercherBanker()" style="flex: 1; background-color: var(--primary);">🔍 Analyser les Bankers</button>
+              </div>
+
+              <div id="resultatBanker" class="result-box" style="display: none;">
+                <div class="ana-grid">
+                  <div class="ana-card" style="border-top: 4px solid var(--color-hot);">
+                    <h4>🔥 Le plus en retard (Cycle)</h4>
+                    <div id="bankerRetard" style="text-align: center; margin-top: 15px;"></div>
+                  </div>
+                  <div class="ana-card" style="border-top: 4px solid var(--color-star);">
+                    <h4>⭐ Le plus régulier (Fréquence)</h4>
+                    <div id="bankerFrequent" style="text-align: center; margin-top: 15px;"></div>
+                  </div>
+                  <div class="ana-card" style="border-top: 4px solid var(--color-cold);">
+                    <h4>👣 Le suiveur (Après le dernier tirage)</h4>
+                    <div id="bankerSuiveur" style="text-align: center; margin-top: 15px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NOUVEAU : Analyseur de Suivi Post-Tirage -->
+            <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+              <h3>🔗 Analyseur de Suivi (Post-Tirage)</h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Sélectionnez un tirage "déclencheur" et découvrez quelles boules sortent régulièrement dans les 5 tirages suivants.</p>
+              
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <select id="suiviDeclencheur" style="flex: 1; min-width: 250px;">
+                  <option value="">Sélectionnez un tirage déclencheur...</option>
+                </select>
+                <button onclick="analyserSuivi()" style="flex: 1; background-color: var(--color-star); color: white;">📊 Lancer l'Analyse de Suivi</button>
+              </div>
+
+              <div id="resultatSuivi" class="result-box" style="display: none; font-weight: normal;"></div>
+            </div>
+
         </div>
       </div>
     </div>
@@ -262,6 +309,56 @@
           <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">Cliquez sur une boule pour voir son historique complet, sa fréquence, ses écarts et ses paires favorites.</p>
           <div class="boules-grid" id="boulesGrid"></div>
           <div id="bouleDetail" class="boule-detail" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOUVEAU : Onglet Chercheur -->
+    <div id="onglet-recherche" class="tab-content" role="tabpanel" aria-labelledby="tab-recherche" tabindex="0">
+      <div class="card premium-locked" id="lock-recherche">
+        <div class="lock-overlay" id="overlay-recherche" style="display: none;" role="region" aria-label="Accès restreint">
+          <h2>🔒 Accès Abonné Requis</h2>
+          <p>Le chercheur de boules est réservé aux abonnés.</p>
+          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
+        </div>
+        <div id="content-recherche">
+          <h2>🕵️ Chercheur de Boules</h2>
+          <p style="color: var(--text-muted); font-size: 14px;">Trouvez des combinaisons spécifiques dans l'historique des tirages.</p>
+          
+          <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+              <label><b>Jeu :</b><br>
+                <select id="rechJeu">
+                  <option value="tous">Tous les jeux</option>
+                  <option value="Star">Star</option>
+                  <option value="Fortune">Fortune</option>
+                  <option value="Digital">Digital</option>
+                </select>
+              </label>
+            </div>
+            
+            <p style="font-size: 13px; margin-bottom: 10px;"><b>Boules à chercher (1 à 5) :</b></p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px;">
+              <div id="rechBoulesContainer" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+              <button class="secondary" onclick="ajouterChampRecherche()" style="min-height: 44px; padding: 0 15px;">➕</button>
+              <button class="danger" onclick="retirerChampRecherche()" style="min-height: 44px; padding: 0 15px;">➖</button>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="rechPositionActive" onchange="togglePositionsRecherche()" style="width: 20px; height: 20px; margin: 0;"> 
+                <b>Activer la recherche par position exacte</b>
+              </label>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">Si coché, la boule doit se trouver exactement à la position indiquée (1ère à 5ème).</p>
+            </div>
+
+            <button onclick="executerRecherche()" style="width: 100%; background-color: var(--primary); font-size: 16px;">🔍 Rechercher</button>
+          </div>
+
+          <div id="resultatRecherche" style="display: none;">
+            <h3>Résultats (<span id="rechCompteur">0</span>)</h3>
+            <div id="rechListe" style="max-height: 400px; overflow-y: auto;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -403,6 +500,7 @@
         <button type="button" class="drawer-nav-btn" data-onglet="comparateur" onclick="ouvrirOngletDepuisDrawer('comparateur')">⚖️ Comparateur</button>
         <button type="button" class="drawer-nav-btn" data-onglet="labo" onclick="ouvrirOngletDepuisDrawer('labo')">🧪 Laboratoire</button>
         <button type="button" class="drawer-nav-btn" data-onglet="boules" onclick="ouvrirOngletDepuisDrawer('boules')">🔍 Boules</button>
+        <button type="button" class="drawer-nav-btn" data-onglet="recherche" onclick="ouvrirOngletDepuisDrawer('recherche')">🕵️ Chercheur</button>
         <button type="button" class="drawer-nav-btn" data-onglet="verif" onclick="ouvrirOngletDepuisDrawer('verif')">✅ Vérifier</button>
         <button type="button" class="drawer-nav-btn" data-onglet="analyses" onclick="ouvrirOngletDepuisDrawer('analyses')">📊 Analyses</button>
         <button type="button" class="drawer-nav-btn" data-onglet="demo" onclick="ouvrirOngletDepuisDrawer('demo')">🎬 Démo</button>
