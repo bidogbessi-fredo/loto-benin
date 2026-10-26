@@ -266,7 +266,19 @@ async function actualiserDashboard() {
 
 function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; }
 function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; }
-
+var _ouvrirOnglet = function(id, btn) {
+  var tabs = document.querySelectorAll('[role="tab"]'), panels = document.querySelectorAll('[role="tabpanel"]');
+  tabs.forEach(function(t) { var s = (t.id === 'tab-' + id); t.setAttribute('aria-selected', s ? 'true' : 'false'); t.classList.toggle('active', s); });
+  panels.forEach(function(p) { p.classList.toggle('active', p.id === 'onglet-' + id); });
+  ajouterAtelier(id); majBarreAteliers();
+  if (btn) btn.focus();
+  
+  if (id === 'cockpit') actualiserCockpit();
+  if (id === 'recherche') initialiserRecherche();
+  if (id === 'labo') { remplirSelecteursLabo(); }
+  if (id === 'boules') remplirBoulesGrid(); // <-- Ajouté
+  if (id === 'comparateur') { mettreAJourZoneComparaison(); } // <-- Ajouté
+};
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
     verifierSession(); 
