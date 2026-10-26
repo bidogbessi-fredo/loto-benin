@@ -29,70 +29,42 @@
 
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 0 auto; padding: 0; background: var(--bg-body); color: var(--text-main); overflow-x: hidden; }
 
-  /* Le lien d'évitement (Skip link) est maintenant bien caché */
   .skip-link { position: absolute; left: -9999px; top: 0; background: var(--primary); color: white; padding: 10px; z-index: 10000; }
   .skip-link:focus { left: 10px; }
 
-  /* =========================================
-     BARRE DU HAUT (TOPBAR) CORRIGÉE
-     ========================================= */
+  /* BARRE DU HAUT */
   .topbar { 
     display: flex; justify-content: space-between; align-items: center; gap: 10px; 
-    width: 100%; box-sizing: border-box;
-    padding: 12px 15px;
+    width: 100%; box-sizing: border-box; padding: 12px 15px;
     background: linear-gradient(90deg, #1f618d, #2980b9, #8e44ad, #2980b9, #1f618d);
-    background-size: 300% 100%;
-    animation: gradientMove 12s ease infinite;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    position: sticky; top: 0; z-index: 1000;
+    background-size: 300% 100%; animation: gradientMove 12s ease infinite;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000;
   }
-  @keyframes gradientMove { 
-    0% { background-position: 0% 50%; } 
-    50% { background-position: 100% 50%; } 
-    100% { background-position: 0% 50%; } 
-  }
+  @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
   .burger-btn { 
     background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); 
     width: 44px; height: 44px; border-radius: var(--radius-sm); cursor: pointer; font-size: 20px; 
-    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); flex-shrink: 0;
   }
   .burger-btn:hover { background: rgba(255,255,255,0.4); }
 
-  .topbar-logo-title {
-    display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; overflow: hidden;
-  }
-  .topbar-title { 
-    color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); margin: 0; font-size: 20px; 
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
+  .topbar-logo-title { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; overflow: hidden; }
+  .topbar-title { color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); margin: 0; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topbar-logo-title img { height: 30px; border-radius: 6px; }
   
-  .status-badge { 
-    display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: bold; 
-    color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); flex-shrink: 0;
-  }
+  .status-badge { display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: bold; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); flex-shrink: 0; }
   .badge-admin { background: #27ae60; }
   .badge-abonne { background: var(--primary); }
   .badge-gratuit { background: var(--color-hot); }
 
-  /* Bandeau d'expiration */
-  .bandeau-expiration {
-    display: none; background: linear-gradient(90deg, #f39c12, #e67e22); color: #fff; padding: 10px 15px;
-    font-weight: bold; font-size: 13px; align-items: center; justify-content: space-between; gap: 10px;
-  }
+  .bandeau-expiration { display: none; background: linear-gradient(90deg, #f39c12, #e67e22); color: #fff; padding: 10px 15px; font-weight: bold; font-size: 13px; align-items: center; justify-content: space-between; gap: 10px; }
   .bandeau-expiration.visible { display: flex; }
   .bandeau-expiration button { padding: 5px 10px; font-size: 12px; background: white; color: #e67e22; }
 
-  /* =========================================
-     TABLEAU DE BORD (GRILLE RESTAURÉE)
-     ========================================= */
-  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; }
-  .dash-card { 
-    background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); 
-    border-left: 5px solid var(--primary); text-align: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); 
-  }
+  /* TABLEAU DE BORD */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; padding: 0 15px; }
+  .dash-card { background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); border-left: 5px solid var(--primary); text-align: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
   .dash-card .num { font-size: 24px; font-weight: bold; color: var(--primary); display: block; }
   .dash-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; display: block; }
   .dash-card.star { border-left-color: var(--color-star); } .dash-card.star .num { color: var(--color-star); }
@@ -101,14 +73,12 @@
   .dash-card.abonnes { border-left-color: #27ae60; } .dash-card.abonnes .num { color: #27ae60; }
   .dash-card.date { border-left-color: var(--color-hot); } .dash-card.date .num { font-size: 16px; color: var(--color-hot); margin-top: 8px;}
 
-  /* =========================================
-     ANIMATIONS & EFFETS VISUELS
-     ========================================= */
+  /* ANIMATIONS & EFFETS VISUELS */
   .ball {
     display: inline-flex; align-items: center; justify-content: center; 
     width: var(--ball-size); height: var(--ball-size); border-radius: 50%; 
     background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(0,0,0,0.2) 100%), var(--primary); 
-    color: white; font-weight: bold; margin: 0 3px; font-size: calc(var(--ball-size) * 0.45); flex-shrink: 0;
+    color: white; font-weight: bold; margin: 0 2px; font-size: calc(var(--ball-size) * 0.45); flex-shrink: 0;
     box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     transition: transform 0.2s;
@@ -119,35 +89,42 @@
   .ball.fortune { background: linear-gradient(135deg, #3498db, #2980b9); }
   .ball.digital { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
 
-  button { 
-    background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; 
-    border-radius: var(--radius-pill); padding: 10px 20px; min-height: 44px; 
-    transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-  }
+  button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; border-radius: var(--radius-pill); padding: 10px 20px; min-height: 44px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
   button:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
   button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   button.secondary { background: var(--text-muted); }
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-  .card { 
-    background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg); 
-    box-shadow: var(--shadow); margin: 15px; border: 1px solid var(--border-color); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
+  .card { background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin: 15px; border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; }
   .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+  
+  /* CORRECTION DE L'AFFICHAGE DES BOULES (PLUS DE COUPURE) */
   .day-card { 
     background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); 
     margin-bottom: 15px; padding: 15px; box-shadow: var(--shadow); transition: transform 0.2s;
+    width: 100%; box-sizing: border-box;
   }
   .day-card:hover { transform: scale(1.01); }
+  .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
+  
+  .day-row { 
+    display: flex; align-items: center; padding: 10px 0; 
+    border-bottom: 1px solid var(--border-color); width: 100%; box-sizing: border-box;
+  }
+  .day-row:last-child { border-bottom: none; }
+  .day-time { width: 60px; font-weight: bold; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
+  .day-game { width: 70px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
+  
+  .day-nums { 
+    flex: 1; min-width: 0; 
+    display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 5px; 
+  }
 
   #statusCloud { animation: pulse 2s infinite; display: inline-block; padding: 0 15px; margin-bottom: 10px; }
   @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; color: var(--color-star); } 100% { opacity: 0.6; } }
 
-  /* =========================================
-     LE RESTE DU DESIGN (ONGGLETS, MENU, ETC.)
-     ========================================= */
+  /* INTERFACE & MENU */
   #login-screen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.5s ease-out; }
   #form-inscription { display: none; }
@@ -179,13 +156,6 @@
   .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
   .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  
-  .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
-  .day-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
-  .day-row:last-child { border-bottom: none; }
-  .day-time { width: 80px; font-weight: bold; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
-  .day-game { width: 80px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
-  .day-nums { flex: 1; display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 5px; }
   
   .mode-visiteur .admin-only { display: none !important; }
   
