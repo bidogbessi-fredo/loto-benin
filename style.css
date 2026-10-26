@@ -96,7 +96,12 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-  .card { background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin: 15px; border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card { 
+    background: var(--bg-card); padding: 15px; border-radius: var(--radius-lg); 
+    box-shadow: var(--shadow); margin: 10px; border: 1px solid var(--border-color); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
+    width: calc(100% - 20px); box-sizing: border-box; /* <-- C'est ça qui règle le problème */
+  }
   .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   
   /* CORRECTION DE L'AFFICHAGE DES BOULES (PLUS DE COUPURE) */
