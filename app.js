@@ -6,10 +6,93 @@ var donneesCloud = [];
 var estAdmin = false;
 var estAbonne = false;
 
+// Variables Ateliers et Chercheur
+var ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
+var dernieresBoulesCherchees = [];
+var tiragesComparateur = [];
+var tirageActifHistorique = null;
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
 }
 
+// --- GESTION DU DRAWER (MENU LATÉRAL) ---
+function ouvrirDrawer() {
+    document.getElementById('drawerMenu').classList.add('open');
+    document.getElementById('drawerBackdrop').classList.add('open');
+    document.getElementById('btnBurger').setAttribute('aria-expanded', 'true');
+}
+function fermerDrawer() {
+    document.getElementById('drawerMenu').classList.remove('open');
+    document.getElementById('drawerBackdrop').classList.remove('open');
+    document.getElementById('btnBurger').setAttribute('aria-expanded', 'false');
+}
+function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
+
+// --- GESTION DES ATELIERS (BARRE LATÉRALE) ---
+function majBarreAteliers() {
+    var bar = document.getElementById('ateliersBar');
+    var topOnglets = ['saisie', 'cockpit', 'analyses']; // Onglets fixes
+    var ateliersFiltres = ateliersOuverts.filter(function(id) { return topOnglets.indexOf(id) === -1; });
+    
+    if (ateliersFiltres.length === 0) { bar.style.display = "none"; return; }
+    bar.style.display = "flex";
+    bar.innerHTML = "";
+    
+    ateliersFiltres.forEach(function(id) {
+        var icone = "🔧";
+        var btnOnglet = document.getElementById('tab-' + id);
+        if(btnOnglet) { icone = btnOnglet.textContent.trim().split(' ')[0]; }
+        
+        var btn = document.createElement('button');
+        btn.className = "atelier-btn" + (document.getElementById('onglet-' + id).classList.contains('active') ? " active" : "");
+        btn.innerHTML = icone + "<span class='atelier-close' onclick='retirerAtelier(event, \"" + id + "\")'>✕</span>";
+        btn.onclick = function() { _ouvrirOnglet(id, document.getElementById('tab-' + id)); };
+        bar.appendChild(btn);
+    });
+}
+function ajouterAtelier(id) {
+    var topOnglets = ['saisie', 'cockpit', 'analyses'];
+    if (topOnglets.indexOf(id) !== -1) return; 
+    if (ateliersOuverts.indexOf(id) === -1) {
+        ateliersOuverts.push(id);
+        localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
+    }
+    majBarreAteliers();
+}
+function retirerAtelier(e, id) {
+    e.stopPropagation();
+    ateliersOuverts = ateliersOuverts.filter(function(a) { return a !== id; });
+    localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
+    majBarreAteliers();
+    if(document.getElementById('onglet-' + id).classList.contains('active')) {
+        _ouvrirOnglet('saisie', document.getElementById('tab-saisie'));
+    }
+}
+
+// --- NAVIGATION ONGLETS ---
+var _ouvrirOnglet = function(id, btn) {
+  var tabs = document.querySelectorAll('[role="tab"]');
+  var panels = document.querySelectorAll('[role="tabpanel"]');
+  tabs.forEach(function(t) {
+    var s = (t.id === 'tab-' + id);
+    t.setAttribute('aria-selected', s ? 'true' : 'false');
+    t.classList.toggle('active', s);
+  });
+  panels.forEach(function(p) { p.classList.toggle('active', p.id === 'onglet-' + id); });
+  
+  // Ajouter l'onglet ouvert à la barre des ateliers (sauf s'il est déjà en haut)
+  ajouterAtelier(id);
+  majBarreAteliers();
+  
+  if (btn) btn.focus();
+  if (id === 'recherche') initialiserRecherche();
+};
+function ouvrirOnglet(id, btn) { _ouvrirOnglet(id, btn); }
+function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); _ouvrirOnglet(id, document.getElementById('tab-' + id)); }
+
+
+// --- AUTHENTIFICATION ---
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
@@ -58,6 +141,7 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
     if (isAdmin) chargerUtilisateursAuto();
 }
 
+// --- DONNÉES ---
 async function chargerDonnees() {
   var statusEl = document.getElementById("statusCloud"); statusEl.textContent = "⏳...";
   let tous = [], page = 0, enCours = true;
@@ -74,6 +158,7 @@ async function chargerDonnees() {
   if (estAdmin) actualiserDashboard();
 }
 
+// --- AJOUT TIRAGE ---
 document.getElementById("btnAjouter")?.addEventListener("click", async function () {
   if (!estAdmin) { alert("Admin uniquement."); return; }
   var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "blue";
@@ -85,11 +170,12 @@ document.getElementById("btnAjouter")?.addEventListener("click", async function 
   else { 
       msg.textContent = "✅ Tirage enregistré !"; msg.style.color = "green"; 
       for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
-      document.getElementById("filtrePeriode").value = "tout"; // Affiche tout
+      document.getElementById("filtrePeriode").value = "tout";
       chargerDonnees(); 
   }
 });
 
+// --- TABLEAU DE BORD UTILISATEURS ---
 async function chargerUtilisateursAuto() {
     var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
     if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>";
@@ -119,6 +205,7 @@ async function actualiserDashboard() {
     document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
 }
 
+// --- AFFICHAGE COMPILATION ---
 function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value;
     var filtre = document.getElementById("filtrePeriode") ? document.getElementById("filtrePeriode").value : "tout";
@@ -151,6 +238,86 @@ function afficherSacSelectionne() {
     conteneur.innerHTML = html;
 }
 
+// --- CHERCHEUR AVEC SOMME ---
+function initialiserRecherche() {
+    var container = document.getElementById('rechBoulesContainer'); if (!container || container.children.length > 0) return;
+    container.innerHTML = '';
+    ajouterChampRecherche(); ajouterChampRecherche();
+}
+function ajouterChampRecherche() {
+    var container = document.getElementById('rechBoulesContainer'); if (container.children.length >= 5) return;
+    var div = document.createElement('div'); div.className = 'rech-input-group';
+    div.innerHTML = `<input type="number" class="rech-num" min="1" max="90" placeholder="N°" style="width:60px;">`;
+    container.appendChild(div);
+}
+function retirerChampRecherche() { var c = document.getElementById('rechBoulesContainer'); if (c.children.length > 1) c.lastElementChild.remove(); }
+function changerModeRecherche() {
+    var mode = document.getElementById('rechMode').value;
+    document.getElementById('sectionRechBoules').style.display = mode === 'boules' ? 'block' : 'none';
+    document.getElementById('sectionRechSomme').style.display = mode === 'somme' ? 'block' : 'none';
+    document.getElementById('resultatRecherche').style.display = 'none';
+}
+
+function executerRecherche() {
+    var mode = document.getElementById('rechMode').value, jeu = document.getElementById('rechJeu').value;
+    var source = donneesCloud.filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
+    var resultats = []; dernieresBoulesCherchees = [];
+
+    if (mode === 'boules') {
+        var nums = [];
+        document.querySelectorAll('.rech-num').forEach(function(inp) {
+            var v = parseInt(inp.value, 10); if (!isNaN(v)) { nums.push(v); dernieresBoulesCherchees.push(v); }
+        });
+        if (nums.length === 0) { alert("Entrez au moins une boule."); return; }
+        
+        source.forEach(function(t) {
+            var match = true;
+            for (var i = 0; i < nums.length; i++) { if (t.boules.indexOf(nums[i]) === -1) { match = false; break; } }
+            if (match) resultats.push(t);
+        });
+    } else if (mode === 'somme') {
+        var totalCible = parseInt(document.getElementById('rechTotalSomme').value, 10);
+        var nbBoules = parseInt(document.getElementById('rechNbBoules').value, 10);
+        if (isNaN(totalCible)) { alert("Entrez un total."); return; }
+        
+        source.forEach(function(t) {
+            var combinaisons = obtenirCombinaisons(t.boules, nbBoules), match = false;
+            for (var j = 0; j < combinaisons.length; j++) {
+                if (combinaisons[j].reduce(function(a,b){return a+b;}, 0) === totalCible) { match = true; break; }
+            }
+            if (match) { resultats.push(t); t.boules.forEach(function(b) { if(dernieresBoulesCherchees.indexOf(b) === -1) dernieresBoulesCherchees.push(b); }); }
+        });
+    }
+    afficherResultatsRecherche(resultats);
+}
+
+function obtenirCombinaisons(arr, k) {
+    var res = [];
+    function combiner(debut, actuels) {
+        if (actuels.length === k) { res.push(actuels.slice()); return; }
+        for (var i = debut; i < arr.length; i++) { actuels.push(arr[i]); combiner(i + 1, actuels); actuels.pop(); }
+    }
+    combiner(0, []); return res;
+}
+
+function afficherResultatsRecherche(resultats) {
+    var box = document.getElementById('resultatRecherche'); box.style.display = 'block';
+    document.getElementById('rechCompteur').textContent = resultats.length;
+    var tbody = document.getElementById('tbodyResultatsRecherche'); tbody.innerHTML = "";
+    if (resultats.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Aucun résultat.</td></tr>"; return; }
+    
+    resultats.forEach(function(t) {
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+        var idxGlobal = donneesCloud.indexOf(t) + 1;
+        var tr = document.createElement('tr');
+        var html = "<td><b>L." + idxGlobal + "</b></td><td>" + t.date + " " + t.heure + "</td><td>" + t.jeu + "</td><td class='boules-cell'>";
+        t.boules.forEach(function(b) { var isCible = dernieresBoulesCherchees.indexOf(b) !== -1; html += "<span class='ball " + c + "' style='" + (isCible ? "border: 2px solid #fff;" : "") + "'>" + b + "</span>"; });
+        html += "</td><td>" + t.boules.reduce(function(a,b){return a+b;}, 0) + "</td>";
+        tr.innerHTML = html; tbody.appendChild(tr);
+    });
+}
+
+// --- UTILITAIRES ---
 function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; }
 function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; }
 
