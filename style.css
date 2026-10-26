@@ -7,10 +7,8 @@
     --color-hot: #e74c3c; --color-cold: #3498db;
     --focus-ring: #ffb300;
     --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px; --radius-pill: 50px;
-    
     --ball-size: 32px; 
   }
-  
   body.taille-petite { --ball-size: 26px; }
   body.taille-normale { --ball-size: 32px; }
   body.taille-grande { --ball-size: 40px; }
@@ -32,20 +30,13 @@
   
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; -webkit-touch-callout: none; }
   
-  #conteneurSac, .cockpit-grid, .comp-container, .lab-box, .result-box,
-  .day-card, .day-nums, .ball, .comp-ball,
-  .tabs, .tab-btn, .status-badge, .sac-selector,
-  .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat, .ana-card, #tableUtilisateurs, .histo-row .h-boules, .rech-result-card, .table-recherche {
-    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-    -webkit-touch-callout: none;
+  #conteneurSac, .cockpit-grid, .comp-container, .lab-box, .result-box, .day-card, .day-nums, .ball, .comp-ball, .tabs, .tab-btn, .status-badge, .sac-selector, .drawer, .topbar-title, .boules-grid, .boule-detail, .verif-grille-gains, .verif-resultat, .ana-card, #tableUtilisateurs, .histo-row .h-boules, .rech-result-card, .table-recherche {
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none;
   }
-  input, textarea, [contenteditable="true"] {
-    -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important;
-  }
+  input, textarea, [contenteditable="true"] { -webkit-user-select: text !important; user-select: text !important; }
   .modal-box, .modal-box input, .modal-box textarea { -webkit-user-select: text; user-select: text; }
   h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; font-weight: 600; }
   
-  /* NOUVELLE BARRE LATÉRALE DES ATELIERS */
   .ateliers-bar {
     position: fixed; left: 0; top: 50%; transform: translateY(-50%);
     background: var(--bg-card); border: 1px solid var(--border-color);
@@ -71,7 +62,8 @@
     .ateliers-bar { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; border-radius: var(--radius-pill); border: 1px solid var(--border-color); padding: 5px 10px; }
   }
 
-  #login-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+  /* L'ECRAN DE CONNEXION EST VISIBLE PAR DEFAUT */
+  #login-screen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
   #form-inscription { display: none; }
   .login-box input { width: 100%; margin-bottom: 15px; padding: 12px 15px; font-size: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); }
@@ -94,10 +86,6 @@
   button.secondary { background: var(--text-muted); }
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
-  .bandeau-expiration { display: none; background: linear-gradient(90deg, #f39c12, #e67e22); color: #fff; padding: 12px 20px; border-radius: var(--radius-md); margin-bottom: 15px; font-weight: bold; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
-  .bandeau-expiration.visible { display: flex; }
-  .bandeau-expiration.urgent { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-  .bandeau-expiration button { background: #fff; color: #e74c3c; min-height: auto; padding: 6px 14px; font-size: 13px; }
   
   .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px; margin-bottom: 10px; }
   .burger-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 48px; height: 48px; padding: 0; border-radius: var(--radius-sm); cursor: pointer; font-size: 22px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: background 0.2s; flex-shrink: 0; }
@@ -134,7 +122,6 @@
   th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
   tr:last-child td { border-bottom: none; }
   
-  /* BOULE DYNAMIQUE (JAMAIS DE RETOUR A LA LIGNE) */
   .ball { display: inline-flex; align-items: center; justify-content: center; width: var(--ball-size); height: var(--ball-size); border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.2) 100%), var(--primary); color: white; font-weight: bold; margin: 0 2px; font-size: calc(var(--ball-size) * 0.45); box-shadow: 0 3px 5px rgba(0,0,0,0.2); text-shadow: 1px 1px 2px rgba(0,0,0,0.4); transition: transform 0.2s; flex-shrink: 0; }
   .ball:hover { transform: scale(1.1); }
   .ball.star { background: linear-gradient(135deg, #f1c40f, #e67e22); }
@@ -215,8 +202,6 @@
   @media (max-width: 500px) { .periode-grid { grid-template-columns: 1fr; } }
   .periode-grid label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
   .periode-grid input, .periode-grid select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-main); }
-  .raccourcis-periode { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 15px; }
-  .raccourcis-periode button { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); font-size: 12px; padding: 6px 12px; border-radius: var(--radius-pill); min-height: auto; }
   .apercu-periode { background: var(--bg-body); padding: 14px; border-radius: var(--radius-md); margin: 15px 0; font-size: 14px; border-left: 4px solid var(--primary); }
   .apercu-periode.alerte { border-left-color: var(--color-hot); background: #fff5f5; color: var(--color-hot); font-weight: bold; }
   .apercu-periode .compteur { font-size: 20px; font-weight: bold; }
