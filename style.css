@@ -123,11 +123,13 @@
   .day-time { width: 60px; font-weight: bold; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
   .day-game { width: 70px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
   
-  .day-nums { 
-    flex: 1; min-width: 0; 
-    display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 5px; 
+    .day-nums { 
+    flex: 1; min-width: 0; /* <-- INDISPENSABLE pour que le scroll marche */
+    display: flex; align-items: center; flex-wrap: nowrap; 
+    overflow-x: auto; -webkit-overflow-scrolling: touch; /* <-- Scroll fluide sur iOS/Android */
+    gap: 4px; padding-bottom: 5px; scrollbar-width: none; /* Cache la barre de scroll */
   }
-
+  .day-nums::-webkit-scrollbar { display: none; } /* Cache la barre de scroll sur Chrome */
   #statusCloud { animation: pulse 2s infinite; display: inline-block; padding: 0 15px; margin-bottom: 10px; }
   @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; color: var(--color-star); } 100% { opacity: 0.6; } }
 
