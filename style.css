@@ -14,31 +14,23 @@
   
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); }
 
-  /* BARRE DES ATELIERS */
-  .ateliers-bar {
-    position: fixed; left: 0; top: 50%; transform: translateY(-50%);
-    background: var(--bg-card); border: 1px solid var(--border-color);
-    border-left: none; border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 10px 5px; display: flex; flex-direction: column; gap: 10px;
-    box-shadow: var(--shadow); z-index: 1000;
-  }
-  .atelier-btn {
-    width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body);
-    border: 1px solid var(--border-color); color: var(--text-main);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
-    font-size: 18px; position: relative; transition: 0.2s; padding: 0; min-height: auto;
-  }
+  /* DESIGN DU TABLEAU DE BORD */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+  .dash-card { background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); border-left: 5px solid var(--primary); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+  .dash-card .num { font-size: 28px; font-weight: bold; color: var(--primary); display: block; }
+  .dash-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; display: block;}
+  .dash-card.star { border-left-color: var(--color-star); } .dash-card.star .num { color: var(--color-star); }
+  .dash-card.fortune { border-left-color: var(--color-fortune); } .dash-card.fortune .num { color: var(--color-fortune); }
+  .dash-card.digital { border-left-color: var(--color-digital); } .dash-card.digital .num { color: var(--color-digital); }
+  .dash-card.abonnes { border-left-color: #27ae60; } .dash-card.abonnes .num { color: #27ae60; }
+  .dash-card.date { border-left-color: var(--color-hot); } .dash-card.date .num { font-size: 16px; color: var(--color-hot); margin-top: 8px;}
+
+  .ateliers-bar { position: fixed; left: 0; top: 50%; transform: translateY(-50%); background: var(--bg-card); border: 1px solid var(--border-color); border-left: none; border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 10px 5px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); z-index: 1000; }
+  .atelier-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; position: relative; transition: 0.2s; padding: 0; min-height: auto; }
   .atelier-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
   .atelier-btn.active { border: 2px solid var(--primary); background: var(--primary); color: white; }
-  .atelier-close {
-    position: absolute; top: -5px; right: -5px; width: 18px; height: 18px;
-    background: var(--color-hot); color: white; border-radius: 50%;
-    font-size: 10px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; border: none; padding: 0;
-  }
-  @media (max-width: 768px) {
-    .ateliers-bar { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; border-radius: var(--radius-pill); border: 1px solid var(--border-color); padding: 5px 10px; }
-  }
+  .atelier-close { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: var(--color-hot); color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; }
+  @media (max-width: 768px) { .ateliers-bar { top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; border-radius: var(--radius-pill); border: 1px solid var(--border-color); padding: 5px 10px; } }
 
   #login-screen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
@@ -100,7 +92,6 @@
   .badge-gratuit { background: var(--color-hot); }
   .mode-visiteur .admin-only { display: none !important; }
   
-  /* Le reste des styles (tableaux, résultats, modales) est conservé de manière simplifiée */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
   th, td { border-bottom: 1px solid var(--border-color); padding: 12px 10px; text-align: center; }
   th { background: var(--bg-body); color: var(--text-muted); }
