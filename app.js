@@ -503,6 +503,141 @@ function chargerUtilisateursDansTableau() {
         chargerUtilisateursAuto();
     }
 }
+// =========================================================
+// IMPORTATION DE DONNÉES (AVEC GESTION DES CONFLITS)
+// =========================================================
+var importAttente = null;
+
+function parseDateExotique(ligne) {
+    var moisMap = { 'janv':1,'jan':1,'janvier':1,'fevr':2,'fev':2,'fevrier':2,'févr':2,'fév':2,'février':2,'mars':3,'mar':3,'avr':4,'avril':4,'mai':5,'juin':6,'juil':7,'juillet':7,'aout':8,'août':8,'sept':9,'septembre':9,'oct':10,'octobre':10,'nov':11,'novembre':11,'dec':12,'déc':12,'decembre':12,'décembre':12 };
+    var m;
+    m = ligne.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (m) return { jour: parseInt(m[3],10), mois: parseInt(m[2],10), annee: parseInt(m[1],10) };
+    m = ligne.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/);
+    if (m) { var a = m[3].length===2 ? parseInt("20"+m[3],10) : parseInt(m[3],10); return { jour: parseInt(m[1],10), mois: parseInt(m[2],10), annee: a }; }
+    m = ligne.match(/(\d{1,2})(?:er)?\s+([a-zéèûôàç]+)\.?\s+(\d{2,4})/i);
+    if (m) { var mt = m[2].toLowerCase().replace(/[^a-zéèûôàç]/g,''); var mn = moisMap[mt]; if (mn) { var a2 = m[3].length===2 ? parseInt("20"+m[3],10) : parseInt(m[3],10); return { jour: parseInt(m[1],10), mois: mn, annee: a2 }; } }
+    return null;
+}
+
+async function traiterTexteColle() {
+    if (!estAdmin) { alert("Admin uniquement."); return; }
+    var txt = document.getElementById("texteAImporter").value;
+    var msg = document.getElementById("importMessage");
+    if (!txt.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Vide."; return; }
+    msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse...";
+    
+    var lignes = txt.split(/\r?\n/), nv = [], cf = [], inv = 0;
+    var aA = new Date().getFullYear(), aMax = aA+1, aMin = 2004;
+    
+    lignes.forEach(function(l) {
+        if (!l.trim()) return;
+        var ll = l.toLowerCase();
+        if (ll.indexOf("date")!==-1 || ll.indexOf("column")!==-1 || ll.indexOf("benin")!==-1) return;
+        var d = parseDateExotique(l);
+        if (!d) { inv++; return; }
+        if (d.jour<1||d.jour>31||d.mois<1||d.mois>12||d.annee<aMin||d.annee>aMax) { inv++; return; }
+        
+        var df = d.annee + "-" + String(d.mois).padStart(2,'0') + "-" + String(d.jour).padStart(2,'0');
+        var jt = "Star", ht = "14H";
+        if (ll.indexOf("digital")!==-1) jt = "Digital";
+        else if (ll.indexOf("fortune")!==-1) jt = "Fortune";
+        else if (/\b(jeu|ven|lun|mar)\b/i.test(l)) jt = "Fortune";
+        
+        var mh = l.match(/(\d{1,2})\s*[hH]/);
+        if (mh) ht = mh[1].padStart(2,'0') + "H";
+        
+        var tn = l.replace(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/, ' ').replace(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/, ' ').replace(/\d{1,2}(?:er)?\s+[a-zéèûôàç]+\.?\s+\d{2,4}/i, ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' ');
+        var ns = [], mn2 = tn.match(/\b\d{1,2}\b/g);
+        if (mn2) for (var i=0;i<mn2.length;i++){ var num = parseInt(mn2[i],10); if (num>=1&&num<=90) ns.push(num); }
+        var b = ns.slice(0,5); if (b.length<5) b = ns.slice(-5);
+        
+        if (b.length===5 && new Set(b).size===5) {
+            var no = { date: df, heure: ht, jeu: jt, boules: JSON.stringify(b), numero_tirage: "Auto", _b: b };
+            var ii = nv.findIndex(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
+            if (ii !== -1) { nv[ii] = no; return; }
+            var ic = cf.findIndex(function(c){ return c.nouveau.date===no.date && c.nouveau.heure===no.heure && c.nouveau.jeu===no.jeu; });
+            if (ic !== -1) { cf[ic].nouveau = no; return; }
+            var ex = donneesCloud.find(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
+            if (ex) cf.push({ existant: { id: ex.id, date: ex.date, heure: ex.heure, jeu: ex.jeu, boules: ex.boules }, nouveau: no });
+            else nv.push(no);
+        } else { inv++; }
+    });
+    
+    if (nv.length === 0 && cf.length === 0) { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun valide (" + inv + " invalides)."; return; }
+    
+    importAttente = { nouveaux: nv, conflits: cf, invalides: inv };
+    document.getElementById("statNouveaux").textContent = nv.length;
+    document.getElementById("statConflits").textContent = cf.length;
+    document.getElementById("statInvalides").textContent = inv;
+    document.getElementById("nbConflitsQuestion").textContent = cf.length;
+    
+    var ll2 = document.getElementById("listeConflits");
+    if (cf.length === 0) ll2.innerHTML = "<p style='color:var(--text-muted);'>Aucun conflit.</p>";
+    else {
+        var h = "";
+        cf.slice(0,10).forEach(function(c){ h += "<div class='ligne-conflit'>⚠️ <b>" + c.nouveau.date + "</b> · " + c.nouveau.jeu + " · " + c.nouveau.heure + "<br>Ancien : <span class='ancien'>[" + c.existant.boules.join(", ") + "]</span><br>Nouveau : <span class='nouveau'>[" + c.nouveau._b.join(", ") + "]</span></div>"; });
+        ll2.innerHTML = h;
+    }
+    
+    document.getElementById("btnEcraser").style.display = cf.length > 0 ? "inline-block" : "none";
+    document.getElementById("modalConflitImport").style.display = "flex";
+    document.getElementById("messageConflit").textContent = "";
+    document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; });
+    msg.style.color = "var(--text-muted)"; msg.textContent = "En attente de votre choix.";
+}
+
+async function executerImport(mode) {
+    if (!importAttente) return;
+    var msg = document.getElementById("messageConflit"), mp = document.getElementById("importMessage");
+    msg.style.color = "var(--primary)"; msg.textContent = "⏳...";
+    document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = true; });
+    
+    var nv = importAttente.nouveaux, cf = importAttente.conflits, nbA = 0, nbE = 0, nbI = 0, err = null;
+    
+    if (mode === 'ecraser' && cf.length > 0) {
+        var tb = 20;
+        for (var i=0;i<cf.length;i+=tb) {
+            var batch = cf.slice(i,i+tb);
+            var ps = batch.map(function(c){ return supabaseClient.from('tirages').update({ boules: c.nouveau.boules }).eq('id', c.existant.id); });
+            var rs = await Promise.all(ps);
+            for (var r=0;r<rs.length;r++) if (rs[r].error) { err = rs[r].error; break; }
+            if (err) break;
+            nbE += batch.length;
+        }
+    } else { nbI = cf.length; }
+    
+    if (!err && nv.length > 0) {
+        var tp = 100, ai = nv.map(function(t){ return { date: t.date, heure: t.heure, jeu: t.jeu, boules: t.boules, numero_tirage: t.numero_tirage }; });
+        for (var j=0;j<ai.length;j+=tp) {
+            var paq = ai.slice(j,j+tp);
+            var res = await supabaseClient.from('tirages').insert(paq);
+            if (res.error) { err = res.error; break; }
+            nbA += paq.length;
+        }
+    }
+    
+    if (err) { 
+        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + err.message; 
+        document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; }); 
+        return; 
+    }
+    
+    var res2 = "✅ Terminé. " + nbA + " ajouté(s)" + (mode==='ecraser' ? ", " + nbE + " écrasé(s)" : ", " + nbI + " ignoré(s)") + ".";
+    msg.style.color = "#27ae60"; msg.textContent = res2;
+    mp.style.color = "#27ae60"; mp.textContent = res2;
+    
+    importAttente = null;
+    document.getElementById("texteAImporter").value = "";
+    setTimeout(function(){ document.getElementById("modalConflitImport").style.display = "none"; chargerDonnees(); }, 1500);
+}
+
+function annulerImport() {
+    importAttente = null;
+    document.getElementById("modalConflitImport").style.display = "none";
+    document.getElementById("importMessage").style.color = "var(--color-star)";
+    document.getElementById("importMessage").textContent = "⏹️ Annulé.";
+}
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
     verifierSession(); 
