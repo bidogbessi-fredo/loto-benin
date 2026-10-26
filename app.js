@@ -138,7 +138,9 @@ function afficherSacSelectionne() {
     var parDate = {}; tf.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var html = "";
     Object.keys(parDate).sort().forEach(function(dateStr) {
-        html += "<div class='day-card'><h3 class='day-header'>📅 " + dateStr + "</h3>";
+                var dObj = new Date(dateStr);
+        var df = dObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        html += "<div class='day-card'><h3 class='day-header'>📅 " + df + "</h3>";
         parDate[dateStr].forEach(function(t) {
             var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
             html += "<div class='day-row'><div class='day-time'>" + t.heure + "</div><div class='day-game'>" + t.jeu + "</div><div class='day-nums'>";
