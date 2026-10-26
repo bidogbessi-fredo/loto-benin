@@ -114,9 +114,10 @@
   .day-card:hover { transform: scale(1.01); }
   .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
   
-  .day-row { 
+   .day-row { 
     display: flex; align-items: center; padding: 10px 0; 
-    border-bottom: 1px solid var(--border-color); width: 100%; box-sizing: border-box;
+    border-bottom: 1px solid var(--border-color); 
+    width: 100%; box-sizing: border-box; overflow: hidden; /* <-- Empêche le débordement */
   }
   .day-row:last-child { border-bottom: none; }
   .day-time { width: 60px; font-weight: bold; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
