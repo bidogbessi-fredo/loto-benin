@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loto Bénin - Pro Cockpit</title>
-    <link rel="icon" type="image/png" href="./logo.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2980b9">
+<link rel="icon" type="image/png" href="./logo.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -41,477 +41,426 @@
     </div>
 </div>
 
-<main id="contenu-principal">
-<div id="app-content">
-    <div class="bandeau-expiration" id="bandeauExpiration" role="alert" aria-live="assertive">
-        <span id="bandeauTexte">⚠️ Votre abonnement expire bientôt !</span>
-        <button onclick="contacterAdmin()">💬 Renouveler</button>
-    </div>
-    <div class="topbar">
-        <button type="button" class="burger-btn" id="btnBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu" onclick="ouvrirDrawer()">☰</button>
-        
-        <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px;">
-            <img src="./logo.png" alt="Logo" style="height: 32px; border-radius: 6px; object-fit: cover;">
-            <h1 class="topbar-title" style="flex: none; margin: 0; font-size: 20px;">Loto Bénin</h1>
+<main id="contenu-principal" style="margin-left: 0; transition: margin-left 0.3s;">
+    
+    <!-- BARRE DES ATELIERS (WORKSPACE) -->
+    <div id="ateliersBar" class="ateliers-bar" style="display: none;"></div>
+
+    <div id="app-content">
+        <div class="bandeau-expiration" id="bandeauExpiration" role="alert" aria-live="assertive">
+            <span id="bandeauTexte">⚠️ Votre abonnement expire bientôt !</span>
+            <button onclick="contacterAdmin()">💬 Renouveler</button>
         </div>
-
-        <span id="statusBadge" class="status-badge" role="status" aria-live="polite" style="margin:0;">Chargement...</span>
-    </div>
-    <p id="statusCloud" role="status" aria-live="polite" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
-
-    <!-- OPTION B : Seuls ces 3 onglets restent en haut -->
-    <div class="tabs" role="tablist" aria-label="Navigation principale">
-      <button class="tab-btn" role="tab" id="tab-saisie" aria-controls="onglet-saisie" aria-selected="true" tabindex="0" onclick="ouvrirOnglet('saisie', this)">📝 Compilation</button>
-      <button class="tab-btn" role="tab" id="tab-cockpit" aria-controls="onglet-cockpit" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('cockpit', this)">🚀 Cockpit</button>
-      <button class="tab-btn" role="tab" id="tab-analyses" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('analyses', this)">📊 Analyses</button>
-    </div>
-
-    <div id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
-      <div class="card admin-only">
-        <h2>➕ Saisir un tirage</h2>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
-          <label for="jeuSaisie" class="sr-only">Jeu</label>
-          <select id="jeuSaisie" aria-label="Choisir le jeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
-          <label for="heureSaisie" class="sr-only">Heure du tirage</label>
-          <select id="heureSaisie" aria-label="Choisir l'heure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
-          <label for="date" class="sr-only">Date du tirage</label>
-          <input type="date" id="date" aria-label="Date du tirage">
-          <input type="number" id="b1" min="1" max="90" placeholder="B1" aria-label="Boule 1">
-          <input type="number" id="b2" min="1" max="90" placeholder="B2" aria-label="Boule 2">
-          <input type="number" id="b3" min="1" max="90" placeholder="B3" aria-label="Boule 3">
-          <input type="number" id="b4" min="1" max="90" placeholder="B4" aria-label="Boule 4">
-          <input type="number" id="b5" min="1" max="90" placeholder="B5" aria-label="Boule 5">
-          <button id="btnAjouter">Ajouter</button>
-        </div>
-        <div class="msg" id="message" role="alert" aria-live="polite" style="color: var(--color-hot); margin-top:10px;"></div>
-      </div>
-
-      <div class="card admin-only" id="dashboardAdmin">
-        <h2>📊 Tableau de bord</h2>
-        <div class="dashboard-grid">
-          <div class="dash-card"><span class="num" id="dashTotal">—</span><span class="label">Total tirages</span></div>
-          <div class="dash-card star"><span class="num" id="dashStar">—</span><span class="label">Star</span></div>
-          <div class="dash-card fortune"><span class="num" id="dashFortune">—</span><span class="label">Fortune</span></div>
-          <div class="dash-card digital"><span class="num" id="dashDigital">—</span><span class="label">Digital</span></div>
-          <div class="dash-card abonnes"><span class="num" id="dashAbonnes">—</span><span class="label">Abonnés actifs</span></div>
-          <div class="dash-card date"><span class="num" id="dashDerniereDate">—</span><span class="label">Dernière saisie</span></div>
-        </div>
-        
-        <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
-          <h3>👥 Gestion des utilisateurs</h3>
-          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Gérez les rôles et les abonnements des utilisateurs inscrits.</p>
-          <button onclick="chargerUtilisateurs()" style="background: var(--primary); color: white; margin-bottom: 15px; width: 100%; max-width: 300px; font-size: 15px;">👥 Afficher / Actualiser la liste des abonnés</button>
-          <div style="overflow-x: auto;">
-            <table id="tableUtilisateurs" style="display: none; font-size: 13px;">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Rôle actuel</th>
-                  <th>Date de fin</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyUtilisateurs"></tbody>
-            </table>
-          </div>
-          <div id="msgUtilisateurs" style="margin-top: 10px; font-size: 13px; font-weight: bold;"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-          <h2 style="margin: 0;">📜 Compilation par Sac (Résultats)</h2>
-          <div class="admin-only" style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="warning" onclick="ouvrirModaleSuppressionPeriode()" style="font-size: 13px;">📅 Supprimer par période</button>
-            <button class="danger" onclick="toutEffacer()" style="font-size: 13px;">🗑️ Tout effacer</button>
-          </div>
-        </div>
-        <label for="selectSac" class="sr-only">Sac à afficher</label>
-        <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()">
-            <option value="tous">Vue Globale (Tout mélangé)</option>
-            <option value="Star">Star Bénin (Seul)</option>
-            <option value="Fortune">Fortune Bénin (Seul)</option>
-            <option value="Digital">Digital Bénin (Seul)</option>
-            <option value="Star_Digital">Sac Star + Digital</option>
-            <option value="Fortune_Digital">Sac Fortune + Digital</option>
-            <option value="Star_Fortune">Sac Star + Fortune</option>
-            <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
-        </select>
-        <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
-      </div>
-
-      <div class="card admin-only">
-        <h2>📁 Importer des résultats</h2>
-        <label for="texteAImporter" class="sr-only">Données brutes à importer</label>
-        <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
-        <br>
-        <button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Analyser et importer</button>
-        <div class="msg" id="importMessage" role="alert" aria-live="polite" style="margin-top: 10px;"></div>
-      </div>
-    </div>
-
-    <div id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
-      <div class="card" id="lock-cockpit">
-        <div class="lock-overlay" id="overlay-cockpit" style="display: none;" role="region" aria-label="Accès restreint">
-            <h2>🔒 Accès Abonné Requis</h2>
-            <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
-            <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-cockpit">
-            <h2>🚀 Cockpit & Simulation</h2>
-            <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
-                <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
-                <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
-            </div>
-            <div class="cockpit-grid">
-                <div class="cockpit-card" style="border-left-color: var(--color-hot);">
-                    <h4>🎯 Prédiction</h4>
-                    <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
-                    <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
-                    <div id="grilleGeneree" aria-live="polite" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
-                </div>
-                <div class="cockpit-card" style="border-left-color: var(--color-cold);">
-                    <h4>🔄 Cycles (Retards)</h4>
-                    <div id="cockpitCycles"><p style="color: var(--text-muted);">En attente...</p></div>
-                </div>
-            </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="onglet-analyses" class="tab-content" role="tabpanel" aria-labelledby="tab-analyses" tabindex="0">
-      <div class="card premium-locked" id="lock-analyses">
-        <div class="lock-overlay" id="overlay-analyses" style="display: none;" role="region" aria-label="Accès restreint">
-          <h2>🔒 Accès Abonné Requis</h2>
-          <p>Les analyses avancées sont réservées aux abonnés.</p>
-          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-analyses">
-          <h2>📊 Analyses Avancées</h2>
-          <p style="color: var(--text-muted); font-size: 14px;">Filtrez par jeu, puis explorez les tendances profondes des tirages.</p>
-          
-          <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-            <label><b>Jeu à analyser :</b></label>
-            <select id="anaJeu" onchange="executerAnalyses()" style="font-size: 16px; font-weight: bold;">
-              <option value="tous">Tous les jeux</option>
-              <option value="Star">Star Bénin</option>
-              <option value="Fortune">Fortune Bénin</option>
-              <option value="Digital">Digital Bénin</option>
-            </select>
-            <button onclick="executerAnalyses()" class="secondary">🔄 Actualiser</button>
-          </div>
-
-          <div class="analyses-tabs" role="tablist">
-            <button class="ana-btn active" onclick="changerOngletAnalyse('paires', this)">🤝 Paires & Trios</button>
-            <button class="ana-btn" onclick="changerOngletAnalyse('positions', this)">📍 Écarts par Position</button>
-            <button class="ana-btn" onclick="changerOngletAnalyse('jours', this)">📅 Par Jour</button>
-            <button class="ana-btn" onclick="changerOngletAnalyse('heures', this)">⏰ Par Créneau</button>
-          </div>
-
-          <div id="ana-paires" class="ana-content active">
-            <div class="ana-grid">
-              <div class="ana-card">
-                <h4>🥇 Top 10 des Paires fréquentes</h4>
-                <ul class="ana-list" id="anaPairesTop10"></ul>
-              </div>
-              <div class="ana-card">
-                <h4>🥉 Top 10 des Trios fréquents</h4>
-                <ul class="ana-list" id="anaTriosTop10"></ul>
-              </div>
-            </div>
-          </div>
-
-          <div id="ana-positions" class="ana-content">
-            <p style="font-size: 13px; color: var(--text-muted);">Découvrez le comportement des numéros selon leur position de sortie (1ère boule, 2ème boule, etc.).</p>
-            <div class="ana-grid" id="anaPositionsContainer"></div>
-          </div>
-
-          <div id="ana-jours" class="ana-content">
-            <p style="font-size: 13px; color: var(--text-muted);">Quels sont les numéros qui sortent le plus souvent un jour spécifique de la semaine ?</p>
-            <div class="ana-grid" id="anaJoursContainer"></div>
-          </div>
-
-          <div id="ana-heures" class="ana-content">
-            <p style="font-size: 13px; color: var(--text-muted);">Quels sont les numéros qui dominent à chaque créneau horaire ?</p>
-            <div class="ana-grid" id="anaHeuresContainer"></div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div id="onglet-comparateur" class="tab-content" role="tabpanel" aria-labelledby="tab-comparateur" tabindex="0">
-      <div class="card" id="lock-comparateur">
-        <div class="lock-overlay" id="overlay-comparateur" style="display: none;" role="region" aria-label="Accès restreint">
-            <h2>🔒 Accès Abonné Requis</h2>
-            <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
-            <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-comparateur">
-            <h2>⚖️ Comparateur Multi-Plages</h2>
+        <div class="topbar">
+            <button type="button" class="burger-btn" id="btnBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu" onclick="ouvrirDrawer()">☰</button>
             
-            <div id="zoneComparaison" style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; border: 2px dashed var(--primary); display: none;">
-                <h4 style="margin-top:0; color: var(--primary); font-size: 14px;">🎯 Tirages sélectionnés depuis le Chercheur</h4>
-                <div id="listeComparaison" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
-                <button onclick="viderZoneComparaison()" class="danger" style="margin-top: 10px; font-size: 12px;">🗑️ Vider la sélection</button>
+            <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <img src="./logo.png" alt="Logo" style="height: 32px; border-radius: 6px; object-fit: cover;">
+                <h1 class="topbar-title" style="flex: none; margin: 0; font-size: 20px;">Loto Bénin</h1>
             </div>
 
-            <div id="plages-config" class="plages-config"></div>
-            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage manuellement</button>
-                <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Lancer la comparaison</button>
-            </div>
-            <div class="palette" role="toolbar" aria-label="Palette de couleurs">
-                <span style="font-weight:bold; margin-right:10px;">🖍️ Crayon :</span>
-                <button class="color-btn" aria-pressed="true" aria-label="Rouge" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></button>
-                <button class="color-btn" aria-pressed="false" aria-label="Bleu" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></button>
-                <button class="color-btn" aria-pressed="false" aria-label="Vert" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></button>
-                <button class="color-btn" aria-pressed="false" aria-label="Jaune" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></button>
-                <button class="color-btn" aria-pressed="false" aria-label="Rose" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></button>
-                <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
-                <button class="color-btn" aria-pressed="false" aria-label="Gomme" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</button>
-                <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Réinitialiser</button>
-            </div>
-            <div class="audio-bar" role="group" aria-label="Options audio du comparateur">
-                <button type="button" id="btnLireDetail" onclick="lireDetailComparaison()">🔊 Écouter le détail</button>
-                <button type="button" id="btnMuet" class="secondary" onclick="basculerMuet()" aria-pressed="false">🔇 Muet</button>
-                <span id="etatAudio" class="sr-only" role="status" aria-live="polite"></span>
-            </div>
-            <div id="annonceComparaison" class="sr-only" role="status" aria-live="polite"></div>
-            <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
+            <span id="statusBadge" class="status-badge" role="status" aria-live="polite" style="margin:0;">Chargement...</span>
         </div>
-      </div>
-    </div>
+        <p id="statusCloud" role="status" aria-live="polite" style="font-weight: bold; color: var(--color-star);">⏳ Connexion à la base de données...</p>
 
-    <div id="onglet-labo" class="tab-content" role="tabpanel" aria-labelledby="tab-labo" tabindex="0">
-      <div class="card" id="lock-labo">
-        <div class="lock-overlay" id="overlay-labo" style="display: none;" role="region" aria-label="Accès restreint">
-            <h2>🔒 Accès Abonné Requis</h2>
-            <p>Votre abonnement est expiré ou vous n'êtes pas abonné.<br>Veuillez contacter l'administrateur pour renouveler votre accès.</p>
-            <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
+        <!-- SEULEMENT 3 ONGLETS -->
+        <div class="tabs" role="tablist" aria-label="Navigation principale">
+          <button class="tab-btn" role="tab" id="tab-saisie" aria-controls="onglet-saisie" aria-selected="true" tabindex="0" onclick="ouvrirOnglet('saisie', this)">📝 Compilation</button>
+          <button class="tab-btn" role="tab" id="tab-cockpit" aria-controls="onglet-cockpit" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('cockpit', this)">🚀 Cockpit</button>
+          <button class="tab-btn" role="tab" id="tab-analyses" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('analyses', this)">📊 Analyses</button>
         </div>
-        <div id="content-labo">
-            <h2>🧪 Laboratoire d'Analyse</h2>
-            <div class="lab-grid">
-              <div class="lab-box">
-                <h3>1. Analyse d'un tirage</h3>
-                <label for="selectTirageLabo" class="sr-only">Sélectionner un tirage</label>
-                <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
-                <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                  <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
-                  <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme (+)</button>
-                  <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">🔢 Théosophie</button>
-                </div>
-                <div id="resultatOperations" class="result-box" role="status" aria-live="polite" style="font-weight: normal;">Sélectionnez un tirage.</div>
-              </div>
-              <div class="lab-box">
-                <h3>2. Multi-Draws</h3>
-                <label for="selectMultiTirages" class="sr-only">Sélectionner plusieurs tirages</label>
-                <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;" aria-describedby="multiAide"></select>
-                <span id="multiAide" class="sr-only">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs tirages.</span>
-                <div style="margin-top: 15px; display:flex; gap:10px;">
-                  <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
-                  <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
-                </div>
-                <div id="resultatLaboAvance" class="result-box" role="status" aria-live="polite" style="margin-top:15px; font-weight: normal;"></div>
-              </div>
+
+        <div id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
+          <div class="card admin-only">
+            <h2>➕ Saisir un tirage</h2>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+              <label for="jeuSaisie" class="sr-only">Jeu</label>
+              <select id="jeuSaisie" aria-label="Choisir le jeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+              <label for="heureSaisie" class="sr-only">Heure du tirage</label>
+              <select id="heureSaisie" aria-label="Choisir l'heure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select>
+              <label for="date" class="sr-only">Date du tirage</label>
+              <input type="date" id="date" aria-label="Date du tirage">
+              <input type="number" id="b1" min="1" max="90" placeholder="B1" aria-label="Boule 1">
+              <input type="number" id="b2" min="1" max="90" placeholder="B2" aria-label="Boule 2">
+              <input type="number" id="b3" min="1" max="90" placeholder="B3" aria-label="Boule 3">
+              <input type="number" id="b4" min="1" max="90" placeholder="B4" aria-label="Boule 4">
+              <input type="number" id="b5" min="1" max="90" placeholder="B5" aria-label="Boule 5">
+              <button id="btnAjouter">Ajouter</button>
             </div>
+            <div class="msg" id="message" role="alert" aria-live="polite" style="color: var(--color-hot); margin-top:10px;"></div>
+          </div>
 
-            <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
-              <h3>🎯 Chasseur de Bankers</h3>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Trouvez le numéro le plus susceptible de sortir au prochain tirage selon différentes stratégies.</p>
-              
-              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                <select id="bankerJeu" style="flex: 1; min-width: 150px;">
-                  <option value="Star">Loto Star</option>
-                  <option value="Fortune">Loto Fortune</option>
-                  <option value="Digital">Loto Digital</option>
-                </select>
-                <button onclick="chercherBanker()" style="flex: 1; background-color: var(--primary);">🔍 Analyser les Bankers</button>
-              </div>
-
-              <div id="resultatBanker" class="result-box" style="display: none;">
-                <div class="ana-grid">
-                  <div class="ana-card" style="border-top: 4px solid var(--color-hot);">
-                    <h4>🔥 Le plus en retard (Cycle)</h4>
-                    <div id="bankerRetard" style="text-align: center; margin-top: 15px;"></div>
-                  </div>
-                  <div class="ana-card" style="border-top: 4px solid var(--color-star);">
-                    <h4>⭐ Le plus régulier (Fréquence)</h4>
-                    <div id="bankerFrequent" style="text-align: center; margin-top: 15px;"></div>
-                  </div>
-                  <div class="ana-card" style="border-top: 4px solid var(--color-cold);">
-                    <h4>👣 Le suiveur (Après le dernier tirage)</h4>
-                    <div id="bankerSuiveur" style="text-align: center; margin-top: 15px;"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
-              <h3>🔗 Analyseur de Suivi (Post-Tirage)</h3>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Sélectionnez un tirage "déclencheur" et découvrez quelles boules sortent régulièrement dans les 5 tirages suivants.</p>
-              
-              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                <select id="suiviDeclencheur" style="flex: 1; min-width: 250px;">
-                  <option value="">Sélectionnez un tirage déclencheur...</option>
-                </select>
-                <button onclick="analyserSuivi()" style="flex: 1; background-color: var(--color-star); color: white;">📊 Lancer l'Analyse de Suivi</button>
-              </div>
-
-              <div id="resultatSuivi" class="result-box" style="display: none; font-weight: normal;"></div>
-            </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div id="onglet-boules" class="tab-content" role="tabpanel" aria-labelledby="tab-boules" tabindex="0">
-      <div class="card premium-locked" id="lock-boules">
-        <div class="lock-overlay" id="overlay-boules" style="display: none;" role="region" aria-label="Accès restreint">
-          <h2>🔒 Accès Abonné Requis</h2>
-          <p>Cette analyse est réservée aux abonnés.<br>Contactez l'administrateur pour renouveler votre accès.</p>
-          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-boules">
-          <h2>🔍 Historique par Boule</h2>
-          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">Cliquez sur une boule pour voir son historique complet, sa fréquence, ses écarts et ses paires favorites.</p>
-          <div class="boules-grid" id="boulesGrid"></div>
-          <div id="bouleDetail" class="boule-detail" style="display: none;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="onglet-recherche" class="tab-content" role="tabpanel" aria-labelledby="tab-recherche" tabindex="0">
-      <div class="card premium-locked" id="lock-recherche">
-        <div class="lock-overlay" id="overlay-recherche" style="display: none;" role="region" aria-label="Accès restreint">
-          <h2>🔒 Accès Abonné Requis</h2>
-          <p>Le chercheur de boules est réservé aux abonnés.</p>
-          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-recherche">
-          <h2>🕵️ Chercheur de Boules</h2>
-          <p style="color: var(--text-muted); font-size: 14px;">Trouvez des combinaisons spécifiques dans l'historique des tirages.</p>
-          
-          <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px;">
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-              <label><b>Jeu :</b><br>
-                <select id="rechJeu">
-                  <option value="tous">Tous les jeux</option>
-                  <option value="Star">Star</option>
-                  <option value="Fortune">Fortune</option>
-                  <option value="Digital">Digital</option>
-                </select>
-              </label>
+          <div class="card admin-only" id="dashboardAdmin">
+            <h2>📊 Tableau de bord</h2>
+            <div class="dashboard-grid">
+              <div class="dash-card"><span class="num" id="dashTotal">—</span><span class="label">Total tirages</span></div>
+              <div class="dash-card star"><span class="num" id="dashStar">—</span><span class="label">Star</span></div>
+              <div class="dash-card fortune"><span class="num" id="dashFortune">—</span><span class="label">Fortune</span></div>
+              <div class="dash-card digital"><span class="num" id="dashDigital">—</span><span class="label">Digital</span></div>
+              <div class="dash-card abonnes"><span class="num" id="dashAbonnes">—</span><span class="label">Abonnés actifs</span></div>
+              <div class="dash-card date"><span class="num" id="dashDerniereDate">—</span><span class="label">Dernière saisie</span></div>
             </div>
             
-            <p style="font-size: 13px; margin-bottom: 10px;"><b>Boules à chercher (1 à 5) :</b></p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px;">
-              <div id="rechBoulesContainer" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
-              <button class="secondary" onclick="ajouterChampRecherche()" style="min-height: 44px; padding: 0 15px;">➕</button>
-              <button class="danger" onclick="retirerChampRecherche()" style="min-height: 44px; padding: 0 15px;">➖</button>
+            <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+              <h3>👥 Gestion des utilisateurs</h3>
+              <button onclick="chargerUtilisateurs()" style="background: var(--primary); color: white; margin-bottom: 15px; width: 100%; max-width: 300px; font-size: 15px;">👥 Afficher / Actualiser la liste des abonnés</button>
+              <div style="overflow-x: auto;">
+                <table id="tableUtilisateurs" style="display: none; font-size: 13px;">
+                  <thead><tr><th>Email</th><th>Rôle actuel</th><th>Date de fin</th><th>Actions</th></tr></thead>
+                  <tbody id="tbodyUtilisateurs"></tbody>
+                </table>
+              </div>
+              <div id="msgUtilisateurs" style="margin-top: 10px; font-size: 13px; font-weight: bold;"></div>
             </div>
+          </div>
 
-            <div style="margin-bottom: 15px;">
-              <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="rechPositionActive" onchange="togglePositionsRecherche()" style="width: 20px; height: 20px; margin: 0;"> 
-                <b>Activer la recherche par position exacte</b>
-              </label>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">Si coché, la boule doit se trouver exactement à la position indiquée (1ère à 5ème).</p>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+              <h2 style="margin: 0;">📜 Compilation par Sac</h2>
+              <div class="admin-only" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="warning" onclick="ouvrirModaleSuppressionPeriode()" style="font-size: 13px;">📅 Supprimer par période</button>
+                <button class="danger" onclick="toutEffacer()" style="font-size: 13px;">🗑️ Tout effacer</button>
+              </div>
             </div>
-
-            <button onclick="executerRecherche()" style="width: 100%; background-color: var(--primary); font-size: 16px;">🔍 Rechercher</button>
+            
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; background: var(--bg-body); padding: 10px; border-radius: var(--radius-md);">
+                <label><b>Sac :</b><br>
+                    <select id="selectSac" class="sac-selector" onchange="afficherSacSelectionne()" style="margin-bottom: 0; padding: 10px;">
+                        <option value="tous">Vue Globale (Tout mélangé)</option>
+                        <option value="Star">Star Bénin (Seul)</option>
+                        <option value="Fortune">Fortune Bénin (Seul)</option>
+                        <option value="Digital">Digital Bénin (Seul)</option>
+                        <option value="Star_Digital">Sac Star + Digital</option>
+                        <option value="Fortune_Digital">Sac Fortune + Digital</option>
+                        <option value="Star_Fortune">Sac Star + Fortune</option>
+                        <option value="Star_Fortune_Digital">Sac Star + Fortune + Digital</option>
+                    </select>
+                </label>
+                <label><b>Période :</b><br>
+                    <select id="filtrePeriode" onchange="afficherSacSelectionne()" style="padding: 10px;">
+                        <option value="recent" selected>Hier & Aujourd'hui</option>
+                        <option value="mois">Mois en cours</option>
+                        <option value="tout">Tout afficher</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div id="conteneurSac" style="max-height: 600px; overflow-y: auto; padding-right: 10px;"></div>
           </div>
 
-          <div id="resultatRecherche" style="display: none;">
-            <h3>Résultats (<span id="rechCompteur">0</span>)</h3>
-            <div id="rechListe" style="max-height: 400px; overflow-y: auto;"></div>
+          <div class="card admin-only">
+            <h2>📁 Importer des résultats</h2>
+            <textarea id="texteAImporter" rows="4" style="width: 100%; font-family: monospace;" placeholder="Collez vos données brutes ici..."></textarea>
+            <br><button onclick="traiterTexteColle()" style="margin-top: 10px;">🚀 Analyser et importer</button>
+            <div class="msg" id="importMessage" role="alert" aria-live="polite" style="margin-top: 10px;"></div>
           </div>
         </div>
-      </div>
+
+        <!-- COCKPIT -->
+        <div id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
+          <div class="card" id="lock-cockpit">
+            <div class="lock-overlay" id="overlay-cockpit" style="display: none;" role="region" aria-label="Accès restreint">
+                <h2>🔒 Accès Abonné Requis</h2>
+                <p>Votre abonnement est expiré ou vous n'êtes pas abonné.</p>
+                <button onclick="contacterAdmin()">💬 S'abonner</button>
+            </div>
+            <div id="content-cockpit">
+                <h2>🚀 Cockpit & Simulation</h2>
+                <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                    <label><b>Jeu :</b> <select id="cockpitJeu"><option value="Digital">Digital</option><option value="Star">Star</option><option value="Fortune">Fortune</option></select></label>
+                    <label><b>Créneau :</b> <select id="cockpitHeure"><option value="all">Tous</option><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
+                    <button onclick="actualiserCockpit()" class="warning">🔄 Actualiser</button>
+                </div>
+                <div class="cockpit-grid">
+                    <div class="cockpit-card" style="border-left-color: var(--color-hot);">
+                        <h4>🎯 Prédiction</h4>
+                        <div id="cockpitPrediction"><p style="color: var(--text-muted);">En attente...</p></div>
+                        <button onclick="genererGrilleCockpit()" style="width: 100%; margin-top: 15px; background-color: #27ae60;">🎲 Générer une grille</button>
+                        <div id="grilleGeneree" aria-live="polite" style="margin-top: 15px; text-align: center; font-size: 22px; font-weight: bold; color: #27ae60; letter-spacing: 2px;"></div>
+                    </div>
+                    <div class="cockpit-card" style="border-left-color: var(--color-cold);">
+                        <h4>🔄 Cycles (Retards)</h4>
+                        <div id="cockpitCycles"><p style="color: var(--text-muted);">En attente...</p></div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYSES -->
+        <div id="onglet-analyses" class="tab-content" role="tabpanel" aria-labelledby="tab-analyses" tabindex="0">
+          <div class="card premium-locked" id="lock-analyses">
+            <div class="lock-overlay" id="overlay-analyses" style="display: none;" role="region" aria-label="Accès restreint">
+              <h2>🔒 Accès Abonné Requis</h2>
+              <p>Les analyses avancées sont réservées aux abonnés.</p>
+              <button onclick="contacterAdmin()">💬 S'abonner</button>
+            </div>
+            <div id="content-analyses">
+              <h2>📊 Analyses Avancées</h2>
+              <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                <label><b>Jeu à analyser :</b></label>
+                <select id="anaJeu" onchange="executerAnalyses()" style="font-size: 16px; font-weight: bold;">
+                  <option value="tous">Tous les jeux</option><option value="Star">Star Bénin</option><option value="Fortune">Fortune Bénin</option><option value="Digital">Digital Bénin</option>
+                </select>
+                <button onclick="executerAnalyses()" class="secondary">🔄 Actualiser</button>
+              </div>
+              <div class="analyses-tabs" role="tablist">
+                <button class="ana-btn active" onclick="changerOngletAnalyse('paires', this)">🤝 Paires & Trios</button>
+                <button class="ana-btn" onclick="changerOngletAnalyse('positions', this)">📍 Positions</button>
+                <button class="ana-btn" onclick="changerOngletAnalyse('jours', this)">📅 Par Jour</button>
+                <button class="ana-btn" onclick="changerOngletAnalyse('heures', this)">⏰ Créneau</button>
+              </div>
+              <div id="ana-paires" class="ana-content active"><div class="ana-grid"><div class="ana-card"><h4>🥇 Paires fréquentes</h4><ul class="ana-list" id="anaPairesTop10"></ul></div><div class="ana-card"><h4>🥉 Trios fréquents</h4><ul class="ana-list" id="anaTriosTop10"></ul></div></div></div>
+              <div id="ana-positions" class="ana-content"><div class="ana-grid" id="anaPositionsContainer"></div></div>
+              <div id="ana-jours" class="ana-content"><div class="ana-grid" id="anaJoursContainer"></div></div>
+              <div id="ana-heures" class="ana-content"><div class="ana-grid" id="anaHeuresContainer"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTRES ONGLETS (CACHÉS) -->
+        <div id="onglet-comparateur" class="tab-content" role="tabpanel" aria-labelledby="tab-comparateur" tabindex="0">
+          <div class="card" id="lock-comparateur">
+            <div class="lock-overlay" id="overlay-comparateur" style="display: none;" role="region" aria-label="Accès restreint"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
+            <div id="content-comparateur">
+                <h2>⚖️ Comparateur Multi-Plages</h2>
+                <div id="zoneComparaison" style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; border: 2px dashed var(--primary); display: none;">
+                    <h4 style="margin-top:0; color: var(--primary); font-size: 14px;">🎯 Tirages depuis le Chercheur</h4>
+                    <div id="listeComparaison" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
+                    <button onclick="viderZoneComparaison()" class="danger" style="margin-top: 10px; font-size: 12px;">🗑️ Vider</button>
+                </div>
+                <div id="plages-config" class="plages-config"></div>
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="ajouterPlage()" class="secondary">➕ Ajouter une plage</button>
+                    <button onclick="executerComparateurMulti()" style="flex: 1;">🔍 Comparer</button>
+                </div>
+                <div class="palette" role="toolbar" aria-label="Palette">
+                    <span style="font-weight:bold; margin-right:10px;">🖍️</span>
+                    <button class="color-btn" aria-pressed="true" style="background:#e74c3c;" onclick="changerCouleur(this, '#e74c3c')"></button>
+                    <button class="color-btn" aria-pressed="false" style="background:#3498db;" onclick="changerCouleur(this, '#3498db')"></button>
+                    <button class="color-btn" aria-pressed="false" style="background:#2ecc71;" onclick="changerCouleur(this, '#2ecc71')"></button>
+                    <button class="color-btn" aria-pressed="false" style="background:#f1c40f;" onclick="changerCouleur(this, '#f1c40f')"></button>
+                    <button class="color-btn" aria-pressed="false" style="background:#e84393;" onclick="changerCouleur(this, '#e84393')"></button>
+                    <span style="font-weight:bold; margin-left:15px; margin-right:5px;">Gomme :</span>
+                    <button class="color-btn" aria-pressed="false" style="background:#fff; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; font-size:18px;" onclick="changerCouleur(this, 'annuler')">🧽</button>
+                    <button onclick="resetColors()" class="danger" style="margin-left: 15px; font-size: 12px;">Reset</button>
+                </div>
+                <div class="audio-bar">
+                    <button type="button" onclick="lireDetailComparaison()">🔊 Détail</button>
+                    <button type="button" id="btnMuet" class="secondary" onclick="basculerMuet()">🔇</button>
+                </div>
+                <div id="annonceComparaison" class="sr-only" aria-live="polite"></div>
+                <div id="resultatComparaison" class="comp-container" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LABO -->
+        <div id="onglet-labo" class="tab-content" role="tabpanel" aria-labelledby="tab-labo" tabindex="0">
+          <div class="card" id="lock-labo">
+            <div class="lock-overlay" id="overlay-labo" style="display: none;" role="region" aria-label="Accès restreint"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
+            <div id="content-labo">
+                <h2>🧪 Laboratoire</h2>
+                <div class="lab-grid">
+                  <div class="lab-box">
+                    <h3>1. Analyse d'un tirage</h3>
+                    <select id="selectTirageLabo" onchange="analyserTirageLabo()" style="width: 100%;"></select>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                      <button onclick="faireTurning()" class="secondary" style="flex:1; font-size:13px;">Miroir</button>
+                      <button onclick="faireAddition()" class="secondary" style="flex:1; font-size:13px;">Somme</button>
+                      <button onclick="faireTheosophie()" class="warning" style="flex:1; font-size:13px;">Théosophie</button>
+                    </div>
+                    <div id="resultatOperations" class="result-box" style="font-weight: normal;">Sélectionnez un tirage.</div>
+                  </div>
+                  <div class="lab-box">
+                    <h3>2. Multi-Draws</h3>
+                    <select id="selectMultiTirages" multiple style="width: 100%; height: 120px;"></select>
+                    <div style="margin-top: 15px; display:flex; gap:10px;">
+                      <button onclick="executerAdditions()" class="secondary" style="flex:1;">➕ Additionner</button>
+                      <button onclick="executerBankersMulti()" class="secondary" style="flex:1;">🏦 Communs</button>
+                    </div>
+                    <div id="resultatLaboAvance" class="result-box" style="margin-top:15px; font-weight: normal;"></div>
+                  </div>
+                </div>
+                <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+                  <h3>🎯 Chasseur de Bankers</h3>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <select id="bankerJeu" style="flex: 1; min-width: 150px;"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+                    <button onclick="chercherBanker()" style="flex: 1;">🔍 Analyser</button>
+                  </div>
+                  <div id="resultatBanker" class="result-box" style="display: none;"><div class="ana-grid"><div class="ana-card"><h4>Plus en retard</h4><div id="bankerRetard" style="text-align: center; margin-top: 15px;"></div></div><div class="ana-card"><h4>Plus régulier</h4><div id="bankerFrequent" style="text-align: center; margin-top: 15px;"></div></div><div class="ana-card"><h4>Suiveur</h4><div id="bankerSuiveur" style="text-align: center; margin-top: 15px;"></div></div></div></div>
+                </div>
+                <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
+                  <h3>🔗 Analyseur de Suivi (Post-Tirage)</h3>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <select id="suiviDeclencheur" style="flex: 1; min-width: 250px;"><option value="">Sélectionnez un tirage...</option></select>
+                    <button onclick="analyserSuivi()" style="flex: 1;">📊 Lancer l'Analyse</button>
+                  </div>
+                  <div id="resultatSuivi" class="result-box" style="display: none;"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOULES -->
+        <div id="onglet-boules" class="tab-content" role="tabpanel" aria-labelledby="tab-boules" tabindex="0">
+          <div class="card premium-locked" id="lock-boules">
+            <div class="lock-overlay" id="overlay-boules" style="display: none;"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
+            <div id="content-boules">
+              <h2>🔍 Historique par Boule</h2>
+              <div class="boules-grid" id="boulesGrid"></div>
+              <div id="bouleDetail" class="boule-detail" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHERCHEUR -->
+        <div id="onglet-recherche" class="tab-content" role="tabpanel" aria-labelledby="tab-recherche" tabindex="0">
+          <div class="card premium-locked" id="lock-recherche">
+            <div class="lock-overlay" id="overlay-recherche" style="display: none;"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
+            <div id="content-recherche">
+              <h2>🕵️ Chercheur de Boules</h2>
+              
+              <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <!-- MENU DEROULANT MODE DE RECHERCHE -->
+                <div style="margin-bottom: 15px;">
+                    <label><b>Mode de recherche :</b><br>
+                        <select id="rechMode" onchange="changerModeRecherche()" style="width: 100%; padding: 10px; font-size: 16px; font-weight: bold;">
+                            <option value="boules">Recherche par Boules</option>
+                            <option value="somme">Recherche par Somme</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                  <label><b>Jeu :</b><br>
+                    <select id="rechJeu"><option value="tous">Tous les jeux</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+                  </label>
+                </div>
+
+                <!-- SECTION RECHERCHE PAR BOULES -->
+                <div id="sectionRechBoules">
+                    <p style="font-size: 13px; margin-bottom: 10px;"><b>Boules à chercher :</b></p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px;">
+                      <div id="rechBoulesContainer" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                      <button class="secondary" onclick="ajouterChampRecherche()" style="min-height: 44px; padding: 0 15px;">➕</button>
+                      <button class="danger" onclick="retirerChampRecherche()" style="min-height: 44px; padding: 0 15px;">➖</button>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                      <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="rechPositionActive" onchange="togglePositionsRecherche()" style="width: 20px; height: 20px; margin: 0;"> 
+                        <b>Recherche par position exacte</b>
+                      </label>
+                    </div>
+                </div>
+
+                <!-- SECTION RECHERCHE PAR SOMME -->
+                <div id="sectionRechSomme" style="display: none;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; background: var(--bg-card); padding: 10px; border-radius: var(--radius-sm);">
+                        <label><b>Somme totale :</b><br>
+                            <input type="number" id="rechTotalSomme" placeholder="Ex: 148" style="width: 100px; font-weight: bold;">
+                        </label>
+                        <label><b>Nombre de boules :</b><br>
+                            <select id="rechNbBoules" onchange="togglePositionsSomme()" style="padding: 10px;">
+                                <option value="2">2 boules</option>
+                                <option value="3">3 boules</option>
+                                <option value="4">4 boules</option>
+                                <option value="5">5 boules</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                      <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="rechSommePosActive" onchange="togglePositionsSomme()" style="width: 20px; height: 20px; margin: 0;"> 
+                        <b>Préciser les positions des boules</b>
+                      </label>
+                    </div>
+                    <div id="rechSommePositionsContainer" style="display: none; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <!-- Les selects de position s'ajouteront ici via JS -->
+                    </div>
+                </div>
+
+                <button onclick="executerRecherche()" style="width: 100%; background-color: var(--primary); font-size: 16px;">🔍 Rechercher</button>
+              </div>
+
+              <div id="resultatRecherche" style="display: none;">
+                <h3>Résultats (<span id="rechCompteur">0</span>)</h3>
+                <div style="overflow-x: auto;">
+                  <table class="table-recherche" id="tableResultatsRecherche">
+                    <thead><tr><th>Ligne</th><th>Date</th><th>Jeu</th><th>Boules</th><th>Total</th></tr></thead>
+                    <tbody id="tbodyResultatsRecherche"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VERIFIER -->
+        <div id="onglet-verif" class="tab-content" role="tabpanel" aria-labelledby="tab-verif" tabindex="0">
+          <div class="card premium-locked" id="lock-verif">
+            <div class="lock-overlay" id="overlay-verif" style="display: none;"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
+            <div id="content-verif">
+              <h2>✅ Vérifier ma grille</h2>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0; align-items: end;">
+                <label><b>Jeu :</b><br><select id="verifJeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select></label>
+                <label><b>Date :</b><br><input type="date" id="verifDate"></label>
+                <label><b>Heure :</b><br><select id="verifHeure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
+                <label><b>Mise (FCFA) :</b><br><input type="number" id="verifMise" value="100" min="100" step="100" style="width: 110px;"></label>
+              </div>
+              <div class="verif-grid">
+                <input type="number" class="verif-input" id="vB1" min="1" max="90" placeholder="?">
+                <input type="number" class="verif-input" id="vB2" min="1" max="90" placeholder="?">
+                <input type="number" class="verif-input" id="vB3" min="1" max="90" placeholder="?">
+                <input type="number" class="verif-input" id="vB4" min="1" max="90" placeholder="?">
+                <input type="number" class="verif-input" id="vB5" min="1" max="90" placeholder="?">
+                <button onclick="verifierGrille()" style="min-height: 70px; font-size: 16px;">🔎 Vérifier</button>
+              </div>
+              <div id="verifResultat"></div>
+              <div class="verif-grille-gains">
+                <b>💰 Grille des gains LNB (officielle)</b>
+                <table><thead><tr><th>Bons numéros</th><th>Multiplicateur</th><th>Gain pour 100 F</th></tr></thead><tbody><tr><td>1</td><td>×2</td><td>200 F</td></tr><tr><td>2</td><td>×250</td><td>25 000 F</td></tr><tr><td>3</td><td>×2 500</td><td>250 000 F</td></tr><tr><td>4</td><td>×7 500</td><td>750 000 F</td></tr><tr><td>5</td><td>×45 000</td><td>4 500 000 F</td></tr></tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEMO -->
+        <div id="onglet-demo" class="tab-content" role="tabpanel" aria-labelledby="tab-demo" tabindex="0">
+          <div class="card">
+            <div class="demo-bandeau">🎬 Mode Démo — Données fictives.</div>
+            <h2>🎬 Découvrir les fonctionnalités</h2>
+            <div class="demo-grid" id="demoGrid"></div>
+            <div style="margin-top: 25px; text-align: center;"><button class="secondary" onclick="quitterDemo()">🚪 Quitter le mode démo</button></div>
+          </div>
+        </div>
     </div>
-
-    <div id="onglet-verif" class="tab-content" role="tabpanel" aria-labelledby="tab-verif" tabindex="0">
-      <div class="card premium-locked" id="lock-verif">
-        <div class="lock-overlay" id="overlay-verif" style="display: none;" role="region" aria-label="Accès restreint">
-          <h2>🔒 Accès Abonné Requis</h2>
-          <p>La vérification de grille est réservée aux abonnés.</p>
-          <button onclick="contacterAdmin()">💬 S'abonner via WhatsApp</button>
-        </div>
-        <div id="content-verif">
-          <h2>✅ Vérifier ma grille</h2>
-          <p style="color: var(--text-muted); font-size: 14px;">Saisissez vos 5 numéros, choisissez le jeu et le tirage, puis vérifiez si vous avez gagné.</p>
-          <div style="display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0; align-items: end;">
-            <label><b>Jeu :</b><br><select id="verifJeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select></label>
-            <label><b>Date :</b><br><input type="date" id="verifDate"></label>
-            <label><b>Heure :</b><br><select id="verifHeure"><option value="00H">00H</option><option value="08H">08H</option><option value="11H">11H</option><option value="14H">14H</option><option value="18H">18H</option><option value="20H">20H</option></select></label>
-            <label><b>Mise (FCFA) :</b><br><input type="number" id="verifMise" value="100" min="100" step="100" style="width: 110px;"></label>
-          </div>
-          <div class="verif-grid">
-            <input type="number" class="verif-input" id="vB1" min="1" max="90" placeholder="?">
-            <input type="number" class="verif-input" id="vB2" min="1" max="90" placeholder="?">
-            <input type="number" class="verif-input" id="vB3" min="1" max="90" placeholder="?">
-            <input type="number" class="verif-input" id="vB4" min="1" max="90" placeholder="?">
-            <input type="number" class="verif-input" id="vB5" min="1" max="90" placeholder="?">
-            <button onclick="verifierGrille()" style="min-height: 70px; font-size: 16px;">🔎 Vérifier</button>
-          </div>
-          <div id="verifResultat"></div>
-          <div class="verif-grille-gains">
-            <b>💰 Grille des gains LNB (officielle)</b>
-            <table>
-              <thead><tr><th>Bons numéros</th><th>Multiplicateur</th><th>Gain pour 100 F</th></tr></thead>
-              <tbody>
-                <tr><td>1</td><td>×2</td><td>200 F</td></tr>
-                <tr><td>2</td><td>×250</td><td>25 000 F</td></tr>
-                <tr><td>3</td><td>×2 500</td><td>250 000 F</td></tr>
-                <tr><td>4</td><td>×7 500</td><td>750 000 F</td></tr>
-                <tr><td>5</td><td>×45 000</td><td>4 500 000 F</td></tr>
-              </tbody>
-            </table>
-            <p style="font-size: 11px; margin-top: 10px;">Mise minimale par ticket : 100 FCFA. Gains indicatifs, se référer aux règles officielles LNB.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="onglet-demo" class="tab-content" role="tabpanel" aria-labelledby="tab-demo" tabindex="0">
-      <div class="card">
-        <div class="demo-bandeau">🎬 Mode Démo — Données fictives à but pédagogique. Aucune donnée réelle n'est utilisée ou modifiée.</div>
-        <h2>🎬 Découvrir les fonctionnalités</h2>
-        <p style="color: var(--text-muted); font-size: 14px;">Cliquez sur une carte pour lancer une démonstration interactive. Les données de démo sont chargées en mémoire uniquement.</p>
-        <div class="demo-grid" id="demoGrid"></div>
-        <div style="margin-top: 25px; text-align: center;">
-          <button class="secondary" onclick="quitterDemo()">🚪 Quitter le mode démo</button>
-        </div>
-      </div>
-    </div>
-</div>
 </main>
 
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="fermerDrawer()" aria-hidden="true"></div>
 <aside class="drawer" id="drawerMenu" role="dialog" aria-modal="true" aria-labelledby="drawerTitre">
-    <div class="drawer-header">
-        <h2 id="drawerTitre">🎰 Menu</h2>
-        <button type="button" class="drawer-close" onclick="fermerDrawer()" aria-label="Fermer le menu">✕</button>
-    </div>
+    <div class="drawer-header"><h2 id="drawerTitre">🎰 Menu</h2><button type="button" class="drawer-close" onclick="fermerDrawer()" aria-label="Fermer le menu">✕</button></div>
+    
     <div class="drawer-section">
         <h3>Mon compte</h3>
         <span class="status-badge" id="drawerBadge">Chargement...</span>
         <button type="button" class="drawer-export admin-only" onclick="exporterSauvegardeComplete()">💾 Sauvegarder les données</button>
         <button type="button" class="drawer-deconnexion" onclick="seDeconnecterDepuisDrawer()">🚪 Déconnexion</button>
     </div>
+    
     <div class="drawer-section">
-        <h3>Navigation</h3>
-        <!-- ONGLETS PRINCIPAUX -->
-        <button type="button" class="drawer-nav-btn" data-onglet="saisie" onclick="ouvrirOngletDepuisDrawer('saisie')">📝 Compilation</button>
-        <button type="button" class="drawer-nav-btn" data-onglet="cockpit" onclick="ouvrirOngletDepuisDrawer('cockpit')">🚀 Cockpit</button>
-        <button type="button" class="drawer-nav-btn" data-onglet="analyses" onclick="ouvrirOngletDepuisDrawer('analyses')">📊 Analyses</button>
-        
-        <!-- SÉPARATEUR -->
-        <div style="margin: 10px 0; border-top: 1px solid var(--border-color);"></div>
-        
-        <!-- OUTILS AVANCÉS -->
+        <h3>⚙️ Paramètres</h3>
+        <label for="selectTailleBoules" style="font-size: 13px; margin-bottom: 5px; display: block;">Taille des boules :</label>
+        <select id="selectTailleBoules" onchange="changerTailleBoules(this.value)" style="width: 100%; padding: 10px; font-size: 14px;">
+            <option value="taille-petite">Petite</option>
+            <option value="taille-normale" selected>Normale</option>
+            <option value="taille-grande">Grande</option>
+        </select>
+    </div>
+
+    <div class="drawer-section">
+        <h3>Outils</h3>
+        <!-- SEULEMENT LES OUTILS CACHÉS -->
         <button type="button" class="drawer-nav-btn" data-onglet="comparateur" onclick="ouvrirOngletDepuisDrawer('comparateur')">⚖️ Comparateur</button>
         <button type="button" class="drawer-nav-btn" data-onglet="labo" onclick="ouvrirOngletDepuisDrawer('labo')">🧪 Laboratoire</button>
         <button type="button" class="drawer-nav-btn" data-onglet="boules" onclick="ouvrirOngletDepuisDrawer('boules')">🔍 Boules</button>
@@ -521,11 +470,10 @@
     </div>
 </aside>
 
-<!-- Modale d'historique contextuel -->
-<div id="modalHistorique" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalHistoTitre" style="display: none; z-index: 10001;">
+<!-- Modales -->
+<div id="modalHistorique" class="modal-backdrop" role="dialog" style="display: none; z-index: 10001;">
   <div class="modal-box" style="max-width: 700px; border-top: 6px solid var(--primary);">
     <h2 id="modalHistoTitre" style="color: var(--primary); margin-top: 0;">📜 Contexte du tirage</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Historique de 10 tirages avant et après (même jeu).</p>
     <div id="histoContent" style="max-height: 60vh; overflow-y: auto; margin-bottom: 20px;"></div>
     <div style="display: flex; gap: 10px; justify-content: flex-end;">
       <button type="button" class="secondary" onclick="document.getElementById('modalHistorique').style.display='none'">Fermer</button>
@@ -534,84 +482,60 @@
   </div>
 </div>
 
-<div id="modalSuppression" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSuppTitre" style="display: none;">
+<div id="modalSuppression" class="modal-backdrop" role="dialog" style="display: none;">
     <div class="modal-box">
-        <h2 id="modalSuppTitre" style="color: var(--color-hot);">⚠️ Suppression irréversible</h2>
-        <p style="line-height: 1.6;">Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.<br>Cette action <strong>ne peut pas être annulée</strong>.</p>
-        <details style="margin: 15px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
-            <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder d'abord (recommandé)</summary>
-            <p style="font-size: 13px; margin: 10px 0 5px;">Téléchargez un fichier CSV de secours avant de supprimer :</p>
-            <button type="button" class="secondary" onclick="exporterCSV()" style="font-size: 13px;">📥 Télécharger le CSV</button>
-        </details>
-        <div style="margin-top: 20px; text-align: left;">
-            <label for="champConfirmation" style="display: block; font-size: 14px; margin-bottom: 8px;">Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> ci-dessous :</label>
-            <input type="text" id="champConfirmation" autocomplete="off" autocapitalize="characters" spellcheck="false" style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;" placeholder="SUPPRIMER">
+        <h2 style="color: var(--color-hot);">⚠️ Suppression irréversible</h2>
+        <p>Vous êtes sur le point de supprimer <strong id="modalSuppCompteur">tous les tirages</strong>.</p>
+        <div style="margin-top: 20px;">
+            <label for="champConfirmation">Tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> :</label>
+            <input type="text" id="champConfirmation" style="width: 100%; padding: 12px; text-transform: uppercase;" placeholder="SUPPRIMER">
         </div>
-        <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
-            <button type="button" class="secondary" onclick="fermerModaleSuppression()">Annuler (Échap)</button>
-            <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()">🗑️ Supprimer définitivement (<span id="compteARebours">5</span>s)</button>
+        <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" class="secondary" onclick="fermerModaleSuppression()">Annuler</button>
+            <button type="button" class="danger" id="btnConfirmerFinal" disabled onclick="confirmerSuppressionFinale()">🗑️ Supprimer (<span id="compteARebours">5</span>s)</button>
         </div>
-        <div id="modalSuppMessage" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+        <div id="modalSuppMessage" style="margin-top: 15px;"></div>
     </div>
 </div>
 
-<div id="modalSuppressionPeriode" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalPeriodeTitre" style="display: none;">
+<div id="modalSuppressionPeriode" class="modal-backdrop" role="dialog" style="display: none;">
   <div class="modal-box modal-box-period">
-    <h2 id="modalPeriodeTitre" style="color: var(--color-star);">📅 Supprimer par période</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Choisissez une plage de dates et éventuellement un jeu.</p>
+    <h2 style="color: var(--color-star);">📅 Supprimer par période</h2>
     <div class="periode-grid">
       <div><label for="periodeDebut">Date de début</label><input type="date" id="periodeDebut" oninput="previsualiserPeriode()"></div>
       <div><label for="periodeFin">Date de fin</label><input type="date" id="periodeFin" oninput="previsualiserPeriode()"></div>
       <div style="grid-column: 1 / -1;">
         <label for="periodeJeu">Filtrer par jeu</label>
-        <select id="periodeJeu" onchange="previsualiserPeriode()">
-          <option value="tous">Tous les jeux</option><option value="Star">Star uniquement</option><option value="Fortune">Fortune uniquement</option><option value="Digital">Digital uniquement</option>
-        </select>
+        <select id="periodeJeu" onchange="previsualiserPeriode()"><option value="tous">Tous</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
       </div>
     </div>
-    <div class="raccourcis-periode">
-      <button type="button" onclick="appliquerRaccourciPeriode('ceMois')">Ce mois-ci</button>
-      <button type="button" onclick="appliquerRaccourciPeriode('moisDernier')">Mois dernier</button>
-      <button type="button" onclick="appliquerRaccourciPeriode('cetteAnnee')">Cette année</button>
-      <button type="button" onclick="appliquerRaccourciPeriode('anneeDerniere')">Année dernière</button>
+    <div class="apercu-periode" id="apercuPeriode"><span class="compteur">0</span> tirage(s) supprimés.</div>
+    <div style="margin-top: 20px;">
+        <label for="champConfirmationPeriode">Tapez <strong>SUPPRIMER</strong> :</label>
+        <input type="text" id="champConfirmationPeriode" style="width: 100%; padding: 12px; text-transform: uppercase;" placeholder="SUPPRIMER" oninput="verifierMotConfirmationPeriode()">
     </div>
-    <div class="apercu-periode" id="apercuPeriode"><span class="compteur">0</span> tirage(s) seront supprimés.</div>
-    <details style="margin: 10px 0; text-align: left; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm);">
-      <summary style="cursor: pointer; font-weight: bold;">💾 Sauvegarder la période (CSV)</summary>
-      <button type="button" class="secondary" onclick="exporterCSVPeriode()" style="font-size: 13px; margin-top: 8px;">📥 Télécharger le CSV</button>
-    </details>
-    <div style="margin-top: 20px; text-align: left;">
-      <label for="champConfirmationPeriode" style="display: block; font-size: 14px; margin-bottom: 8px;">Pour confirmer, tapez <strong style="color: var(--color-hot);">SUPPRIMER</strong> :</label>
-      <input type="text" id="champConfirmationPeriode" autocomplete="off" autocapitalize="characters" spellcheck="false" style="width: 100%; padding: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;" placeholder="SUPPRIMER" oninput="verifierMotConfirmationPeriode()">
+    <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" class="secondary" onclick="fermerModaleSuppressionPeriode()">Annuler</button>
+        <button type="button" class="danger" id="btnConfirmerPeriode" disabled onclick="confirmerSuppressionPeriode()">🗑️ Supprimer (<span id="compteAReboursPeriode">5</span>s)</button>
     </div>
-    <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
-      <button type="button" class="secondary" onclick="fermerModaleSuppressionPeriode()">Annuler (Échap)</button>
-      <button type="button" class="danger" id="btnConfirmerPeriode" disabled onclick="confirmerSuppressionPeriode()">🗑️ Supprimer la période (<span id="compteAReboursPeriode">5</span>s)</button>
-    </div>
-    <div id="messagePeriode" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+    <div id="messagePeriode" style="margin-top: 15px;"></div>
   </div>
 </div>
 
-<div id="modalConflitImport" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalConflitTitre" style="display: none;">
+<div id="modalConflitImport" class="modal-backdrop" role="dialog" style="display: none;">
   <div class="modal-box modal-box-conflit">
-    <h2 id="modalConflitTitre" style="color: var(--primary);">📥 Résumé de l'import</h2>
-    <p style="font-size: 13px; color: var(--text-muted);">Analyse terminée. Vérifiez le résumé et choisissez quoi faire des conflits.</p>
+    <h2 style="color: var(--primary);">📥 Résumé de l'import</h2>
     <div class="conflit-resume">
-      <div class="conflit-stat nouveaux"><span class="num" id="statNouveaux">0</span><span style="font-size: 12px;">nouveaux</span></div>
-      <div class="conflit-stat conflits"><span class="num" id="statConflits">0</span><span style="font-size: 12px;">conflits</span></div>
-      <div class="conflit-stat invalides"><span class="num" id="statInvalides">0</span><span style="font-size: 12px;">invalides</span></div>
+      <div class="conflit-stat nouveaux"><span class="num" id="statNouveaux">0</span><span>nouveaux</span></div>
+      <div class="conflit-stat conflits"><span class="num" id="statConflits">0</span><span>conflits</span></div>
+      <div class="conflit-stat invalides"><span class="num" id="statInvalides">0</span><span>invalides</span></div>
     </div>
-    <details id="detailsConflits" style="margin: 10px 0;">
-      <summary style="cursor: pointer; font-weight: bold;">🔍 Voir le détail des conflits</summary>
-      <div class="conflit-detail" id="listeConflits"></div>
-    </details>
-    <p style="margin: 20px 0 10px; font-weight: bold;">Que faire des <span id="nbConflitsQuestion">0</span> conflits ?</p>
     <div class="conflit-choix">
       <button type="button" class="secondary" onclick="annulerImport()">❌ Annuler</button>
-      <button type="button" class="warning" onclick="executerImport('ignorer')">⏭️ Ignorer les conflits</button>
-      <button type="button" class="danger" onclick="executerImport('ecraser')" id="btnEcraser">🔄 Écraser les anciens</button>
+      <button type="button" class="warning" onclick="executerImport('ignorer')">⏭️ Ignorer</button>
+      <button type="button" class="danger" onclick="executerImport('ecraser')" id="btnEcraser">🔄 Écraser</button>
     </div>
-    <div id="messageConflit" role="alert" aria-live="assertive" style="margin-top: 15px; font-size: 14px;"></div>
+    <div id="messageConflit" style="margin-top: 15px;"></div>
   </div>
 </div>
 
