@@ -178,3 +178,32 @@
   .atelier-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
   .atelier-btn.active { border: 2px solid var(--primary); background: var(--primary); color: white; }
   .atelier-close { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: var(--color-hot); color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; }
+/* =========================================
+   AFFICHAGE MOBILE : BOULE EN DESSOUS
+   ========================================= */
+@media (max-width: 768px) {
+  .day-row {
+    flex-wrap: wrap; /* Permet de passer à la ligne */
+    padding-bottom: 15px;
+  }
+  
+  .day-time {
+    width: auto; 
+    margin-right: 15px;
+    font-size: 14px;
+  }
+  
+  .day-game {
+    width: auto;
+    font-size: 14px;
+  }
+  
+  .day-nums {
+    flex: 0 0 100%; /* Prend toute la largeur et force le retour à la ligne */
+    width: 100%;
+    margin-top: 8px;
+    justify-content: flex-start; /* Aligne les boules à gauche */
+    overflow-x: visible; /* Enlève la barre de défilement */
+    gap: 4px; /* Un peu d'espace entre les boules */
+  }
+}
