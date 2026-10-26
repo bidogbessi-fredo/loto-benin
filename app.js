@@ -104,6 +104,13 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
     if (isAdmin) { badgeEl.textContent = "👑 Admin"; badgeEl.className = "status-badge badge-admin"; document.body.classList.remove("mode-visiteur"); }
     else if (isAbonne) { badgeEl.textContent = "⭐ Abonné"; badgeEl.className = "status-badge badge-abonne"; document.body.classList.remove("mode-visiteur"); }
     else { badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit"; document.body.classList.add("mode-visiteur"); }
+        var db = document.getElementById('drawerBadge');
+    if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
+    
+    var dash = document.getElementById('dashboardAdmin');     var db = document.getElementById('drawerBadge');
+    if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
+    
+    var dash = document.getElementById('dashboardAdmin'); 
     var dash = document.getElementById('dashboardAdmin'); if (dash) dash.style.display = isAdmin ? "block" : "none";
     chargerDonnees(); if (isAdmin) chargerUtilisateursAuto();
 }
@@ -469,6 +476,30 @@ function executerBankersMulti() {
     if (communs.length === 0) html += "Aucun numéro commun.";
     else html += communs.map(function(n){ return "<span class='ball' style='background:#e74c3c;'>" + n + "</span>"; }).join(" "); 
     document.getElementById("resultatLaboAvance").innerHTML = html; 
+}
+function exporterSauvegardeComplete() {
+    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
+    if (donneesCloud.length === 0) { alert("Aucune donnée à exporter."); return; }
+    
+    var l = ["date,heure,jeu,boules"];
+    donneesCloud.forEach(function(t){ 
+        l.push([t.date, t.heure, t.jeu, '"' + t.boules.join(",") + '"'].join(",")); 
+    });
+    
+    var blob = new Blob([l.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); 
+    a.href = url;
+    a.download = "loto-benin-sauvegarde-" + new Date().toISOString().slice(0,10) + ".csv";
+    a.click(); 
+    URL.revokeObjectURL(url);
+}
+
+function chargerUtilisateursDansTableau() {
+    // Si ta fonction s'appelle chargerUtilisateursAuto, tu peux juste l'appeler ici
+    if (typeof chargerUtilisateursAuto === 'function') {
+        chargerUtilisateursAuto();
+    }
 }
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
