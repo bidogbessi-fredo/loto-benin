@@ -6,7 +6,7 @@
     --color-star: #f39c12; --color-fortune: #2980b9; --color-digital: #8e44ad;
     --color-hot: #e74c3c; --color-cold: #3498db;
     --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px; --radius-pill: 50px;
-    --ball-size: 32px; 
+    --ball-size: 28px; 
   }
   
   @media (prefers-color-scheme: dark) {
