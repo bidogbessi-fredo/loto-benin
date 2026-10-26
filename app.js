@@ -1,5 +1,5 @@
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
-const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
+const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U'; // <-- Vérifie que c'est bien TA clé ici
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
@@ -7,11 +7,12 @@ var estAdmin = false;
 var estAbonne = false;
 var ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
 var tiragesComparateur = [];
-var tirageActifHistorique = null;
+var tirageLabo = null;
+var nPlages = 0;
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
-// --- MENU LATÉRAL (DRAWER) ---
+// --- 1. MENU LATÉRAL (DRAWER) ---
 function ouvrirDrawer() {
     document.getElementById('drawerMenu').classList.add('open');
     document.getElementById('drawerBackdrop').classList.add('open');
@@ -24,7 +25,7 @@ function fermerDrawer() {
 }
 function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
 
-// --- BARRE DES ATELIERS ---
+// --- 2. BARRE DES ATELIERS (WORKSPACE) ---
 function majBarreAteliers() {
     var bar = document.getElementById('ateliersBar');
     var topOnglets = ['saisie', 'cockpit', 'analyses'];
@@ -55,7 +56,7 @@ function retirerAtelier(e, id) {
     if(document.getElementById('onglet-' + id).classList.contains('active')) _ouvrirOnglet('saisie', document.getElementById('tab-saisie'));
 }
 
-// --- NAVIGATION ---
+// --- 3. NAVIGATION ---
 var _ouvrirOnglet = function(id, btn) {
   var tabs = document.querySelectorAll('[role="tab"]'), panels = document.querySelectorAll('[role="tabpanel"]');
   tabs.forEach(function(t) { var s = (t.id === 'tab-' + id); t.setAttribute('aria-selected', s ? 'true' : 'false'); t.classList.toggle('active', s); });
@@ -63,14 +64,16 @@ var _ouvrirOnglet = function(id, btn) {
   ajouterAtelier(id); majBarreAteliers();
   if (btn) btn.focus();
   
-  if (id === 'cockpit') actualiserCockpit(); // <-- LA LIGNE QUI MANQUAIT
+  if (id === 'cockpit') actualiserCockpit();
   if (id === 'recherche') initialiserRecherche();
-  if (id === 'labo') { remplirSelecteursLabo(); }
+  if (id === 'labo') remplirSelecteursLabo();
+  if (id === 'boules') remplirBoulesGrid();
+  if (id === 'comparateur') mettreAJourZoneComparaison();
 };
 function ouvrirOnglet(id, btn) { _ouvrirOnglet(id, btn); }
 function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); _ouvrirOnglet(id, document.getElementById('tab-' + id)); }
 
-// --- AUTHENTIFICATION ---
+// --- 4. AUTHENTIFICATION ---
 async function verifierSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
@@ -92,6 +95,8 @@ async function seConnecter() {
 }
 function entrerVisiteur() { estAdmin = false; estAbonne = false; afficherApplication(false, false, null); }
 async function seDeconnecter() { await supabaseClient.auth.signOut(); document.getElementById("login-screen").style.display = "flex"; document.getElementById("app-content").style.display = "none"; afficherConnexion(); }
+function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; document.getElementById("loginMessage").textContent = ""; }
+function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; document.getElementById("loginMessage").textContent = ""; }
 
 function afficherApplication(isAdmin, isAbonne, dateFin) {
     document.getElementById("login-screen").style.display = "none"; document.getElementById("app-content").style.display = "block";
@@ -103,7 +108,7 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
     chargerDonnees(); if (isAdmin) chargerUtilisateursAuto();
 }
 
-// --- DONNÉES & COMPILATION ---
+// --- 5. DONNÉES & COMPILATION ---
 async function chargerDonnees() {
   var statusEl = document.getElementById("statusCloud"); statusEl.textContent = "⏳...";
   let tous = [], page = 0, enCours = true;
@@ -120,6 +125,7 @@ function afficherSacSelectionne() {
     var sacId = document.getElementById("selectSac").value, filtre = document.getElementById("filtrePeriode") ? document.getElementById("filtrePeriode").value : "tout", tf = donneesCloud;
     if (filtre === 'recent') { var a = new Date().toISOString().slice(0,10), h = new Date(Date.now()-86400000).toISOString().slice(0,10); tf = tf.filter(function(t) { return t.date === a || t.date === h; }); }
     else if (filtre === 'mois') { var p = new Date().toISOString().slice(0,7); tf = tf.filter(function(t) { return t.date.startsWith(p); }); }
+    
     var conteneur = document.getElementById("conteneurSac"); conteneur.innerHTML = "";
     if (tf.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
     var parDate = {}; tf.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
@@ -147,30 +153,25 @@ document.getElementById("btnAjouter")?.addEventListener("click", async function 
   else { msg.textContent = "✅ Tirage enregistré !"; msg.style.color = "green"; for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = ""; document.getElementById("filtrePeriode").value = "tout"; chargerDonnees(); }
 });
 
-// --- COCKPIT (FONCTIONNEL) ---
+// --- 6. COCKPIT ---
 function actualiserCockpit() {
     var jeu = document.getElementById("cockpitJeu").value, h = document.getElementById("cockpitHeure").value;
     var f = donneesCloud.filter(function(t){ return t.jeu === jeu && (h === "all" || t.heure === h); });
     if (f.length === 0) { document.getElementById("cockpitPrediction").innerHTML = "<p>Pas de données.</p>"; document.getElementById("cockpitCycles").innerHTML = "<p>Pas de données.</p>"; return; }
-    
     var freq = {}, ec = {}; for (var n=1;n<=90;n++) { freq[n]=0; ec[n]=0; }
     f.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); }); 
     f.forEach(function(t,idx){ t.boules.forEach(function(b){ if (ec[b]===0 && idx!==0) ec[b]=idx; }); });
     if (f.length > 0) f[0].boules.forEach(function(b){ ec[b]=0; });
-    
     var ns = Object.keys(freq).map(function(k){ return { n: parseInt(k,10), f: freq[k], e: ec[k] }; });
     var tc = ns.slice().sort(function(a,b){ return b.f-a.f; }).slice(0,5);
     var tr = ns.slice().sort(function(a,b){ return b.e-a.e; }).slice(0,5);
-    
     var hp = "<p><b>🔥 Chauds :</b><br>"; tc.forEach(function(x){ hp += "<span class='ball hot' style='background:#e74c3c'>" + x.n + "</span> (" + x.f + "x) "; });
     hp += "</p><p style='margin-top:15px;'><b>❄️ Retards :</b><br>"; tr.forEach(function(x){ hp += "<span class='ball cold' style='background:#3498db'>" + x.n + "</span> (R:" + x.e + ") "; });
     hp += "</p>";
     document.getElementById("cockpitPrediction").innerHTML = hp;
-    
     var hc = "<ul style='list-style:none; padding:0;'>"; tr.forEach(function(x){ hc += "<li style='padding:5px 0; border-bottom:1px dashed #ccc;'><b>" + x.n + "</b> Retard: " + x.e + "</li>"; }); hc += "</ul>"; 
     document.getElementById("cockpitCycles").innerHTML = hc;
 }
-
 function genererGrilleCockpit() {
     var jeu = document.getElementById("cockpitJeu").value, h = document.getElementById("cockpitHeure").value;
     var f = donneesCloud.filter(function(t){ return t.jeu === jeu && (h === "all" || t.heure === h); });
@@ -184,7 +185,7 @@ function genererGrilleCockpit() {
     cb.sort(function(a,b){ return a-b; }); document.getElementById("grilleGeneree").innerHTML = "🎲 " + cb.join(" - ");
 }
 
-// --- ANALYSES ---
+// --- 7. ANALYSES ---
 function executerAnalyses() {
     var jeu = document.getElementById('anaJeu').value, source = donneesCloud.filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
     if (source.length < 5) { document.getElementById('anaPairesTop10').innerHTML = "<li>Pas assez de données.</li>"; return; }
@@ -193,12 +194,9 @@ function executerAnalyses() {
     var topP = Object.keys(paires).map(function(k) { return { n: k, c: paires[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
     var htmlP = ""; topP.forEach(function(p) { htmlP += "<li><b>" + p.n.replace("-", " + ") + "</b> <span class='status-badge badge-abonne'>" + p.c + " fois</span></li>"; }); 
     document.getElementById('anaPairesTop10').innerHTML = htmlP || "<li>Aucune.</li>";
-    document.getElementById('anaPositionsContainer').innerHTML = "";
-    document.getElementById('anaJoursContainer').innerHTML = "";
-    document.getElementById('anaHeuresContainer').innerHTML = "";
 }
 
-// --- CHERCHEUR ---
+// --- 8. CHERCHEUR ---
 function initialiserRecherche() { var c = document.getElementById('rechBoulesContainer'); if (!c || c.children.length > 0) return; c.innerHTML = ''; ajouterChampRecherche(); ajouterChampRecherche(); }
 function ajouterChampRecherche() { var c = document.getElementById('rechBoulesContainer'); if (c.children.length >= 5) return; var div = document.createElement('div'); div.className = 'rech-input-group'; div.innerHTML = `<input type="number" class="rech-num" min="1" max="90" placeholder="N°" style="width:60px;">`; c.appendChild(div); }
 function retirerChampRecherche() { var c = document.getElementById('rechBoulesContainer'); if (c.children.length > 1) c.lastElementChild.remove(); }
@@ -226,13 +224,99 @@ function executerRecherche() {
     });
 }
 
-// --- LABO ---
+// --- 9. LES BOULES ---
+function remplirBoulesGrid() {
+    var grid = document.getElementById('boulesGrid'); if (!grid) return;
+    var freq = {}; for (var n=1;n<=90;n++) freq[n]=0;
+    donneesCloud.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); });
+    var maxF = Math.max.apply(null, Object.values(freq).concat([1]));
+    var html = "";
+    for (var n2=1;n2<=90;n2++) {
+        var c = "boule-selecteur";
+        if (freq[n2] === maxF && maxF > 0) c += " chaud";
+        else if (freq[n2] === 0 && donneesCloud.length > 0) c += " froid";
+        html += "<button type='button' class='" + c + "' data-boule='" + n2 + "' onclick='afficherDetailBoule(" + n2 + ")'>" + n2 + "</button>";
+    }
+    grid.innerHTML = html;
+}
+function afficherDetailBoule(num) {
+    if (donneesCloud.length === 0) return;
+    document.querySelectorAll('.boule-selecteur').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.boule,10) === num); });
+    var appar = donneesCloud.filter(function(t){ return t.boules.indexOf(num) !== -1; });
+    var freq = appar.length, dernier = appar.length > 0 ? appar[appar.length-1] : null, ecart = dernier ? donneesCloud.length - 1 - donneesCloud.indexOf(dernier) : donneesCloud.length;
+    var h = "<h3>🔍 Boule " + num + "</h3><div class='boule-stats-grid'><div class='boule-stat'><span class='num'>" + freq + "</span><span class='label'>Sorties</span></div><div class='boule-stat'><span class='num'>" + ecart + "</span><span class='label'>Écart</span></div><div class='boule-stat'><span class='num'>" + (dernier ? dernier.date : '—') + "</span><span class='label'>Dernier</span></div><div class='boule-stat'><span class='num'>" + (donneesCloud.length>0 ? Math.round(freq/donneesCloud.length*1000)/10 : 0) + "%</span><span class='label'>Fréquence</span></div></div>";
+    if (appar.length > 0) {
+        h += "<p><b>📜 20 dernières apparitions :</b></p>";
+        appar.slice(-20).reverse().forEach(function(t) {
+            h += "<div class='boule-historique-ligne'><span class='date'>" + t.date + "</span><span class='jeu'>" + t.jeu + "</span><span class='heure'>" + t.heure + "</span><span class='boules'>";
+            t.boules.forEach(function(b){ h += "<span class='boule-mini" + (b===num?" cible":"") + "'>" + b + "</span>"; }); h += "</span></div>";
+        });
+    } else { h += "<p>Jamais sortie.</p>"; }
+    var d = document.getElementById('bouleDetail'); d.innerHTML = h; d.style.display = 'block';
+}
+
+// --- 10. COMPARATEUR ---
+function ajouterPlage() {
+    if (nPlages >= 5) { alert("Max 5."); return; }
+    nPlages++;
+    var d = document.createElement("div"); d.className = "plage-box"; d.id = "plage-container-" + nPlages; d.style.borderTop = "4px solid #2980b9";
+    d.innerHTML = `<label>Plage ${nPlages}</label><select id="sacNum${nPlages}"><option value="tous">Tous</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select><div style="display:flex; gap:5px;"><input type="number" id="refNum${nPlages}" placeholder="Ligne N°" style="width:80px;"><select id="refRange${nPlages}" style="flex:1;"><option value="10">10</option><option value="20">20</option><option value="30" selected>30</option></select></div><button class="danger" style="font-size:12px;" onclick="supprimerPlage(${nPlages})">Retirer</button>`;
+    document.getElementById("plages-config").appendChild(d);
+}
+function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
+function executerComparateurMulti() {
+    var plages = [];
+    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1 }; }), color: "#e74c3c" });
+    for (var i=1;i<=nPlages;i++) {
+        var c = document.getElementById("plage-container-" + i); if (!c) continue;
+        var s = document.getElementById("sacNum" + i).value, rl = parseInt(document.getElementById("refNum" + i).value, 10), rg = parseInt(document.getElementById("refRange" + i).value, 10);
+        if (isNaN(rl)) continue;
+        var td = donneesCloud.filter(function(t){ return s === 'tous' || t.jeu === s; }), si = rl - 1;
+        if (si < 0 || si >= td.length) { alert("Ligne " + rl + " n'existe pas."); return; }
+        var p = [], mn = Math.max(0, si-rg), mx = Math.min(td.length-1, si+rg); for (var j=mn;j<=mx;j++) p.push({ data: td[j], ligneLocale: j+1 });
+        plages.push({ id: i, nomSac: "Plage " + i, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
+    }
+    if (plages.length < 2) { alert("Il faut au moins 2 colonnes."); return; }
+    var ml = 0; plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
+    var html = "";
+    plages.forEach(function(p) {
+        html += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><tbody>";
+        for (var l=0;l<ml;l++) {
+            var it = p.data[l]; if (!it) { html += "<tr><td><i>-</i></td><td>-</td></tr>"; continue; }
+            var t = it.data; html += "<tr><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
+            t.boules.forEach(function(n) { html += "<span class='comp-ball'>" + n + "</span>"; }); html += "</td></tr>";
+        }
+        html += "</tbody></table></div>";
+    });
+    document.getElementById("resultatComparaison").innerHTML = html;
+}
+function mettreAJourZoneComparaison() {
+    var zone = document.getElementById('zoneComparaison'), liste = document.getElementById('listeComparaison');
+    if (!zone || !liste) return;
+    if (tiragesComparateur.length === 0) { zone.style.display = 'none'; return; }
+    zone.style.display = 'block'; liste.innerHTML = "";
+    tiragesComparateur.forEach(function(t, idx) {
+        var div = document.createElement('div'); div.className = "comp-tag";
+        div.innerHTML = "<b>L." + (donneesCloud.indexOf(t) + 1) + "</b> (" + t.jeu + ") <button onclick='retirerDuComparateur(" + idx + ")'>✕</button>";
+        liste.appendChild(div);
+    });
+}
+function retirerDuComparateur(idx) { tiragesComparateur.splice(idx, 1); mettreAJourZoneComparaison(); }
+function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneComparaison(); }
+
+// --- 11. LABO ---
 function remplirSelecteursLabo() {
     var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
     donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s1.appendChild(o); });
+    var s2 = document.getElementById("selectMultiTirages"); if(s2) { s2.innerHTML = ""; donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s2.appendChild(o); }); }
+    analyserTirageLabo();
 }
+function analyserTirageLabo() { var i = document.getElementById("selectTirageLabo").value; if (i !== "" && donneesCloud[i]) { tirageLabo = donneesCloud[i]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageLabo.boules.join(" - "); } }
+function faireTurning() { if (!tirageLabo) return; var r = tirageLabo.boules.map(function(n){ var s = n.toString(); if (s.length===1) s = "0"+s; var i = parseInt(s.split('').reverse().join(''),10); return (i>90||i===0)?n:i; }); document.getElementById("resultatOperations").innerHTML = "<b>Miroir :</b><br>Base : " + tirageLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + r.join(" - ") + "</span>"; }
+function faireAddition() { if (!tirageLabo) return; var s = tirageLabo.boules.reduce(function(a,b){ return a+b; },0), r = s; while (r > 90) r -= 90; document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>" + tirageLabo.boules.join(" + ") + " = " + s + "<br>Réduit : <strong>" + r + "</strong>"; }
+function faireTheosophie() { if (!tirageLabo) return; var st = 0, cd = []; tirageLabo.boules.forEach(function(n) { var s = n.toString(), sn = 0, dn = []; for (var i=0;i<s.length;i++) { var c = parseInt(s[i],10); sn += c; dn.push(c); } st += sn; cd.push(dn.join("+") + "=" + sn); }); var ta = st, rt = ""; while (ta > 90) { ta -= 90; rt += " -> " + ta; } document.getElementById("resultatOperations").innerHTML = "<b>Théosophie :</b><br>" + cd.join(" | ") + "<br><b>Total : " + st + "</b><br>" + (rt ? "Réduction : " + rt + "<br>" : "") + "Résultat : <span class='ball'>" + ta + "</span>"; }
 
-// --- TABLEAU DE BORD UTILISATEURS ---
+// --- 12. ADMINISTRATION ---
 async function chargerUtilisateursAuto() {
     var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
     if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>";
@@ -251,34 +335,16 @@ async function sauvegarderPrivileges(userId) {
     const { error } = await supabaseClient.from('profils').update({ role: role, date_fin_abonnement: dateFin }).eq('id', userId);
     if(error) alert("Erreur: " + error.message); else alert("✅ Utilisateur mis à jour !");
 }
-
 async function actualiserDashboard() {
     var total = donneesCloud.length;
     document.getElementById('dashTotal').textContent = total.toLocaleString('fr-FR');
     document.getElementById('dashStar').textContent = donneesCloud.filter(function(t){return t.jeu==='Star';}).length;
     document.getElementById('dashFortune').textContent = donneesCloud.filter(function(t){return t.jeu==='Fortune';}).length;
     document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
-    if (total > 0) {
-        var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date);
-        document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
-    }
+    if (total > 0) { var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date); document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
 }
 
-function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; }
-function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; }
-var _ouvrirOnglet = function(id, btn) {
-  var tabs = document.querySelectorAll('[role="tab"]'), panels = document.querySelectorAll('[role="tabpanel"]');
-  tabs.forEach(function(t) { var s = (t.id === 'tab-' + id); t.setAttribute('aria-selected', s ? 'true' : 'false'); t.classList.toggle('active', s); });
-  panels.forEach(function(p) { p.classList.toggle('active', p.id === 'onglet-' + id); });
-  ajouterAtelier(id); majBarreAteliers();
-  if (btn) btn.focus();
-  
-  if (id === 'cockpit') actualiserCockpit();
-  if (id === 'recherche') initialiserRecherche();
-  if (id === 'labo') { remplirSelecteursLabo(); }
-  if (id === 'boules') remplirBoulesGrid(); // <-- Ajouté
-  if (id === 'comparateur') { mettreAJourZoneComparaison(); } // <-- Ajouté
-};
+// --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
     verifierSession(); 
