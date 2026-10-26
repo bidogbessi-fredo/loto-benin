@@ -18,7 +18,6 @@
     }
   }
   
-  /* Respect des préférences utilisateur pour le mouvement */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -28,17 +27,19 @@
     }
   }
 
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 20px auto; padding: 0 15px; background: var(--bg-body); color: var(--text-main); overflow-x: hidden; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1400px; margin: 0 auto; padding: 0; background: var(--bg-body); color: var(--text-main); overflow-x: hidden; }
+
+  /* Le lien d'évitement (Skip link) est maintenant bien caché */
+  .skip-link { position: absolute; left: -9999px; top: 0; background: var(--primary); color: white; padding: 10px; z-index: 10000; }
+  .skip-link:focus { left: 10px; }
 
   /* =========================================
-     ANIMATIONS & EFFETS VISUELS
+     BARRE DU HAUT (TOPBAR) CORRIGÉE
      ========================================= */
-
-  /* 1. Fond animé de la Topbar */
   .topbar { 
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px; 
-    margin: -20px -15px 20px -15px; /* Étire la barre sur les côtés */
-    padding: 15px 20px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; 
+    width: 100%; box-sizing: border-box;
+    padding: 12px 15px;
     background: linear-gradient(90deg, #1f618d, #2980b9, #8e44ad, #2980b9, #1f618d);
     background-size: 300% 100%;
     animation: gradientMove 12s ease infinite;
@@ -51,13 +52,58 @@
     100% { background-position: 0% 50%; } 
   }
 
-  /* Adapter le texte pour qu'il ressorte sur le fond coloré */
-  .topbar-title { color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); flex: 1; margin: 0; text-align: center; font-size: 22px; }
-  .burger-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(5px); }
-  .burger-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
-  .status-badge { box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+  .burger-btn { 
+    background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); 
+    width: 44px; height: 44px; border-radius: var(--radius-sm); cursor: pointer; font-size: 20px; 
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+    flex-shrink: 0;
+  }
+  .burger-btn:hover { background: rgba(255,255,255,0.4); }
 
-  /* 2. Animation "Pop" des boules */
+  .topbar-logo-title {
+    display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; overflow: hidden;
+  }
+  .topbar-title { 
+    color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); margin: 0; font-size: 20px; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .topbar-logo-title img { height: 30px; border-radius: 6px; }
+  
+  .status-badge { 
+    display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: bold; 
+    color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); flex-shrink: 0;
+  }
+  .badge-admin { background: #27ae60; }
+  .badge-abonne { background: var(--primary); }
+  .badge-gratuit { background: var(--color-hot); }
+
+  /* Bandeau d'expiration */
+  .bandeau-expiration {
+    display: none; background: linear-gradient(90deg, #f39c12, #e67e22); color: #fff; padding: 10px 15px;
+    font-weight: bold; font-size: 13px; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .bandeau-expiration.visible { display: flex; }
+  .bandeau-expiration button { padding: 5px 10px; font-size: 12px; background: white; color: #e67e22; }
+
+  /* =========================================
+     TABLEAU DE BORD (GRILLE RESTAURÉE)
+     ========================================= */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; }
+  .dash-card { 
+    background: var(--bg-body); padding: 15px; border-radius: var(--radius-md); 
+    border-left: 5px solid var(--primary); text-align: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); 
+  }
+  .dash-card .num { font-size: 24px; font-weight: bold; color: var(--primary); display: block; }
+  .dash-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; display: block; }
+  .dash-card.star { border-left-color: var(--color-star); } .dash-card.star .num { color: var(--color-star); }
+  .dash-card.fortune { border-left-color: var(--color-fortune); } .dash-card.fortune .num { color: var(--color-fortune); }
+  .dash-card.digital { border-left-color: var(--color-digital); } .dash-card.digital .num { color: var(--color-digital); }
+  .dash-card.abonnes { border-left-color: #27ae60; } .dash-card.abonnes .num { color: #27ae60; }
+  .dash-card.date { border-left-color: var(--color-hot); } .dash-card.date .num { font-size: 16px; color: var(--color-hot); margin-top: 8px;}
+
+  /* =========================================
+     ANIMATIONS & EFFETS VISUELS
+     ========================================= */
   .ball {
     display: inline-flex; align-items: center; justify-content: center; 
     width: var(--ball-size); height: var(--ball-size); border-radius: 50%; 
@@ -68,16 +114,11 @@
     transition: transform 0.2s;
   }
   .ball:hover { transform: scale(1.15) translateY(-2px); z-index: 10; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-  @keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    80% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
-  }
+  @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
   .ball.star { background: linear-gradient(135deg, #f1c40f, #e67e22); }
   .ball.fortune { background: linear-gradient(135deg, #3498db, #2980b9); }
   .ball.digital { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
 
-  /* 3. Boutons interactifs */
   button { 
     background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; 
     border-radius: var(--radius-pill); padding: 10px 20px; min-height: 44px; 
@@ -89,43 +130,24 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-  /* 4. Cartes dynamiques */
   .card { 
-    background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); 
-    box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border-color); 
+    background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg); 
+    box-shadow: var(--shadow); margin: 15px; border: 1px solid var(--border-color); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   .day-card { 
     background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); 
-    margin-bottom: 15px; padding: 15px 20px; box-shadow: var(--shadow); 
-    transition: transform 0.2s;
+    margin-bottom: 15px; padding: 15px; box-shadow: var(--shadow); transition: transform 0.2s;
   }
   .day-card:hover { transform: scale(1.01); }
 
-  /* 5. Pulsation du chargement */
-  #statusCloud {
-    animation: pulse 2s infinite;
-    display: inline-block;
-  }
-  @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; color: var(--color-star); }
-    100% { opacity: 0.6; }
-  }
+  #statusCloud { animation: pulse 2s infinite; display: inline-block; padding: 0 15px; margin-bottom: 10px; }
+  @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; color: var(--color-star); } 100% { opacity: 0.6; } }
 
-  /* 6. Onglets animés */
-  .tab-btn { 
-    background: transparent; color: var(--text-muted); border: none; font-size: 15px; 
-    padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; 
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); min-height: 44px;
-  }
-  .tab-btn[aria-selected="true"] { 
-    background: var(--primary); color: white; transform: scale(1.05); 
-    box-shadow: 0 4px 10px rgba(41,128,185,0.4); 
-  }
-
-  /* --- LE RESTE DU DESIGN (Conservé tel quel) --- */
+  /* =========================================
+     LE RESTE DU DESIGN (ONGGLETS, MENU, ETC.)
+     ========================================= */
   #login-screen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
   .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.5s ease-out; }
   #form-inscription { display: none; }
@@ -151,7 +173,9 @@
   .drawer-nav-btn:hover { background: var(--bg-body); }
   .drawer-deconnexion { width: 100%; padding: 12px; background: var(--color-hot); color: #fff; border: none; border-radius: var(--radius-pill); font-weight: bold; font-size: 15px; cursor: pointer; min-height: 48px; }
   
-  .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center; justify-content: center;}
+  .tabs { display: flex; gap: 10px; margin: 15px; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--radius-pill); box-shadow: var(--shadow); align-items: center; justify-content: center;}
+  .tab-btn { background: transparent; color: var(--text-muted); border: none; font-size: 15px; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-pill); font-weight: bold; transition: all 0.3s; min-height: 44px;}
+  .tab-btn[aria-selected="true"] { background: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 4px 10px rgba(41,128,185,0.4); }
   .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
   .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -163,10 +187,6 @@
   .day-game { width: 80px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
   .day-nums { flex: 1; display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 5px; }
   
-  .status-badge { display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: bold; color: white; margin-right: 15px; vertical-align: middle;}
-  .badge-admin { background: #27ae60; }
-  .badge-abonne { background: var(--primary); }
-  .badge-gratuit { background: var(--color-hot); }
   .mode-visiteur .admin-only { display: none !important; }
   
   table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
