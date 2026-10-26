@@ -1,5 +1,5 @@
-// On passe la version de v2 à v3 pour forcer le rechargement
-const CACHE_NAME = 'loto-benin-v3'; 
+// On passe la version de v3 à v4 pour forcer le rechargement
+const CACHE_NAME = 'loto-benin-v4'; 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
