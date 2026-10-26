@@ -345,6 +345,120 @@ async function actualiserDashboard() {
 }
 
 // --- INITIALISATION ---
+// =========================================================
+// OUTILS DU LABORATOIRE (Bankers, Suivi, Multi-Draws)
+// =========================================================
+
+// 1. Chasseur de Bankers
+function chercherBanker() {
+    var jeuChoisi = document.getElementById('bankerJeu').value;
+    var resultatBox = document.getElementById('resultatBanker');
+    var tiragesJeu = donneesCloud.filter(function(t) { return t.jeu === jeuChoisi; });
+    
+    if (tiragesJeu.length < 10) { alert("Pas assez de données pour analyser."); return; }
+    var totalTirages = tiragesJeu.length;
+    
+    // Le plus en retard
+    var ecarts = {}; for (var i = 1; i <= 90; i++) ecarts[i] = totalTirages;
+    for (var idx = 0; idx < totalTirages; idx++) { tiragesJeu[idx].boules.forEach(function(b) { ecarts[b] = (totalTirages - 1) - idx; }); }
+    var maxEcart = -1, numRetard = null; for (var n = 1; n <= 90; n++) if (ecarts[n] > maxEcart) { maxEcart = ecarts[n]; numRetard = n; }
+    
+    // Le plus régulier
+    var freq = {}; for (var f = 1; f <= 90; f++) freq[f] = 0; 
+    tiragesJeu.forEach(function(t) { t.boules.forEach(function(b) { freq[b]++; }); });
+    var maxFreq = -1, numFrequent = null; for (var m = 1; m <= 90; m++) if (freq[m] > maxFreq) { maxFreq = freq[m]; numFrequent = m; }
+    
+    // Le suiveur
+    var dernierTirage = tiragesJeu[totalTirages - 1], suiveurs = {};
+    for (var k = 0; k < totalTirages - 1; k++) { 
+        if (tiragesJeu[k].boules.some(function(b) { return dernierTirage.boules.includes(b); })) { 
+            tiragesJeu[k + 1].boules.forEach(function(b) { suiveurs[b] = (suiveurs[b] || 0) + 1; }); 
+        } 
+    }
+    var topSuiveur = null, maxSuivi = -1; for (var s in suiveurs) if (suiveurs[s] > maxSuivi) { maxSuivi = suiveurs[s]; topSuiveur = s; }
+    
+    // Affichage
+    resultatBox.style.display = 'block';
+    document.getElementById('bankerRetard').innerHTML = "<span class='ball hot' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#e74c3c;'>" + numRetard + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Écart de " + maxEcart + " tirages</b></p>";
+    document.getElementById('bankerFrequent').innerHTML = "<span class='ball star' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#f39c12;'>" + numFrequent + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxFreq + " fois</b></p>";
+    
+    if (topSuiveur) {
+        document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#3498db;'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>";
+    } else {
+        document.getElementById('bankerSuiveur').innerHTML = "<p style='font-size: 12px;'>Pas assez de données.</p>";
+    }
+}
+
+// 2. Analyseur de Suivi
+function remplirSuiviDeclencheur() {
+    var sel = document.getElementById('suiviDeclencheur'); 
+    if (!sel) return; 
+    sel.innerHTML = "<option value=''>Sélectionnez un tirage déclencheur...</option>"; 
+    var limit = Math.max(0, donneesCloud.length - 50); 
+    for (var i = donneesCloud.length - 1; i >= limit; i--) { 
+        var t = donneesCloud[i], opt = document.createElement("option"); 
+        opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure; 
+        sel.appendChild(opt); 
+    } 
+}
+
+function analyserSuivi() {
+    var idxSel = document.getElementById('suiviDeclencheur').value; 
+    if (idxSel === "") { alert("Sélectionnez un tirage."); return; }
+    var idx = parseInt(idxSel, 10), declencheur = donneesCloud[idx], resultats = {}, tiragesSuivants = [];
+    
+    for (var i = idx + 1; i < donneesCloud.length; i++) { 
+        if (donneesCloud[i].jeu === declencheur.jeu) { 
+            tiragesSuivants.push(donneesCloud[i]); 
+            if (tiragesSuivants.length === 5) break; 
+        } 
+    }
+    
+    var box = document.getElementById('resultatSuivi'); 
+    if (tiragesSuivants.length === 0) { box.style.display = 'block'; box.innerHTML = "<p>Aucun tirage suivant trouvé.</p>"; return; }
+    
+    tiragesSuivants.forEach(function(t) { t.boules.forEach(function(b) { resultats[b] = (resultats[b] || 0) + 1; }); });
+    var top = Object.keys(resultats).map(function(k) { return { n: parseInt(k, 10), c: resultats[k] }; }).sort(function(a, b) { return b.c - a.c; });
+    
+    var html = "<h4 style='margin-top:0; color:var(--color-star);'>Résultats du suivi</h4><p style='font-size: 13px; margin-bottom: 15px;'>Analyse des <b>" + tiragesSuivants.length + "</b> tirages suivants (jeu " + declencheur.jeu + ").</p><div class='ana-grid'>";
+    top.slice(0, 5).forEach(function(item) { 
+        var pourcentage = Math.round((item.c / tiragesSuivants.length) * 100); 
+        html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>"; 
+    });
+    html += "</div>"; box.innerHTML = html; box.style.display = 'block';
+}
+
+// 3. Multi-Draws (Additionner et Communs)
+function executerAdditions() {
+    var sel = document.getElementById("selectMultiTirages"); 
+    var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
+    if (idx.length === 0) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez des tirages."; return; } 
+    
+    var html = "<b>Additions :</b><br>"; 
+    idx.forEach(function(i){ 
+        var t = donneesCloud[i]; 
+        var s = t.boules.reduce(function(a,b){ return a+b; },0); 
+        var r = s; while(r > 90) r -= 90; 
+        html += t.date + " " + t.heure + " : " + s + " → " + r + "<br>"; 
+    }); 
+    document.getElementById("resultatLaboAvance").innerHTML = html; 
+}
+
+function executerBankersMulti() {
+    var sel = document.getElementById("selectMultiTirages"); 
+    var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
+    if (idx.length < 2) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez au moins 2 tirages."; return; } 
+    
+    var communs = donneesCloud[idx[0]].boules.slice(); 
+    for (var i=1;i<idx.length;i++) {
+        communs = communs.filter(function(n){ return donneesCloud[idx[i]].boules.indexOf(n) !== -1; }); 
+    }
+    
+    var html = "<b>Communs (" + idx.length + " tirages) :</b><br>"; 
+    if (communs.length === 0) html += "Aucun numéro commun.";
+    else html += communs.map(function(n){ return "<span class='ball' style='background:#e74c3c;'>" + n + "</span>"; }).join(" "); 
+    document.getElementById("resultatLaboAvance").innerHTML = html; 
+}
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
     verifierSession(); 
