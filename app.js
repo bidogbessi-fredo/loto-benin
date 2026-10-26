@@ -3,767 +3,158 @@ const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
-var couleurActive = '#e74c3c';
 var estAdmin = false;
 var estAbonne = false;
-var modeDemoActif = false;
-
-var rechercheResultatsActifs = [];
-var dernieresBoulesCherchees = [];
-var tiragesComparateur = [];
-var tirageActifHistorique = null;
-var indexGlobalTirageHistorique = null;
-var ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.log('Erreur SW', err));
-  });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
 }
-
-function initialiserTailleBoules() {
-    var taille = localStorage.getItem('loto_taille_boules') || 'taille-normale';
-    document.body.classList.remove('taille-petite', 'taille-normale', 'taille-grande');
-    document.body.classList.add(taille);
-    var select = document.getElementById('selectTailleBoules');
-    if (select) select.value = taille;
-}
-
-function changerTailleBoules(taille) {
-    localStorage.setItem('loto_taille_boules', taille);
-    document.body.classList.remove('taille-petite', 'taille-normale', 'taille-grande');
-    document.body.classList.add(taille);
-}
-
-(function activerProtectionCopie() {
-    document.addEventListener('copy', function(e) {
-        var c = e.target;
-        if (c && (c.tagName === 'INPUT' || c.tagName === 'TEXTAREA' || c.isContentEditable)) return;
-        if (c && c.closest && c.closest('.modal-box')) return;
-        e.preventDefault(); return false;
-    }, true);
-    document.addEventListener('contextmenu', function(e) {
-        var c = e.target;
-        if (c && (c.tagName === 'INPUT' || c.tagName === 'TEXTAREA' || c.isContentEditable)) return;
-        if (c && c.closest && c.closest('.modal-box')) return;
-        e.preventDefault(); return false;
-    }, true);
-})();
-
-var DATE_LANCEMENT_STAR    = new Date("2004-06-16");
-var DATE_LANCEMENT_FORTUNE = new Date("2010-04-28");
-var DATE_LANCEMENT_DIGITAL = new Date("2023-07-13");
-var DATE_AJOUT_11H         = new Date("2023-07-13");
-var DATE_AJOUT_08H         = new Date("2026-08-13");
-
-function heuresPourJeu(jeu, dateObj) {
-    if (jeu === 'Star') {
-        if (dateObj < DATE_LANCEMENT_STAR) return [];
-        if (dateObj < DATE_AJOUT_11H) return ["14H", "18H"];
-        return ["11H", "14H", "18H"];
-    }
-    if (jeu === 'Fortune') {
-        if (dateObj < DATE_LANCEMENT_FORTUNE) return [];
-        if (dateObj < DATE_AJOUT_11H) return ["14H", "18H"];
-        return ["11H", "14H", "18H"];
-    }
-    if (jeu === 'Digital') {
-        if (dateObj < DATE_LANCEMENT_DIGITAL) return [];
-        if (dateObj < DATE_AJOUT_08H) return ["00H", "20H"];
-        return ["00H", "08H", "20H"];
-    }
-    return [];
-}
-
-var GRILLE_GAINS_LNB = {
-  1: { multiplicateur: 2, gainPour100: 200 }, 2: { multiplicateur: 250, gainPour100: 25000 },
-  3: { multiplicateur: 2500, gainPour100: 250000 }, 4: { multiplicateur: 7500, gainPour100: 750000 },
-  5: { multiplicateur: 45000, gainPour100: 4500000 }
-};
-
-var DONNEES_DEMO = [
-  { date: "2025-01-08", heure: "14H", jeu: "Star",    boules: [12, 27, 45, 63, 78] },
-  { date: "2025-01-08", heure: "18H", jeu: "Star",    boules: [5, 19, 34, 56, 82] },
-  { date: "2025-01-09", heure: "14H", jeu: "Fortune", boules: [8, 22, 41, 59, 71] },
-  { date: "2025-01-09", heure: "18H", jeu: "Fortune", boules: [3, 15, 33, 48, 90] },
-  { date: "2025-01-10", heure: "14H", jeu: "Fortune", boules: [11, 29, 44, 67, 75] },
-  { date: "2025-01-10", heure: "18H", jeu: "Fortune", boules: [7, 18, 39, 52, 88] },
-  { date: "2025-01-11", heure: "14H", jeu: "Star",    boules: [14, 25, 36, 58, 79] },
-  { date: "2025-01-11", heure: "18H", jeu: "Star",    boules: [2, 21, 43, 61, 85] },
-  { date: "2025-01-12", heure: "14H", jeu: "Star",    boules: [9, 28, 47, 64, 81] },
-  { date: "2025-01-12", heure: "18H", jeu: "Star",    boules: [6, 17, 38, 55, 72] }
-];
-
-var audioMuet = (localStorage.getItem('loto_audio_muet') === 'true');
-var derniereComparaison = null;
-
-function initialiserBoutonMuet() {
-    var btn = document.getElementById('btnMuet');
-    if (!btn) return;
-    if (audioMuet) { btn.textContent = "🔊 Activer le son"; btn.setAttribute('aria-pressed', 'false'); }
-    else { btn.textContent = "🔇 Muet"; btn.setAttribute('aria-pressed', 'true'); }
-}
-function basculerMuet() {
-    audioMuet = !audioMuet;
-    localStorage.setItem('loto_audio_muet', audioMuet ? 'true' : 'false');
-    var btn = document.getElementById('btnMuet');
-    if (audioMuet) { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); btn.textContent = "🔊 Activer le son"; }
-    else { btn.textContent = "🔇 Muet"; }
-}
-function lireTexteVocal(texte) {
-    if (audioMuet || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(texte);
-    u.lang = 'fr-FR'; u.rate = 1.05; u.pitch = 1;
-    window.speechSynthesis.speak(u);
-}
-function annoncerResumeComparaison(plages, statsParPlage) {
-    var parties = [];
-    statsParPlage.forEach(function(s) { parties.push("Plage " + s.nom + " : " + s.exact + " identique(s), " + s.miroir + " miroir(s)"); });
-    var texte = "Comparaison terminée. " + parties.join(". ") + ".";
-    var zone = document.getElementById('annonceComparaison');
-    if (zone) { zone.textContent = ""; setTimeout(function() { zone.textContent = texte; }, 50); }
-    if (!audioMuet) lireTexteVocal(texte);
-}
-function lireDetailComparaison() {
-    if (!derniereComparaison) { alert("Lance d'abord une comparaison."); return; }
-    var phrases = ["Détail de la comparaison."];
-    derniereComparaison.forEach(function(p) {
-        phrases.push("Colonne " + p.id + ".");
-        p.data.forEach(function(item) { if (item) phrases.push("Ligne " + item.ligneLocale + ", boules : " + item.data.boules.join(", ") + "."); });
-    });
-    if (!audioMuet) lireTexteVocal(phrases.join(" "));
-}
-
-var drawerOuvert = false, focusAvantDrawer = null;
-function ouvrirDrawer() {
-    focusAvantDrawer = document.activeElement; drawerOuvert = true;
-    document.getElementById('drawerMenu').classList.add('open');
-    document.getElementById('drawerBackdrop').classList.add('open');
-    document.getElementById('btnBurger').setAttribute('aria-expanded', 'true');
-    var actif = document.querySelector('.tab-content.active');
-    if (actif) {
-        var id = actif.id.replace('onglet-', '');
-        document.querySelectorAll('.drawer-nav-btn').forEach(function(b) {
-            if (b.dataset.onglet === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
-        });
-    }
-    setTimeout(function() { var c = document.querySelector('#drawerMenu .drawer-close'); if (c) c.focus(); }, 50);
-    document.addEventListener('keydown', piegeFocusDrawer);
-}
-function fermerDrawer() {
-    drawerOuvert = false;
-    document.getElementById('drawerMenu').classList.remove('open');
-    document.getElementById('drawerBackdrop').classList.remove('open');
-    document.getElementById('btnBurger').setAttribute('aria-expanded', 'false');
-    document.removeEventListener('keydown', piegeFocusDrawer);
-    if (focusAvantDrawer && focusAvantDrawer.focus) focusAvantDrawer.focus();
-}
-function piegeFocusDrawer(e) {
-    if (!drawerOuvert) return;
-    if (e.key === 'Escape') { e.preventDefault(); fermerDrawer(); return; }
-    if (e.key !== 'Tab') return;
-    var d = document.getElementById('drawerMenu');
-    var f = d.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    if (f.length === 0) return;
-    var first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-}
-function ouvrirOngletDepuisDrawer(id) { fermerDrawer(); var b = document.getElementById('tab-' + id); _ouvrirOnglet(id, b); }
-function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
-
-function majBarreAteliers() {
-    var bar = document.getElementById('ateliersBar');
-    var topOnglets = ['saisie', 'cockpit', 'analyses'];
-    var ateliersFiltres = ateliersOuverts.filter(function(id) { return topOnglets.indexOf(id) === -1; });
-    if (ateliersFiltres.length === 0) { bar.style.display = "none"; return; }
-    bar.style.display = "flex"; bar.innerHTML = "";
-    ateliersFiltres.forEach(function(id) {
-        var icone = "🔧";
-        var btnOnglet = document.getElementById('tab-' + id);
-        if(btnOnglet) icone = btnOnglet.textContent.trim().split(' ')[0];
-        var btn = document.createElement('button');
-        btn.className = "atelier-btn" + (document.getElementById('onglet-' + id).classList.contains('active') ? " active" : "");
-        btn.innerHTML = icone + "<span class='atelier-close' onclick='retirerAtelier(event, \"" + id + "\")'>✕</span>";
-        btn.onclick = function() { _ouvrirOnglet(id, btnOnglet); };
-        bar.appendChild(btn);
-    });
-}
-function ajouterAtelier(id) {
-    var topOnglets = ['saisie', 'cockpit', 'analyses'];
-    if (topOnglets.indexOf(id) !== -1) return; 
-    if (ateliersOuverts.indexOf(id) === -1) { ateliersOuverts.push(id); localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts)); }
-    majBarreAteliers();
-}
-function retirerAtelier(e, id) {
-    e.stopPropagation();
-    ateliersOuverts = ateliersOuverts.filter(function(a) { return a !== id; });
-    localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
-    majBarreAteliers();
-    if(document.getElementById('onglet-' + id).classList.contains('active')) _ouvrirOnglet('saisie', document.getElementById('tab-saisie'));
-}
-
-var _ouvrirOnglet = function(id, btn) {
-  var tabs = document.querySelectorAll('[role="tab"]');
-  var panels = document.querySelectorAll('[role="tabpanel"]');
-  tabs.forEach(function(t) {
-    var s = (t.id === 'tab-' + id);
-    t.setAttribute('aria-selected', s ? 'true' : 'false'); t.classList.toggle('active', s);
-  });
-  panels.forEach(function(p) { p.classList.toggle('active', p.id === 'onglet-' + id); });
-  if (btn) btn.focus();
-  ajouterAtelier(id); majBarreAteliers();
-  if (id === 'cockpit') actualiserCockpit();
-  if (id === 'labo') { remplirSelecteurTirage(); remplirSelectMulti(); remplirSuiviDeclencheur(); }
-  if (id === 'boules') remplirBoulesGrid();
-  if (id === 'demo') initialiserDemo();
-  if (id === 'verif') { var d = document.getElementById('verifDate'); if (d && !d.value) d.value = new Date().toISOString().slice(0,10); }
-  if (id === 'analyses') { setTimeout(executerAnalyses, 100); }
-  if (id === 'recherche') { initialiserRecherche(); }
-  if (id === 'comparateur') { mettreAJourZoneComparaison(); }
-};
-function ouvrirOnglet(id, btn) { _ouvrirOnglet(id, btn); }
 
 async function verifierSession() {
-    try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
-            let role = profil ? profil.role : 'visiteur';
-            let dateFin = null, dateValide = false;
-            if (profil && profil.date_fin_abonnement) { dateFin = new Date(profil.date_fin_abonnement); dateValide = !isNaN(dateFin.getTime()); }
-            estAdmin = (role === 'admin');
-            estAbonne = (role === 'admin') || (dateValide && dateFin > new Date());
-            afficherApplication(session.user.email, estAdmin, estAbonne, dateValide ? dateFin : null);
-        } else {
-            document.getElementById("login-screen").style.display = "flex";
-            document.getElementById("app-content").style.display = "none";
-        }
-    } catch(e) { document.getElementById("login-screen").style.display = "flex"; }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
+        let role = profil ? profil.role : 'visiteur';
+        let dateFin = null, dateValide = false;
+        if (profil && profil.date_fin_abonnement) { dateFin = new Date(profil.date_fin_abonnement); dateValide = !isNaN(dateFin.getTime()); }
+        estAdmin = (role === 'admin');
+        estAbonne = (role === 'admin') || (dateValide && dateFin > new Date());
+        afficherApplication(estAdmin, estAbonne, dateValide ? dateFin : null);
+    } else {
+        document.getElementById("login-screen").style.display = "flex";
+        document.getElementById("app-content").style.display = "none";
+    }
 }
+
 async function seConnecter() {
     var email = document.getElementById("loginEmail").value, password = document.getElementById("loginPassword").value, msg = document.getElementById("loginMessage");
-    if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
-    msg.style.color = "var(--primary)"; msg.textContent = "Connexion...";
+    msg.textContent = "Connexion...";
     const { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
-    if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message; }
-    else { msg.style.color = "#27ae60"; msg.textContent = "✅ Connecté !"; setTimeout(() => { verifierSession(); }, 500); }
+    if (error) { msg.textContent = "❌ " + error.message; } 
+    else { msg.textContent = "✅ Connecté !"; setTimeout(() => { verifierSession(); }, 500); }
 }
-async function creerCompte() {
-    var email = document.getElementById("insEmail").value, password = document.getElementById("insPassword").value, msg = document.getElementById("loginMessage");
-    if (!email || !password) { msg.style.color = "var(--color-hot)"; msg.textContent = "Remplissez les champs."; return; }
-    if (password.length < 6) { msg.style.color = "var(--color-hot)"; msg.textContent = "6 caractères min."; return; }
-    msg.style.color = "var(--primary)"; msg.textContent = "Création...";
-    const { error } = await supabaseClient.auth.signUp({ email: email, password: password });
-    if (error) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + error.message; }
-    else { msg.style.color = "#27ae60"; msg.textContent = "✅ Compte créé ! Connectez-vous."; setTimeout(() => { afficherConnexion(); }, 2000); }
-}
-function entrerVisiteur() { estAdmin = false; estAbonne = false; afficherApplication("Visiteur", false, false, null); }
+
+function entrerVisiteur() { estAdmin = false; estAbonne = false; afficherApplication(false, false, null); }
+
 async function seDeconnecter() {
     await supabaseClient.auth.signOut();
     document.getElementById("login-screen").style.display = "flex";
     document.getElementById("app-content").style.display = "none";
-    document.body.classList.remove("mode-visiteur");
     afficherConnexion();
 }
-function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; document.getElementById("loginMessage").textContent = ""; }
-function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; document.getElementById("loginMessage").textContent = ""; }
 
-function afficherApplication(nomUtilisateur, isAdmin, isAbonne, dateFin) {
+function afficherApplication(isAdmin, isAbonne, dateFin) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app-content").style.display = "block";
     var badgeEl = document.getElementById("statusBadge");
     if (isAdmin) { badgeEl.textContent = "👑 Admin"; badgeEl.className = "status-badge badge-admin"; document.body.classList.remove("mode-visiteur"); }
-    else if (isAbonne && dateFin) {
-        var dj = new Date(); dj.setHours(0,0,0,0); var f = new Date(dateFin); f.setHours(0,0,0,0);
-        var jr = Math.ceil((f - dj) / 86400000);
-        if (jr <= 1) { badgeEl.textContent = "⚠️ J-1"; badgeEl.className = "status-badge badge-warning"; }
-        else { badgeEl.textContent = "⭐ " + jr + "j"; badgeEl.className = "status-badge badge-abonne"; }
-        document.body.classList.remove("mode-visiteur");
-    } else { badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit"; document.body.classList.add("mode-visiteur"); }
+    else if (isAbonne) { badgeEl.textContent = "⭐ Abonné"; badgeEl.className = "status-badge badge-abonne"; document.body.classList.remove("mode-visiteur"); }
+    else { badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit"; document.body.classList.add("mode-visiteur"); }
     
-    var premium = ['cockpit', 'comparateur', 'labo', 'boules', 'recherche', 'verif', 'analyses'];
-    premium.forEach(function(id) {
-        var overlay = document.getElementById('overlay-' + id);
-        var content = document.getElementById('content-' + id);
-        var card = document.getElementById('lock-' + id);
-        if (isAdmin || isAbonne) {
-            if (overlay) overlay.style.display = "none";
-            if (card) card.classList.remove('premium-locked');
-            if (content) { content.removeAttribute('aria-hidden'); content.removeAttribute('inert'); }
-        } else {
-            if (overlay) overlay.style.display = "flex";
-            if (card) card.classList.add('premium-locked');
-            if (content) { content.setAttribute('aria-hidden','true'); content.setAttribute('inert',''); }
-        }
-    });
     var dash = document.getElementById('dashboardAdmin');
     if (dash) dash.style.display = isAdmin ? "block" : "none";
-    rafraichirDonnees().then(function() {
-        if (document.querySelectorAll('.plage-box').length === 0) { ajouterPlage(); ajouterPlage(); }
-        actualiserCockpit();
-        if (isAdmin) { actualiserDashboard(); chargerUtilisateursAuto(); }
-        remplirBoulesGrid();
-        initialiserRecherche();
-        remplirSuiviDeclencheur();
-    });
+    
+    chargerDonnees();
+    if (isAdmin) chargerUtilisateursAuto();
 }
 
-async function chargerDepuisCloud() {
-  var statusEl = document.getElementById("statusCloud");
-  statusEl.textContent = "⏳ Téléchargement...";
-  let tous = [], page = 0, parPage = 1000, enCours = true;
+async function chargerDonnees() {
+  var statusEl = document.getElementById("statusCloud"); statusEl.textContent = "⏳...";
+  let tous = [], page = 0, enCours = true;
   while (enCours) {
-    let { data, error } = await supabaseClient.from('tirages').select('*').order('date', { ascending: true }).order('heure', { ascending: true }).range(page * parPage, (page + 1) * parPage - 1);
-    if (error) { statusEl.textContent = "❌ Erreur."; return []; }
-    if (data.length > 0) { tous = tous.concat(data); page++; } else { enCours = false; }
+    let { data } = await supabaseClient.from('tirages').select('*').order('date', { ascending: true }).order('heure', { ascending: true }).range(page * 1000, (page + 1) * 1000 - 1);
+    if (data && data.length > 0) { tous = tous.concat(data); page++; } else { enCours = false; }
   }
   statusEl.textContent = "✅ Connecté ! (" + tous.length + " tirages)";
-  statusEl.style.color = "#27ae60";
   donneesCloud = tous.map(function(item) {
       var arr = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
-      return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: arr, somme: arr.reduce(function(a,b){return a+b;},0) };
+      return { id: item.id, date: item.date, jeu: item.jeu, heure: item.heure, boules: arr };
   });
-  return donneesCloud;
-}
-async function rafraichirDonnees() {
-  if (modeDemoActif) { afficherSacSelectionne(); remplirBoulesGrid(); return; }
-  await chargerDepuisCloud();
   afficherSacSelectionne();
-  if (estAdmin) { actualiserDashboard(); }
+  if (estAdmin) actualiserDashboard();
 }
 
-function afficherSacSelectionne() {
-    var sacId = document.getElementById("selectSac").value;
-    var filtre = document.getElementById("filtrePeriode").value;
-    var tf = getTiragesDuSac(sacId);
-    if (tf.length === 0) { document.getElementById("conteneurSac").innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage.</p>"; return; }
+document.getElementById("btnAjouter")?.addEventListener("click", async function () {
+  if (!estAdmin) { alert("Admin uniquement."); return; }
+  var msg = document.getElementById("message"); msg.textContent = "Envoi..."; msg.style.color = "blue";
+  var date = document.getElementById("date").value, jeu = document.getElementById("jeuSaisie").value, heure = document.getElementById("heureSaisie").value, boules = [];
+  for (var i = 1; i <= 5; i++) { var v = parseInt(document.getElementById("b" + i).value, 10); if (isNaN(v)) { msg.textContent = "Erreur boules"; return; } boules.push(v); }
+  
+  let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
+  if (error) { msg.textContent = "❌ Erreur."; msg.style.color = "red"; } 
+  else { 
+      msg.textContent = "✅ Tirage enregistré !"; msg.style.color = "green"; 
+      for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = "";
+      document.getElementById("filtrePeriode").value = "tout"; // Affiche tout
+      chargerDonnees(); 
+  }
+});
 
-    var aujourdhui = new Date();
-    var hier = new Date(); hier.setDate(hier.getDate() - 1);
-    var strAuj = aujourdhui.toISOString().slice(0,10);
-    var strHier = hier.toISOString().slice(0,10);
-    var prefixMois = aujourdhui.toISOString().slice(0,7);
-
-    tf = tf.filter(function(t) {
-        if (filtre === 'recent') return t.date === strAuj || t.date === strHier;
-        if (filtre === 'mois') return t.date.startsWith(prefixMois);
-        return true;
+async function chargerUtilisateursAuto() {
+    var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
+    if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>";
+    const { data: profils } = await supabaseClient.from('profils').select('*').order('role');
+    var html = "";
+    if(profils) profils.forEach(function(p) {
+        var dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
+        html += "<tr><td>" + (p.email || 'Inconnu') + "</td><td>" + p.role + "</td><td><input type='date' value='" + dateVal + "' id='dateUser_" + p.id + "'></td>";
+        html += "<td><select id='roleUser_" + p.id + "'><option value='visiteur' "+(p.role==='visiteur'?'selected':'')+">Visiteur</option><option value='abonne' "+(p.role==='abonne'?'selected':'')+">Abonné</option><option value='admin' "+(p.role==='admin'?'selected':'')+">Admin</option></select>";
+        html += " <button onclick=\"sauvegarderPrivileges('" + p.id + "')\" style='background:green;'>💾</button></td></tr>";
     });
-
-    if (tf.length === 0) { document.getElementById("conteneurSac").innerHTML = "<p style='color:var(--text-muted);'>Aucun tirage pour cette période.</p>"; return; }
-    var parDate = {}; tf.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
-    var dates = Object.keys(parDate).sort();
-    function jeuxDuSac(id) {
-        if (id === 'tous') return ['Star', 'Fortune', 'Digital'];
-        if (id === 'Star') return ['Star']; if (id === 'Fortune') return ['Fortune']; if (id === 'Digital') return ['Digital'];
-        if (id === 'Star_Digital') return ['Star', 'Digital']; if (id === 'Fortune_Digital') return ['Fortune', 'Digital'];
-        if (id === 'Star_Fortune') return ['Star', 'Fortune']; if (id === 'Star_Fortune_Digital') return ['Star', 'Fortune', 'Digital'];
-        return [];
-    }
-    var ja = jeuxDuSac(sacId), seul = (ja.length === 1), html = "", n = 0;
-    dates.forEach(function(ds) {
-        var tj = parDate[ds], dObj = new Date(ds); if (isNaN(dObj.getTime())) return;
-        var df = dObj.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        var hSet = new Set(); ja.forEach(function(j){ heuresPourJeu(j, dObj).forEach(function(h){ hSet.add(h); }); });
-        if (hSet.size === 0) return;
-        var hArr = Array.from(hSet).sort();
-        var htmlJ = "<div class='day-card'><h3 class='day-header'>📅 " + df + "</h3>", ajout = 0;
-        hArr.forEach(function(h) {
-            var t = tj.find(function(x){ return x.heure === h; }); if (!t && !seul) return;
-            var jpH = null; ja.forEach(function(j){ if (heuresPourJeu(j, dObj).indexOf(h) !== -1 && !jpH) jpH = j; });
-            n++; ajout++;
-            htmlJ += "<div class='day-row'><div class='day-time'>Ligne " + n + "<br><small>" + h + "</small></div>";
-            if (t) {
-                var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-                htmlJ += "<div class='day-game'>" + t.jeu + "</div><div class='day-nums'>";
-                t.boules.forEach(function(b){ htmlJ += "<span class='ball " + c + "'>" + b + "</span>"; });
-                htmlJ += "</div>";
-            } else { htmlJ += "<div class='day-game' style='color:var(--border-color);'>" + (jpH||'-') + "</div><div class='day-nums'><span class='ball empty'>-</span></div>"; }
-            htmlJ += "</div>";
-        });
-        htmlJ += "</div>"; if (ajout > 0) html += htmlJ;
-    });
-    document.getElementById("conteneurSac").innerHTML = html;
+    tbody.innerHTML = html;
 }
 
-function getTiragesDuSac(sacId) {
-    return donneesCloud.filter(function(t) {
-        if (sacId === 'tous') return true;
-        if (sacId === 'Star') return t.jeu === 'Star'; if (sacId === 'Fortune') return t.jeu === 'Fortune'; if (sacId === 'Digital') return t.jeu === 'Digital';
-        if (sacId === 'Star_Digital') return t.jeu === 'Star' || t.jeu === 'Digital'; if (sacId === 'Fortune_Digital') return t.jeu === 'Fortune' || t.jeu === 'Digital';
-        if (sacId === 'Star_Fortune') return t.jeu === 'Star' || t.jeu === 'Fortune'; if (sacId === 'Star_Fortune_Digital') return true;
-        return false;
-    });
+async function sauvegarderPrivileges(userId) {
+    var role = document.getElementById("roleUser_" + userId).value;
+    var dateFin = document.getElementById("dateUser_" + userId).value || null;
+    const { error } = await supabaseClient.from('profils').update({ role: role, date_fin_abonnement: dateFin }).eq('id', userId);
+    if(error) alert("Erreur: " + error.message); else alert("✅ Utilisateur mis à jour !");
 }
 
-function changerModeRecherche() {
-    var mode = document.getElementById('rechMode').value;
-    document.getElementById('sectionRechBoules').style.display = mode === 'boules' ? 'block' : 'none';
-    document.getElementById('sectionRechSomme').style.display = mode === 'somme' ? 'block' : 'none';
-    document.getElementById('resultatRecherche').style.display = 'none';
-}
-function initialiserRecherche() {
-    var container = document.getElementById('rechBoulesContainer'); if (!container || container.children.length > 0) return;
-    container.innerHTML = ''; for (var i = 0; i < 2; i++) ajouterChampRecherche();
-}
-function ajouterChampRecherche() {
-    var container = document.getElementById('rechBoulesContainer'); if (container.children.length >= 5) return;
-    var div = document.createElement('div'); div.className = 'rech-input-group';
-    var posOptions = document.getElementById('rechPositionActive').checked ? "<select class='rech-pos'><option value='0'>Peu importe</option><option value='1'>1ère</option><option value='2'>2ème</option><option value='3'>3ème</option><option value='4'>4ème</option><option value='5'>5ème</option></select>" : "";
-    div.innerHTML = `<label>Boule ${container.children.length + 1}</label><input type="number" class="rech-num" min="1" max="90" placeholder="N°">${posOptions}`;
-    container.appendChild(div);
-}
-function retirerChampRecherche() { var container = document.getElementById('rechBoulesContainer'); if (container.children.length > 1) container.lastElementChild.remove(); }
-function togglePositionsRecherche() {
-    var container = document.getElementById('rechBoulesContainer');
-    var nums = Array.from(container.querySelectorAll('.rech-num')).map(function(inp) { return inp.value; });
-    container.innerHTML = ''; nums.forEach(function(val) { ajouterChampRecherche(); container.lastElementChild.querySelector('.rech-num').value = val; });
-}
-function togglePositionsSomme() {
-    var active = document.getElementById('rechSommePosActive').checked;
-    var nbBoules = parseInt(document.getElementById('rechNbBoules').value, 10);
-    var container = document.getElementById('rechSommePositionsContainer');
-    if (!active) { container.style.display = 'none'; return; }
-    container.style.display = 'flex';
-    if (container.children.length !== nbBoules) {
-        container.innerHTML = "";
-        for (var i = 0; i < nbBoules; i++) {
-            var select = document.createElement("select"); select.className = "rech-somme-pos"; select.style.padding = "10px";
-            select.innerHTML = `<option value="1">Pos 1</option><option value="2">Pos 2</option><option value="3">Pos 3</option><option value="4">Pos 4</option><option value="5">Pos 5</option>`;
-            if (i < 5) select.value = (i + 1).toString(); container.appendChild(select);
-        }
-    }
-}
-function obtenirCombinaisons(arr, k) {
-    var resultats = [];
-    function combiner(debut, actuels) {
-        if (actuels.length === k) { resultats.push(actuels.slice()); return; }
-        for (var i = debut; i < arr.length; i++) { actuels.push(arr[i]); combiner(i + 1, actuels); actuels.pop(); }
-    }
-    combiner(0, []); return resultats;
-}
-function executerRecherche() {
-    var mode = document.getElementById('rechMode').value, jeu = document.getElementById('rechJeu').value;
-    var source = donneesCloud.filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
-    rechercheResultatsActifs = []; dernieresBoulesCherchees = [];
-
-    if (mode === 'boules') {
-        var usePos = document.getElementById('rechPositionActive').checked;
-        var inputs = document.getElementById('rechBoulesContainer').querySelectorAll('.rech-input-group');
-        var criteres = [];
-        inputs.forEach(function(div) {
-            var num = parseInt(div.querySelector('.rech-num').value, 10);
-            var pos = usePos ? parseInt(div.querySelector('.rech-pos').value, 10) : 0;
-            if (!isNaN(num) && num >= 1 && num <= 90) { criteres.push({ num: num, pos: pos }); dernieresBoulesCherchees.push(num); }
-        });
-        if (criteres.length === 0) { alert("Entrez au moins une boule."); return; }
-        source.forEach(function(t) {
-            var match = true;
-            for (var i = 0; i < criteres.length; i++) {
-                var c = criteres[i], indexBoule = t.boules.indexOf(c.num);
-                if (indexBoule === -1) { match = false; break; } 
-                if (c.pos > 0 && indexBoule !== (c.pos - 1)) { match = false; break; }
-            }
-            if (match) rechercheResultatsActifs.push(t);
-        });
-    } else if (mode === 'somme') {
-        var totalCible = parseInt(document.getElementById('rechTotalSomme').value, 10);
-        var nbBoules = parseInt(document.getElementById('rechNbBoules').value, 10);
-        var usePos = document.getElementById('rechSommePosActive').checked;
-        if (isNaN(totalCible)) { alert("Entrez un total valide."); return; }
-        var positionsChoisies = [];
-        if (usePos) { document.querySelectorAll('.rech-somme-pos').forEach(function(sel) { positionsChoisies.push(parseInt(sel.value, 10) - 1); }); }
-        source.forEach(function(t) {
-            var match = false;
-            if (usePos) {
-                var somme = 0; for (var i = 0; i < positionsChoisies.length; i++) somme += t.boules[positionsChoisies[i]];
-                if (somme === totalCible) match = true;
-            } else {
-                var combinaisons = obtenirCombinaisons(t.boules, nbBoules);
-                for (var j = 0; j < combinaisons.length; j++) {
-                    if (combinaisons[j].reduce(function(a,b){return a+b;}, 0) === totalCible) { match = true; break; }
-                }
-            }
-            if (match) { rechercheResultatsActifs.push(t); t.boules.forEach(function(b) { if(dernieresBoulesCherchees.indexOf(b) === -1) dernieresBoulesCherchees.push(b); }); }
-        });
-    }
-    afficherResultatsRecherche();
-}
-function afficherResultatsRecherche() {
-    var box = document.getElementById('resultatRecherche'); box.style.display = 'block';
-    document.getElementById('rechCompteur').textContent = rechercheResultatsActifs.length;
-    var tbody = document.getElementById('tbodyResultatsRecherche'); tbody.innerHTML = "";
-    if (rechercheResultatsActifs.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Aucun résultat.</td></tr>"; return; }
-    rechercheResultatsActifs.forEach(function(t) {
-        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-        var indexGlobal = donneesCloud.indexOf(t) + 1, tJeu = donneesCloud.filter(function(x) { return x.jeu === t.jeu; }), idxJ = tJeu.indexOf(t) + 1;
-        var tr = document.createElement('tr'); tr.onclick = function() { ouvrirHistorique(indexGlobal - 1); };
-        var html = "<td><b>L." + indexGlobal + "</b><br><small>L." + t.jeu + " " + idxJ + "</small></td>";
-        html += "<td>" + t.date + "<br><small>" + t.heure + "</small></td><td style='font-weight:bold; color:var(--color-"+c+");'>" + t.jeu + "</td><td class='boules-cell'>";
-        t.boules.forEach(function(b) { var isCible = dernieresBoulesCherchees.indexOf(b) !== -1; html += "<span class='ball " + c + "' style='" + (isCible ? "border: 2px solid #fff; box-shadow: 0 0 5px #fff;" : "") + "'>" + b + "</span>"; });
-        html += "</td><td style='font-weight:bold;'>" + t.somme + "</td>";
-        tr.innerHTML = html; tbody.appendChild(tr);
-    });
-}
-function ouvrirHistorique(indexGlobal) {
-    if (indexGlobal < 0 || indexGlobal >= donneesCloud.length) return;
-    indexGlobalTirageHistorique = indexGlobal; tirageActifHistorique = donneesCloud[indexGlobal];
-    var jeuCible = tirageActifHistorique.jeu, avant = [], apres = [];
-    for (var i = indexGlobal - 1; i >= 0 && avant.length < 10; i--) if (donneesCloud[i].jeu === jeuCible) avant.unshift(donneesCloud[i]);
-    for (var j = indexGlobal + 1; j < donneesCloud.length && apres.length < 10; j++) if (donneesCloud[j].jeu === jeuCible) apres.push(donneesCloud[j]);
-    var contexte = avant.concat([tirageActifHistorique]).concat(apres), html = "";
-    contexte.forEach(function(t) {
-        var isTarget = (t === tirageActifHistorique), c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
-        var idxG = donneesCloud.indexOf(t) + 1, tJeu = donneesCloud.filter(function(x) { return x.jeu === t.jeu; }), idxJ = tJeu.indexOf(t) + 1;
-        html += "<div class='histo-row " + (isTarget ? "target" : "") + "'><div class='h-date' style='font-weight:bold;'>L." + idxG + "<br><small style='font-weight:normal;'>L." + t.jeu + " " + idxJ + "</small></div>";
-        html += "<div class='h-date'>" + t.date + "</div><div class='h-heure'>" + t.heure + "</div><div class='h-boules'>";
-        t.boules.forEach(function(b) { var isCible = dernieresBoulesCherchees.indexOf(b) !== -1; html += "<span class='ball " + c + (isCible ? " target-boule" : "") + "'>" + b + "</span>"; });
-        html += "</div></div>";
-    });
-    document.getElementById('histoContent').innerHTML = html; document.getElementById('modalHistorique').style.display = 'flex';
-}
-
-function mettreAJourZoneComparaison() {
-    var zone = document.getElementById('zoneComparaison'), liste = document.getElementById('listeComparaison');
-    if (tiragesComparateur.length === 0) { zone.style.display = 'none'; return; }
-    zone.style.display = 'block'; liste.innerHTML = "";
-    tiragesComparateur.forEach(function(t, idx) {
-        var div = document.createElement('div'); div.className = "comp-tag";
-        div.innerHTML = "<b>L." + (donneesCloud.indexOf(t) + 1) + "</b> (" + t.jeu + ") <button onclick='retirerDuComparateur(" + idx + ")'>✕</button>";
-        liste.appendChild(div);
-    });
-}
-function ajouterTirageActifAuComparateur() {
-    if (!tirageActifHistorique) return;
-    if (tiragesComparateur.some(function(t) { return t.id === tirageActifHistorique.id; })) { alert("Déjà dedans."); return; }
-    tiragesComparateur.push(tirageActifHistorique); mettreAJourZoneComparaison();
-    document.getElementById('modalHistorique').style.display = 'none'; fermerDrawer(); _ouvrirOnglet('comparateur', document.getElementById('tab-comparateur'));
-}
-function retirerDuComparateur(idx) { tiragesComparateur.splice(idx, 1); mettreAJourZoneComparaison(); }
-function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneComparaison(); }
-
-function actualiserDashboard() {
-    if (!estAdmin) return;
+async function actualiserDashboard() {
     var total = donneesCloud.length;
     document.getElementById('dashTotal').textContent = total;
     document.getElementById('dashStar').textContent = donneesCloud.filter(function(t){return t.jeu==='Star';}).length;
     document.getElementById('dashFortune').textContent = donneesCloud.filter(function(t){return t.jeu==='Fortune';}).length;
     document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
-    if (total > 0) {
-        var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date);
-        document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
-    }
-    try {
-        var aujourdhui = new Date().toISOString().slice(0,10);
-        supabaseClient.from('profils').select('role, date_fin_abonnement').then(function(res) {
-            var nb = (res.data || []).filter(function(p){ if(p.role==='admin') return true; if(!p.date_fin_abonnement) return false; return p.date_fin_abonnement >= aujourdhui; }).length;
-            document.getElementById('dashAbonnes').textContent = nb;
-        });
-    } catch(e) { document.getElementById('dashAbonnes').textContent = "?"; }
 }
 
-async function chargerUtilisateurs() {
-    if (!estAdmin) return;
-    var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs"), msg = document.getElementById("msgUtilisateurs");
-    tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>"; table.style.display = "table";
-    try {
-        const { data: profils, error } = await supabaseClient.from('profils').select('*').order('role', { ascending: true });
-        if (error) throw error;
-        var html = "";
-        profils.forEach(function(p) {
-            var badgeClass = p.role === 'admin' ? 'badge-admin' : (p.role === 'abonne' ? 'badge-abonne' : 'badge-gratuit');
-            var badgeTxt = p.role === 'admin' ? 'Admin' : (p.role === 'abonne' ? 'Abonné' : 'Visiteur');
-            var dateInputVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
-            var emailAffiche = p.email ? p.email : "ID: " + p.id.substring(0,8);
-            html += "<tr><td style='text-align:left;' data-label='Email'><b>" + emailAffiche + "</b></td><td data-label='Rôle'><span class='status-badge " + badgeClass + "' style='margin:0;'>" + badgeTxt + "</span></td>";
-            html += "<td data-label='Fin abonnement'><input type='date' value='" + dateInputVal + "' id='dateUser_" + p.id + "' style='padding:5px; font-size:12px;'></td>";
-            html += "<td data-label='Action'><select id='roleUser_" + p.id + "' style='padding:5px; font-size:12px;'><option value='visiteur' " + (p.role === 'visiteur' ? 'selected' : '') + ">Visiteur</option><option value='abonne' " + (p.role === 'abonne' ? 'selected' : '') + ">Abonné</option><option value='admin' " + (p.role === 'admin' ? 'selected' : '') + ">Admin</option></select> ";
-            html += "<button onclick=\"sauvegarderPrivileges('" + p.id + "', event)\" style='padding:5px 10px; font-size:12px; min-height:auto; background:#27ae60;'>💾</button></td></tr>";
-        });
-        tbody.innerHTML = html; msg.style.color = "#27ae60"; msg.textContent = "✅ " + profils.length + " utilisateur(s).";
-    } catch (err) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Erreur : " + err.message; }
-}
-async function sauvegarderPrivileges(userId, event) {
-    var selectRole = document.getElementById("roleUser_" + userId), inputDate = document.getElementById("dateUser_" + userId);
-    var btn = event.target; btn.textContent = "⏳..."; btn.disabled = true;
-    try {
-        const { error } = await supabaseClient.from('profils').update({ role: selectRole.value, date_fin_abonnement: inputDate.value || null }).eq('id', userId);
-        if (error) throw error; btn.textContent = "✅"; setTimeout(function() { btn.textContent = "💾"; btn.disabled = false; }, 2000);
-    } catch (err) { alert("❌ " + err.message); btn.textContent = "💾"; btn.disabled = false; }
-}
-
-function actualiserCockpit() {
-    var jeu = document.getElementById("cockpitJeu").value, h = document.getElementById("cockpitHeure").value;
-    var f = donneesCloud.filter(function(t){ return t.jeu === jeu && (h === "all" || t.heure === h); });
-    if (f.length === 0) { document.getElementById("cockpitPrediction").innerHTML = "<p>Pas de données.</p>"; document.getElementById("cockpitCycles").innerHTML = "<p>Pas de données.</p>"; return; }
-    var freq = {}, ec = {}; for (var n=1;n<=90;n++) { freq[n]=0; ec[n]=0; }
-    f.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); }); f.forEach(function(t,idx){ t.boules.forEach(function(b){ if (ec[b]===0 && idx!==0) ec[b]=idx; }); });
-    if (f.length > 0) f[0].boules.forEach(function(b){ ec[b]=0; });
-    var ns = Object.keys(freq).map(function(k){ return { n: parseInt(k,10), f: freq[k], e: ec[k] }; });
-    var tc = ns.slice().sort(function(a,b){ return b.f-a.f; }).slice(0,5), tr = ns.slice().sort(function(a,b){ return b.e-a.e; }).slice(0,5);
-    var hp = "<p><b>🔥 Chauds :</b><br>"; tc.forEach(function(x){ hp += "<span class='ball hot'>" + x.n + "</span> (" + x.f + "x) "; });
-    hp += "</p><p><b>❄️ Retards :</b><br>"; tr.forEach(function(x){ hp += "<span class='ball cold'>" + x.n + "</span> (R:" + x.e + ") "; }); hp += "</p>";
-    document.getElementById("cockpitPrediction").innerHTML = hp;
-    var hc = "<ul class='stat-list'>"; tr.forEach(function(x){ hc += "<li><b>" + x.n + "</b> Retard: " + x.e + "</li>"; }); hc += "</ul>"; document.getElementById("cockpitCycles").innerHTML = hc;
-}
-function genererGrilleCockpit() {
-    var jeu = document.getElementById("cockpitJeu").value, h = document.getElementById("cockpitHeure").value;
-    var f = donneesCloud.filter(function(t){ return t.jeu === jeu && (h === "all" || t.heure === h); });
-    if (f.length < 10) { document.getElementById("grilleGeneree").textContent = "Pas assez de données."; return; }
-    var freq = {}; for (var n=1;n<=90;n++) freq[n]=0; f.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); });
-    var tc = Object.keys(freq).sort(function(a,b){ return freq[b]-freq[a]; }).slice(0,3).map(Number);
-    var ec = {}; for (var n2=1;n2<=90;n2++) ec[n2]=0; f.forEach(function(t,idx){ t.boules.forEach(function(b){ if (ec[b]===0 && idx!==0) ec[b]=idx; }); });
-    if (f.length > 0) f[0].boules.forEach(function(b){ ec[b]=0; });
-    var tr = Object.keys(ec).sort(function(a,b){ return ec[b]-ec[a]; }).slice(0,2).map(Number);
-    var cb = tc.concat(tr); cb = [...new Set(cb)]; while(cb.length < 5) { var r = Math.floor(Math.random()*90)+1; if(cb.indexOf(r)===-1) cb.push(r); }
-    cb.sort(function(a,b){ return a-b; }); document.getElementById("grilleGeneree").innerHTML = "🎲 " + cb.join(" - ");
-}
-
-function remplirBoulesGrid() {
-    var grid = document.getElementById('boulesGrid'); if (!grid) return;
-    var src = modeDemoActif ? DONNEES_DEMO : donneesCloud, freq = {}; for (var n=1;n<=90;n++) freq[n]=0;
-    src.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); });
-    var maxF = Math.max.apply(null, Object.values(freq).concat([1])), html = "";
-    for (var n2=1;n2<=90;n2++) {
-        var c = "boule-selecteur"; if (freq[n2] === maxF && maxF > 0) c += " chaud"; else if (freq[n2] === 0 && src.length > 0) c += " froid";
-        html += "<button type='button' class='" + c + "' data-boule='" + n2 + "' onclick='afficherDetailBoule(" + n2 + ")'>" + n2 + "</button>";
-    }
-    grid.innerHTML = html;
-}
-function afficherDetailBoule(num) {
-    var src = modeDemoActif ? DONNEES_DEMO : donneesCloud; if (src.length === 0) return;
-    document.querySelectorAll('.boule-selecteur').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.boule,10) === num); });
-    var appar = src.filter(function(t){ return t.boules.indexOf(num) !== -1; }), freq = appar.length, dernier = appar.length > 0 ? appar[appar.length-1] : null, ecart = dernier ? src.length - 1 - src.indexOf(dernier) : src.length;
-    var paires = {}; appar.forEach(function(t){ t.boules.forEach(function(a){ if (a===num) return; paires[a] = (paires[a]||0)+1; }); });
-    var topP = Object.keys(paires).map(function(k){ return { n: parseInt(k,10), c: paires[k] }; }).sort(function(a,b){ return b.c-a.c; }).slice(0,8);
-    var derniers = appar.slice(-20).reverse();
-    var h = "<h3>🔍 Boule " + num + "</h3><div class='boule-stats-grid'><div class='boule-stat'><span class='num'>" + freq + "</span><span class='label'>Sorties</span></div><div class='boule-stat'><span class='num'>" + ecart + "</span><span class='label'>Écart</span></div><div class='boule-stat'><span class='num'>" + (dernier ? dernier.date : '—') + "</span><span class='label'>Dernier</span></div><div class='boule-stat'><span class='num'>" + (src.length>0 ? Math.round(freq/src.length*1000)/10 : 0) + "%</span><span class='label'>Fréquence</span></div></div>";
-    if (topP.length > 0) { h += "<p><b>🔗 Paires favorites :</b></p><div class='paires-list'>"; topP.forEach(function(p){ h += "<span class='paire-tag'>" + p.n + " <span class='count'>×" + p.c + "</span></span>"; }); h += "</div>"; }
-    if (derniers.length > 0) {
-        h += "<p><b>📜 20 dernières :</b></p>"; derniers.forEach(function(t) { h += "<div class='boule-historique-ligne'><span class='date'>" + t.date + "</span><span class='jeu'>" + t.jeu + "</span><span class='heure'>" + t.heure + "</span><span class='boules'>"; t.boules.forEach(function(b){ h += "<span class='boule-mini" + (b===num?" cible":"") + "'>" + b + "</span>"; }); h += "</span></div>"; });
-    } else { h += "<p>Jamais sortie.</p>"; }
-    var d = document.getElementById('bouleDetail'); d.innerHTML = h; d.style.display = 'block';
-}
-
-function executerAnalyses() {
-    var jeu = document.getElementById('anaJeu').value, source = (modeDemoActif ? DONNEES_DEMO : donneesCloud).filter(function(t) { return jeu === 'tous' || t.jeu === jeu; });
-    if (source.length < 5) { document.getElementById('anaPairesTop10').innerHTML = "<li>Pas assez de données.</li>"; return; }
-    var paires = {}, trios = {};
-    source.forEach(function(t) { var b = t.boules;
-        for (var i = 0; i < b.length; i++) for (var j = i + 1; j < b.length; j++) { var p = [b[i], b[j]].sort(function(a, c) { return a - c; }).join("-"); paires[p] = (paires[p] || 0) + 1; }
-        for (var k = 0; k < b.length; k++) for (var l = k + 1; l < b.length; l++) for (var m = l + 1; m < b.length; m++) { var tr = [b[k], b[l], b[m]].sort(function(a, c) { return a - c; }).join("-"); trios[tr] = (trios[tr] || 0) + 1; }
-    });
-    var topP = Object.keys(paires).map(function(k) { return { n: k, c: paires[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
-    var topT = Object.keys(trios).map(function(k) { return { n: k, c: trios[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
-    var htmlP = ""; topP.forEach(function(p) { htmlP += "<li><b>" + p.n.replace("-", " + ") + "</b> <span class='status-badge badge-abonne'>" + p.c + " fois</span></li>"; }); document.getElementById('anaPairesTop10').innerHTML = htmlP || "<li>Aucune.</li>";
-    var htmlT = ""; topT.forEach(function(p) { htmlT += "<li><b>" + p.n.replace(/-/g, " + ") + "</b> <span class='status-badge badge-warning'>" + p.c + " fois</span></li>"; }); document.getElementById('anaTriosTop10').innerHTML = htmlT || "<li>Aucun.</li>";
+function afficherSacSelectionne() {
+    var sacId = document.getElementById("selectSac").value;
+    var filtre = document.getElementById("filtrePeriode") ? document.getElementById("filtrePeriode").value : "tout";
+    var tf = donneesCloud;
     
-    var positions = [[], [], [], [], []]; source.forEach(function(t) { var triees = t.boules.slice().sort(function(a, b) { return a - b; }); triees.forEach(function(b, idx) { if (idx < 5) positions[idx].push(b); }); });
-    var htmlPos = ""; positions.forEach(function(pos, idx) { if (pos.length === 0) return; var s = pos.reduce(function(a, b) { return a + b; }, 0); var m = (s / pos.length).toFixed(1); htmlPos += "<div class='ana-card'><h4>Pos " + (idx + 1) + "</h4><ul class='ana-list'><li>Moyenne <b>" + m + "</b></li><li>Min <b>" + Math.min.apply(null, pos) + "</b></li><li>Max <b>" + Math.max.apply(null, pos) + "</b></li></ul></div>"; }); document.getElementById('anaPositionsContainer').innerHTML = htmlPos;
-    
-    var jours = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"], parJour = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }; source.forEach(function(t) { var d = new Date(t.date); if (!isNaN(d.getTime())) { var idx = d.getDay(); t.boules.forEach(function(b) { parJour[idx].push(b); }); } });
-    var htmlJours = ""; for (var j = 0; j < 7; j++) { if (parJour[j].length === 0) continue; var fJ = {}; parJour[j].forEach(function(b) { fJ[b] = (fJ[b] || 0) + 1; }); var top3 = Object.keys(fJ).sort(function(a, b) { return fJ[b] - fJ[a]; }).slice(0, 3); htmlJours += "<div class='ana-card'><h4>" + jours[j] + "</h4><ul class='ana-list'>"; top3.forEach(function(n) { htmlJours += "<li>Boule <b>" + n + "</b> <span>" + fJ[n] + " fois</span></li>"; }); htmlJours += "</ul></div>"; } document.getElementById('anaJoursContainer').innerHTML = htmlJours;
-}
-function changerOngletAnalyse(id, btn) { document.querySelectorAll('.ana-btn').forEach(function(b) { b.classList.remove('active'); }); document.querySelectorAll('.ana-content').forEach(function(c) { c.classList.remove('active'); }); btn.classList.add('active'); document.getElementById('ana-' + id).classList.add('active'); }
-
-function remplirSelecteurTirage() { var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = ""; if (donneesCloud.length === 0) { s1.innerHTML = "<option>Aucun</option>"; return; } donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s1.appendChild(o); }); analyserTirageLabo(); }
-function remplirSelectMulti() { var s2 = document.getElementById("selectMultiTirages"); s2.innerHTML = ""; if (donneesCloud.length === 0) { s2.innerHTML = "<option>Aucun</option>"; return; } donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; s2.appendChild(o); }); }
-var tirageLabo = null;
-function analyserTirageLabo() { var i = document.getElementById("selectTirageLabo").value; if (i !== "" && donneesCloud[i]) { tirageLabo = donneesCloud[i]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageLabo.boules.join(" - "); } }
-function faireTurning() { if (!tirageLabo) return; var r = tirageLabo.boules.map(function(n){ var s = n.toString(); if (s.length===1) s = "0"+s; var i = parseInt(s.split('').reverse().join(''),10); return (i>90||i===0)?n:i; }); document.getElementById("resultatOperations").innerHTML = "<b>Miroir :</b><br>Base : " + tirageLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + r.join(" - ") + "</span>"; }
-function faireAddition() { if (!tirageLabo) return; var s = tirageLabo.boules.reduce(function(a,b){ return a+b; },0), r = s; while (r > 90) r -= 90; document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>" + tirageLabo.boules.join(" + ") + " = " + s + "<br>Réduit : <strong>" + r + "</strong>"; }
-function faireTheosophie() { if (!tirageLabo) return; var st = 0, cd = []; tirageLabo.boules.forEach(function(n) { var s = n.toString(), sn = 0, dn = []; for (var i=0;i<s.length;i++) { var c = parseInt(s[i],10); sn += c; dn.push(c); } st += sn; cd.push(dn.join("+") + "=" + sn); }); var ta = st, rt = ""; while (ta > 90) { ta -= 90; rt += " -> " + ta; } document.getElementById("resultatOperations").innerHTML = "<b>Théosophie :</b><br>" + cd.join(" | ") + "<br><b>Total : " + st + "</b><br>" + (rt ? "Réduction : " + rt + "<br>" : "") + "Résultat : <span class='ball'>" + ta + "</span>"; }
-function executerAdditions() { var sel = document.getElementById("selectMultiTirages"); var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); if (idx.length === 0) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez des tirages."; return; } var html = "<b>Additions :</b><br>"; idx.forEach(function(i){ var t = donneesCloud[i]; var s = t.boules.reduce(function(a,b){ return a+b; },0); var r = s; while(r > 90) r -= 90; html += t.date + " " + t.heure + " : " + s + " → " + r + "<br>"; }); document.getElementById("resultatLaboAvance").innerHTML = html; }
-function executerBankersMulti() { var sel = document.getElementById("selectMultiTirages"); var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); if (idx.length < 2) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez 2+ tirages."; return; } var communs = donneesCloud[idx[0]].boules.slice(); for (var i=1;i<idx.length;i++) communs = communs.filter(function(n){ return donneesCloud[idx[i]].boules.indexOf(n) !== -1; }); var html = "<b>Communs (" + idx.length + " tirages) :</b><br>"; if (communs.length === 0) html += "Aucun numéro commun."; else html += communs.map(function(n){ return "<span class='ball'>" + n + "</span>"; }).join(" "); document.getElementById("resultatLaboAvance").innerHTML = html; }
-
-function chercherBanker() {
-    var jeuChoisi = document.getElementById('bankerJeu').value, tiragesJeu = donneesCloud.filter(function(t) { return t.jeu === jeuChoisi; });
-    if (tiragesJeu.length < 10) { alert("Pas assez de données."); return; }
-    var totalTirages = tiragesJeu.length, ecarts = {}; for (var i = 1; i <= 90; i++) ecarts[i] = totalTirages;
-    for (var idx = 0; idx < totalTirages; idx++) { tiragesJeu[idx].boules.forEach(function(b) { ecarts[b] = (totalTirages - 1) - idx; }); }
-    var maxEcart = -1, numRetard = null; for (var n = 1; n <= 90; n++) if (ecarts[n] > maxEcart) { maxEcart = ecarts[n]; numRetard = n; }
-    var freq = {}; for (var f = 1; f <= 90; f++) freq[f] = 0; tiragesJeu.forEach(function(t) { t.boules.forEach(function(b) { freq[b]++; }); });
-    var maxFreq = -1, numFrequent = null; for (var m = 1; m <= 90; m++) if (freq[m] > maxFreq) { maxFreq = freq[m]; numFrequent = m; }
-    var dernierTirage = tiragesJeu[totalTirages - 1], suiveurs = {};
-    for (var k = 0; k < totalTirages - 1; k++) { if (tiragesJeu[k].boules.some(function(b) { return dernierTirage.boules.includes(b); })) { tiragesJeu[k + 1].boules.forEach(function(b) { suiveurs[b] = (suiveurs[b] || 0) + 1; }); } }
-    var topSuiveur = null, maxSuivi = -1; for (var s in suiveurs) if (suiveurs[s] > maxSuivi) { maxSuivi = suiveurs[s]; topSuiveur = s; }
-    document.getElementById('resultatBanker').style.display = 'block';
-    document.getElementById('bankerRetard').innerHTML = "<span class='ball hot' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px;'>" + numRetard + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Écart de " + maxEcart + " tirages</b></p>";
-    document.getElementById('bankerFrequent').innerHTML = "<span class='ball star' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px;'>" + numFrequent + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxFreq + " fois</b></p>";
-    if (topSuiveur) document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px;'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>"; else document.getElementById('bankerSuiveur').innerHTML = "<p style='font-size: 12px;'>Pas assez de données.</p>";
-}
-
-function remplirSuiviDeclencheur() { var sel = document.getElementById('suiviDeclencheur'); if (!sel) return; sel.innerHTML = "<option value=''>Sélectionnez un tirage déclencheur...</option>"; var limit = Math.max(0, donneesCloud.length - 50); for (var i = donneesCloud.length - 1; i >= limit; i--) { var t = donneesCloud[i], opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure + " : [" + t.boules.join(", ") + "]"; sel.appendChild(opt); } }
-function analyserSuivi() {
-    var idxSel = document.getElementById('suiviDeclencheur').value; if (idxSel === "") { alert("Sélectionnez un tirage."); return; }
-    var idx = parseInt(idxSel, 10), declencheur = donneesCloud[idx], resultats = {}, tiragesSuivants = [];
-    for (var i = idx + 1; i < donneesCloud.length; i++) { if (donneesCloud[i].jeu === declencheur.jeu) { tiragesSuivants.push(donneesCloud[i]); if (tiragesSuivants.length === 5) break; } }
-    var box = document.getElementById('resultatSuivi'); if (tiragesSuivants.length === 0) { box.style.display = 'block'; box.innerHTML = "<p>Aucun tirage suivant.</p>"; return; }
-    tiragesSuivants.forEach(function(t) { t.boules.forEach(function(b) { resultats[b] = (resultats[b] || 0) + 1; }); });
-    var top = Object.keys(resultats).map(function(k) { return { n: parseInt(k, 10), c: resultats[k] }; }).sort(function(a, b) { return b.c - a.c; });
-    var html = "<h4 style='margin-top:0; color:var(--color-star);'>Résultats du suivi</h4><p style='font-size: 13px; margin-bottom: 15px;'>Analyse des <b>" + tiragesSuivants.length + "</b> tirages suivants (jeu " + declencheur.jeu + ").</p><div class='ana-grid'>";
-    top.slice(0, 5).forEach(function(item) { var pourcentage = Math.round((item.c / tiragesSuivants.length) * 100); html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>"; });
-    html += "</div>"; box.innerHTML = html; box.style.display = 'block';
-}
-
-function verifierGrille() {
-    var jeu = document.getElementById('verifJeu').value, date = document.getElementById('verifDate').value, heure = document.getElementById('verifHeure').value, mise = parseInt(document.getElementById('verifMise').value, 10) || 100;
-    var src = modeDemoActif ? DONNEES_DEMO : donneesCloud, bj = [];
-    for (var i=1;i<=5;i++) { var v = parseInt(document.getElementById('vB' + i).value, 10); if (isNaN(v) || v < 1 || v > 90) { alert("5 boules 1-90."); return; } bj.push(v); }
-    if (new Set(bj).size !== 5) { alert("Boules différentes."); return; } if (!date) { alert("Date requise."); return; }
-    var t = src.find(function(x){ return x.date === date && x.heure === heure && x.jeu === jeu; }), el = document.getElementById('verifResultat');
-    if (!t) { el.innerHTML = "<div class='verif-resultat perdu'>Aucun tirage pour " + date + " " + heure + " " + jeu + ".</div>"; return; }
-    var bons = bj.filter(function(n){ return t.boules.indexOf(n) !== -1; }).length, gain = bons > 0 ? GRILLE_GAINS_LNB[bons].gainPour100 * (mise / 100) : 0;
-    if (bons > 0) { el.innerHTML = "<div class='verif-resultat gagne'>🎉 <b>" + bons + "</b> bon(s) numéro(s) !<br><span class='rang'>Rang " + bons + "</span>Tirage : " + t.boules.join(" - ") + "<br>Votre grille : " + bj.join(" - ") + "<br><span class='gain'>💰 Gain estimé : " + gain.toLocaleString('fr-FR') + " FCFA</span></div>"; }
-    else { el.innerHTML = "<div class='verif-resultat perdu'>😔 Aucun bon numéro.<br>Tirage : " + t.boules.join(" - ") + "<br>Votre grille : " + bj.join(" - ") + "</div>"; }
-}
-
-function executerComparateurMulti() {
-    var plages = [];
-    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1 }; }), color: "#e74c3c" });
-    for (var i=1;i<=nPlages;i++) {
-        var c = document.getElementById("plage-container-" + i); if (!c) continue;
-        var s = document.getElementById("sacNum" + i).value, rl = parseInt(document.getElementById("refNum" + i).value, 10), rg = parseInt(document.getElementById("refRange" + i).value, 10);
-        if (isNaN(rl)) continue;
-        var td = getTiragesDuSac(s), si = rl - 1; if (si < 0 || si >= td.length) { alert("Ligne " + rl + " n'existe pas."); return; }
-        var p = [], mn = Math.max(0, si-rg), mx = Math.min(td.length-1, si+rg); for (var j=mn;j<=mx;j++) p.push({ data: td[j], ligneLocale: j+1 });
-        plages.push({ id: i, nomSac: document.getElementById("sacNum" + i).options[document.getElementById("sacNum" + i).selectedIndex].text, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
+    if (filtre === 'recent') {
+        var strAuj = new Date().toISOString().slice(0,10), strHier = new Date(Date.now()-86400000).toISOString().slice(0,10);
+        tf = tf.filter(function(t) { return t.date === strAuj || t.date === strHier; });
+    } else if (filtre === 'mois') {
+        var prefixMois = new Date().toISOString().slice(0,7);
+        tf = tf.filter(function(t) { return t.date.startsWith(prefixMois); });
     }
-    if (plages.length < 2) { alert("Il faut au moins 2 colonnes."); return; }
-    var ml = 0; plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
-    var html = "", stats = plages.map(function(p){ return { nom: p.id, exact: 0, miroir: 0 }; });
-    plages.forEach(function(p, pIdx) {
-        html += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><thead><tr><th>Ligne</th><th>Numéros</th></tr></thead><tbody>";
-        for (var l=0;l<ml;l++) {
-            var it = p.data[l]; if (!it) { html += "<tr><td><i>-</i></td><td>-</td></tr>"; continue; }
-            var t = it.data; html += "<tr><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
-            t.boules.forEach(function(n) {
-                var me = 0, mt = 0, am = true;
-                plages.forEach(function(o) { if (o.id === p.id) return; var oi = o.data[l]; if (oi) { if (oi.data.boules.indexOf(n) !== -1) me++; else if (oi.data.boules.indexOf(getTurning(n)) !== -1) mt++; else am = false; } else am = false; });
-                var cls = "comp-ball", si = ""; if (am) { if (me === plages.length - 1) { cls += " match-exact"; stats[pIdx].exact++; } else if (mt === plages.length - 1) { cls += " match-turning"; stats[pIdx].miroir++; } else { cls += " match-multi"; } }
-                html += "<button type='button' class='" + cls + "' onclick='colorierBoule(this)'>" + n + "</button>";
-            });
-            html += "</td></tr>";
-        }
-        html += "</tbody></table></div>";
-    });
-    document.getElementById("resultatComparaison").innerHTML = html; derniereComparaison = plages; annoncerResumeComparaison(plages, stats);
-}
-var nPlages = 0;
-function ajouterPlage() { if (nPlages >= 5) { alert("Max 5."); return; } nPlages++; var d = document.createElement("div"); d.className = "plage-box"; d.id = "plage-container-" + nPlages; var cols = ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"], c = cols[(nPlages-1)%5]; d.style.borderTop = "4px solid " + c; d.innerHTML = `<label style="color:${c};">Plage ${nPlages}</label><select id="sacNum${nPlages}"><option value="tous">Tous</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select><div style="display:flex; gap:5px;"><input type="number" id="refNum${nPlages}" placeholder="Ligne N°" style="width:80px;"><select id="refRange${nPlages}" style="flex:1;"><option value="10">10</option><option value="20">20</option><option value="30" selected>30</option><option value="40">40</option></select></div><button class="danger" style="font-size:12px; padding:5px;" onclick="supprimerPlage(${nPlages})">Retirer</button>`; document.getElementById("plages-config").appendChild(d); }
-function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
-function getTurning(n) { var s = n.toString().padStart(2,'0'); var i = parseInt(s.split('').reverse().join(''), 10); return (i === 0 || i > 90) ? n : i; }
-function resetColors() { document.querySelectorAll('.comp-ball').forEach(function(b){ b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = ''; b.style.boxShadow = ''; }); }
-function changerCouleur(el, c) { document.querySelectorAll('.color-btn').forEach(function(b){ b.setAttribute('aria-pressed','false'); }); el.setAttribute('aria-pressed','true'); couleurActive = c === 'annuler' ? 'annuler' : c; }
-function colorierBoule(b) { if (couleurActive === 'annuler') { b.style.backgroundColor = ''; b.style.color = ''; b.style.borderColor = ''; b.style.boxShadow = ''; } else { b.style.backgroundColor = couleurActive; b.style.color = '#fff'; b.style.borderColor = '#333'; b.style.boxShadow = '0 0 8px ' + couleurActive; b.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; } }
 
-async function actualiserTout() { await rafraichirDonnees(); }
+    var conteneur = document.getElementById("conteneurSac"); conteneur.innerHTML = "";
+    if (tf.length === 0) { conteneur.innerHTML = "<p>Aucun tirage.</p>"; return; }
+    
+    var parDate = {}; tf.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
+    var html = "";
+    Object.keys(parDate).sort().forEach(function(dateStr) {
+        html += "<div class='day-card'><h3 class='day-header'>📅 " + dateStr + "</h3>";
+        parDate[dateStr].forEach(function(t) {
+            var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
+            html += "<div class='day-row'><div class='day-time'>" + t.heure + "</div>";
+            html += "<div class='day-game'>" + t.jeu + "</div><div class='day-nums'>";
+            t.boules.forEach(function(b){ html += "<span class='ball " + c + "'>" + b + "</span>"; });
+            html += "</div></div>";
+        });
+        html += "</div>";
+    });
+    conteneur.innerHTML = html;
+}
+
+function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; }
+function afficherInscription() { document.getElementById("form-connexion").style.display = "none"; document.getElementById("form-inscription").style.display = "block"; }
+
 document.addEventListener('DOMContentLoaded', function() {
-    initialiserBoutonMuet();
-    initialiserTailleBoules();
-    majBarreAteliers();
-    document.getElementById("date").valueAsDate = new Date();
+    if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date();
     verifierSession();
 });
