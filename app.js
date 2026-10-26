@@ -306,10 +306,21 @@ function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneCompar
 
 // --- 11. LABO ---
 function remplirSelecteursLabo() {
-    var s1 = document.getElementById("selectTirageLabo"); s1.innerHTML = "";
-    donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s1.appendChild(o); });
-    var s2 = document.getElementById("selectMultiTirages"); if(s2) { s2.innerHTML = ""; donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s2.appendChild(o); }); }
-    analyserTirageLabo();
+    var s1 = document.getElementById("selectTirageLabo"); 
+    if(s1) {
+        s1.innerHTML = "";
+        donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s1.appendChild(o); });
+        analyserTirageLabo();
+    }
+    
+    var s2 = document.getElementById("selectMultiTirages"); 
+    if(s2) { 
+        s2.innerHTML = ""; 
+        donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s2.appendChild(o); }); 
+    }
+
+    // L'APPEL QUI MANQUAIT POUR L'ANALYSEUR DE SUIVI :
+    remplirSuiviDeclencheur(); 
 }
 function analyserTirageLabo() { var i = document.getElementById("selectTirageLabo").value; if (i !== "" && donneesCloud[i]) { tirageLabo = donneesCloud[i]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageLabo.boules.join(" - "); } }
 function faireTurning() { if (!tirageLabo) return; var r = tirageLabo.boules.map(function(n){ var s = n.toString(); if (s.length===1) s = "0"+s; var i = parseInt(s.split('').reverse().join(''),10); return (i>90||i===0)?n:i; }); document.getElementById("resultatOperations").innerHTML = "<b>Miroir :</b><br>Base : " + tirageLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + r.join(" - ") + "</span>"; }
