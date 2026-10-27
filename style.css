@@ -6,7 +6,7 @@
     --color-star: #f39c12; --color-fortune: #2980b9; --color-digital: #8e44ad;
     --color-hot: #e74c3c; --color-cold: #3498db;
     --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px; --radius-pill: 50px;
-    --ball-size: 28px; 
+    --ball-size: 32px; 
   }
   
   @media (prefers-color-scheme: dark) {
@@ -96,40 +96,31 @@
   button.danger { background: var(--color-hot); }
   button.warning { background: var(--color-star); color: #fff; }
 
-    .card { 
-    background: var(--bg-card); padding: 15px; border-radius: var(--radius-lg); 
-    box-shadow: var(--shadow); margin: 10px; border: 1px solid var(--border-color); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease; 
-    width: calc(100% - 20px); box-sizing: border-box; /* <-- C'est ça qui règle le problème */
-  }
+  .card { background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin: 15px; border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; }
   .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   
   /* CORRECTION DE L'AFFICHAGE DES BOULES (PLUS DE COUPURE) */
-    .day-card { 
+  .day-card { 
     background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); 
-    margin-bottom: 15px; padding: 12px; box-shadow: var(--shadow); transition: transform 0.2s;
+    margin-bottom: 15px; padding: 15px; box-shadow: var(--shadow); transition: transform 0.2s;
     width: 100%; box-sizing: border-box;
-  }
   }
   .day-card:hover { transform: scale(1.01); }
   .day-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
   
-   .day-row { 
+  .day-row { 
     display: flex; align-items: center; padding: 10px 0; 
-    border-bottom: 1px solid var(--border-color); 
-    width: 100%; box-sizing: border-box; overflow: hidden; /* <-- Empêche le débordement */
+    border-bottom: 1px solid var(--border-color); width: 100%; box-sizing: border-box;
   }
   .day-row:last-child { border-bottom: none; }
   .day-time { width: 60px; font-weight: bold; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
   .day-game { width: 70px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
   
-    .day-nums { 
-    flex: 1; min-width: 0; /* <-- INDISPENSABLE pour que le scroll marche */
-    display: flex; align-items: center; flex-wrap: nowrap; 
-    overflow-x: auto; -webkit-overflow-scrolling: touch; /* <-- Scroll fluide sur iOS/Android */
-    gap: 4px; padding-bottom: 5px; scrollbar-width: none; /* Cache la barre de scroll */
+  .day-nums { 
+    flex: 1; min-width: 0; 
+    display: flex; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 5px; 
   }
-  .day-nums::-webkit-scrollbar { display: none; } /* Cache la barre de scroll sur Chrome */
+
   #statusCloud { animation: pulse 2s infinite; display: inline-block; padding: 0 15px; margin-bottom: 10px; }
   @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; color: var(--color-star); } 100% { opacity: 0.6; } }
 
@@ -178,32 +169,41 @@
   .atelier-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
   .atelier-btn.active { border: 2px solid var(--primary); background: var(--primary); color: white; }
   .atelier-close { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: var(--color-hot); color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; }
-/* =========================================
-   AFFICHAGE MOBILE : BOULE EN DESSOUS
-   ========================================= */
-@media (max-width: 768px) {
-  .day-row {
-    flex-wrap: wrap; /* Permet de passer à la ligne */
-    padding-bottom: 15px;
+
+  /* Modales */
+  .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: var(--bg-card); padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 500px; width: 100%; border-top: 6px solid var(--color-hot); animation: popIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
+  .modal-box-conflit { border-top: 6px solid var(--primary); max-width: 650px; }
+  .conflit-resume { display: flex; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+  .conflit-stat { flex: 1; min-width: 100px; padding: 12px; border-radius: var(--radius-md); text-align: center; background: var(--bg-body); }
+  .conflit-stat .num { font-size: 24px; font-weight: bold; display: block; }
+  .conflit-stat.nouveaux { border-left: 4px solid #27ae60; } .conflit-stat.nouveaux .num { color: #27ae60; }
+  .conflit-stat.conflits { border-left: 4px solid var(--color-star); } .conflit-stat.conflits .num { color: var(--color-star); }
+  .conflit-stat.invalides { border-left: 4px solid var(--color-hot); } .conflit-stat.invalides .num { color: var(--color-hot); }
+  .conflit-detail { max-height: 200px; overflow-y: auto; background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm); font-family: monospace; font-size: 12px; margin: 10px 0; }
+  .conflit-choix { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: flex-end; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .day-row {
+      flex-wrap: wrap;
+      padding-bottom: 15px;
+    }
+    .day-time {
+      width: auto; 
+      margin-right: 15px;
+      font-size: 14px;
+    }
+    .day-game {
+      width: auto;
+      font-size: 14px;
+    }
+    .day-nums {
+      flex: 0 0 100%;
+      width: 100%;
+      margin-top: 8px;
+      justify-content: flex-start;
+      overflow-x: visible;
+      gap: 4px;
+    }
   }
-  
-  .day-time {
-    width: auto; 
-    margin-right: 15px;
-    font-size: 14px;
-  }
-  
-  .day-game {
-    width: auto;
-    font-size: 14px;
-  }
-  
-  .day-nums {
-    flex: 0 0 100%; /* Prend toute la largeur et force le retour à la ligne */
-    width: 100%;
-    margin-top: 8px;
-    justify-content: flex-start; /* Aligne les boules à gauche */
-    overflow-x: visible; /* Enlève la barre de défilement */
-    gap: 4px; /* Un peu d'espace entre les boules */
-  }
-}
