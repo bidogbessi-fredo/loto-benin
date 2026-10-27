@@ -452,4 +452,187 @@ function traquerSomme() {
     
     source.forEach(function(t, idx) {
         if (t.somme === cible) {
-            var
+            var suivants = [];
+            for (var i = idx + 1; i < source.length && suivants.length < 5; i++) { suivants.push(source[i]); }
+            if (suivants.length === 5) {
+                var sortis = [];
+                for (var j = 0; j < 4; j++) { suivants[j].boules.forEach(function(b){ if(sortis.indexOf(b)===-1) sortis.push(b); }); }
+                var manquantes = [];
+                for (var n=1; n<=90; n++) { if (sortis.indexOf(n) === -1) manquantes.push(n); }
+                var dernierChance = manquantes.filter(function(n){ return suivants[4].boules.indexOf(n) !== -1; });
+                if (dernierChance.length > 0) { alertes.push({ declencheur: t, boules: dernierChance, suivant5: suivants[4] }); }
+            }
+        }
+    });
+    
+    var box = document.getElementById("resultatTraqueur"); box.style.display = "block";
+    if (alertes.length === 0) { box.innerHTML = "<p style='color:var(--text-muted);'>Aucune alerte trouvée.</p>"; return; }
+    var html = "<h4 style='color:var(--color-star);'>🚨 Alertes trouvées (" + alertes.length + ")</h4>";
+    alertes.slice(-5).reverse().forEach(function(a) {
+        html += "<div style='background:#f9f9f9; padding:10px; margin-bottom:10px; border-left:4px solid var(--color-star); border-radius:4px;'>";
+        html += "<b>Déclencheur :</b> " + a.declencheur.date + " (Somme: " + cible + ")<br><b>Tirage de la dernière chance :</b> " + a.suivant5.date + " " + a.suivant5.heure + "<br><b>Boules qui ont sauvé leur place :</b><br>";
+        a.boules.forEach(function(b){ html += "<span class='ball star'>" + b + "</span> "; }); html += "</div>";
+    });
+    box.innerHTML = html;
+}
+
+// 8. ANALYSES
+function executerAnalyses() {
+    var sac = document.getElementById('anaJeu').value, source = filtrerParSac(sac);
+    if (source.length < 5) { document.getElementById('anaPairesTop10').innerHTML = "<li>Pas assez de données.</li>"; return; }
+    var paires = {};
+    source.forEach(function(t) { var b = t.boules; for (var i = 0; i < b.length; i++) for (var j = i + 1; j < b.length; j++) { var p = [b[i], b[j]].sort(function(a, c) { return a - c; }).join("-"); paires[p] = (paires[p] || 0) + 1; } });
+    var topP = Object.keys(paires).map(function(k) { return { n: k, c: paires[k] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 10);
+    var htmlP = ""; topP.forEach(function(p) { htmlP += "<li><b>" + p.n.replace("-", " + ") + "</b> <span class='status-badge badge-abonne'>" + p.c + " fois</span></li>"; }); 
+    document.getElementById('anaPairesTop10').innerHTML = htmlP || "<li>Aucune.</li>";
+}
+
+// 9. BOULES
+function remplirBoulesGrid() {
+    var grid = document.getElementById('boulesGrid'); if (!grid) return;
+    var freq = {}; for (var n=1;n<=90;n++) freq[n]=0;
+    donneesCloud.forEach(function(t){ t.boules.forEach(function(b){ freq[b]++; }); });
+    var maxF = Math.max.apply(null, Object.values(freq).concat([1])), html = "";
+    for (var n2=1;n2<=90;n2++) {
+        var c = "boule-selecteur"; if (freq[n2] === maxF && maxF > 0) c += " chaud"; else if (freq[n2] === 0 && donneesCloud.length > 0) c += " froid";
+        html += "<button type='button' class='" + c + "' data-boule='" + n2 + "' onclick='afficherDetailBoule(" + n2 + ")'>" + n2 + "</button>";
+    }
+    grid.innerHTML = html;
+}
+function afficherDetailBoule(num) {
+    if (donneesCloud.length === 0) return;
+    document.querySelectorAll('.boule-selecteur').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.boule,10) === num); });
+    var appar = donneesCloud.filter(function(t){ return t.boules.indexOf(num) !== -1; });
+    var freq = appar.length, dernier = appar.length > 0 ? appar[appar.length-1] : null, ecart = dernier ? donneesCloud.length - 1 - donneesCloud.indexOf(dernier) : donneesCloud.length;
+    var h = "<h3>🔍 Boule " + num + "</h3><div class='boule-stats-grid'><div class='boule-stat'><span class='num'>" + freq + "</span><span class='label'>Sorties</span></div><div class='boule-stat'><span class='num'>" + ecart + "</span><span class='label'>Écart</span></div></div>";
+    var d = document.getElementById('bouleDetail'); d.innerHTML = h; d.style.display = 'block';
+}
+
+// 10. RECHERCHE
+function initialiserRecherche() { var c = document.getElementById('rechBoulesContainer'); if (!c || c.children.length > 0) return; c.innerHTML = ''; ajouterChampRecherche(); ajouterChampRecherche(); }
+function ajouterChampRecherche() { var c = document.getElementById('rechBoulesContainer'); if (c.children.length >= 5) return; var div = document.createElement('div'); div.className = 'rech-input-group'; div.innerHTML = `<input type="number" class="rech-num" min="1" max="90" placeholder="N°" style="width:60px;">`; c.appendChild(div); }
+function retirerChampRecherche() { var c = document.getElementById('rechBoulesContainer'); if (c.children.length > 1) c.lastElementChild.remove(); }
+function changerModeRecherche() { var m = document.getElementById('rechMode').value; document.getElementById('sectionRechBoules').style.display = m === 'boules' ? 'block' : 'none'; document.getElementById('sectionRechSomme').style.display = m === 'somme' ? 'block' : 'none'; document.getElementById('resultatRecherche').style.display = 'none'; }
+function obtenirCombinaisons(arr, k) { var res = []; function combiner(debut, actuels) { if (actuels.length === k) { res.push(actuels.slice()); return; } for (var i = debut; i < arr.length; i++) { actuels.push(arr[i]); combiner(i + 1, actuels); actuels.pop(); } } combiner(0, []); return res; }
+function executerRecherche() {
+    var mode = document.getElementById('rechMode').value, jeu = document.getElementById('rechJeu').value, source = filtrerParSac(jeu), resultats = [];
+    if (mode === 'boules') {
+        var nums = []; document.querySelectorAll('.rech-num').forEach(function(inp) { var v = parseInt(inp.value, 10); if (!isNaN(v)) nums.push(v); });
+        if (nums.length === 0) { alert("Entrez au moins une boule."); return; }
+        source.forEach(function(t) { var match = true; for (var i = 0; i < nums.length; i++) { if (t.boules.indexOf(nums[i]) === -1) { match = false; break; } } if (match) resultats.push(t); });
+    } else {
+        var totalCible = parseInt(document.getElementById('rechTotalSomme').value, 10), nbBoules = parseInt(document.getElementById('rechNbBoules').value, 10);
+        if (isNaN(totalCible)) { alert("Entrez un total."); return; }
+        source.forEach(function(t) { var combs = obtenirCombinaisons(t.boules, nbBoules), match = false; for (var j = 0; j < combs.length; j++) { if (combs[j].reduce(function(a,b){return a+b;}, 0) === totalCible) { match = true; break; } } if (match) resultats.push(t); });
+    }
+    var box = document.getElementById('resultatRecherche'); box.style.display = 'block';
+    var tbody = document.getElementById('tbodyResultatsRecherche'); tbody.innerHTML = "";
+    if (resultats.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Aucun résultat.</td></tr>"; return; }
+    resultats.forEach(function(t) {
+        var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital'), idxGlobal = donneesCloud.indexOf(t) + 1;
+        var tr = document.createElement('tr'); tr.innerHTML = "<td><b>L." + idxGlobal + "</b></td><td>" + t.date + "</td><td>" + t.jeu + "</td><td>" + t.boules.map(function(b){return "<span class='ball "+c+"'>"+b+"</span>";}).join("") + "</td><td>" + t.somme + "</td>";
+        tbody.appendChild(tr);
+    });
+}
+
+// 11. ADMINISTRATION (Utilisateurs)
+async function chargerUtilisateursAuto() {
+    var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
+    if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='5'>Chargement...</td></tr>";
+    const { data: profils } = await supabaseClient.from('profils').select('*').order('role');
+    var html = "";
+    if(profils) profils.forEach(function(p) {
+        var dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
+        var tel = p.telephone ? p.telephone : "Non renseigné";
+        html += "<tr><td>" + (p.email || 'Inconnu') + "</td><td>" + tel + "</td><td>" + p.role + "</td><td><input type='date' value='" + dateVal + "' id='dateUser_" + p.id + "'></td>";
+        html += "<td><select id='roleUser_" + p.id + "'><option value='visiteur' "+(p.role==='visiteur'?'selected':'')+">Visiteur</option><option value='abonne' "+(p.role==='abonne'?'selected':'')+">Abonné</option><option value='admin' "+(p.role==='admin'?'selected':'')+">Admin</option></select>";
+        html += " <button onclick=\"sauvegarderPrivileges('" + p.id + "')\" style='background:green;'>💾</button></td></tr>";
+    });
+    tbody.innerHTML = html;
+}
+async function sauvegarderPrivileges(userId) {
+    var role = document.getElementById("roleUser_" + userId).value, dateFin = document.getElementById("dateUser_" + userId).value || null;
+    const { error } = await supabaseClient.from('profils').update({ role: role, date_fin_abonnement: dateFin }).eq('id', userId);
+    if(error) alert("Erreur: " + error.message); else alert("✅ Mis à jour !");
+}
+async function actualiserDashboard() {
+    var total = donneesCloud.length;
+    document.getElementById('dashTotal').textContent = total;
+    document.getElementById('dashStar').textContent = donneesCloud.filter(function(t){return t.jeu==='Star';}).length;
+    document.getElementById('dashFortune').textContent = donneesCloud.filter(function(t){return t.jeu==='Fortune';}).length;
+    document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
+    if (total > 0) { var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date); document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR'); }
+}
+function exporterSauvegardeComplete() {
+    if (!estAdmin) { return; }
+    var l = ["date,heure,jeu,boules"]; donneesCloud.forEach(function(t){ l.push([t.date,t.heure,t.jeu,'"'+t.boules.join(",")+'"'].join(",")); });
+    var blob = new Blob([l.join("\n")], { type: "text/csv;charset=utf-8;" }); var url = URL.createObjectURL(blob); var a = document.createElement("a"); a.href = url;
+    a.download = "loto-benin-sauvegarde.csv"; a.click(); URL.revokeObjectURL(url);
+}
+
+// 12. IMPORT
+function parseDateExotique(ligne) {
+    var moisMap = { 'janv':1,'jan':1,'janvier':1,'fevr':2,'fev':2,'fevrier':2,'févr':2,'fév':2,'février':2,'mars':3,'mar':3,'avr':4,'avril':4,'mai':5,'juin':6,'juil':7,'juillet':7,'aout':8,'août':8,'sept':9,'septembre':9,'oct':10,'octobre':10,'nov':11,'novembre':11,'dec':12,'déc':12,'decembre':12,'décembre':12 };
+    var m;
+    m = ligne.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); if (m) return { jour: parseInt(m[3],10), mois: parseInt(m[2],10), annee: parseInt(m[1],10) };
+    m = ligne.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/); if (m) { var a = m[3].length===2 ? parseInt("20"+m[3],10) : parseInt(m[3],10); return { jour: parseInt(m[1],10), mois: parseInt(m[2],10), annee: a }; }
+    m = ligne.match(/(\d{1,2})(?:er)?\s+([a-zéèûôàç]+)\.?\s+(\d{2,4})/i); if (m) { var mt = m[2].toLowerCase().replace(/[^a-zéèûôàç]/g,''); var mn = moisMap[mt]; if (mn) { var a2 = m[3].length===2 ? parseInt("20"+m[3],10) : parseInt(m[3],10); return { jour: parseInt(m[1],10), mois: mn, annee: a2 }; } }
+    return null;
+}
+async function traiterTexteColle() {
+    if (!estAdmin) { alert("Admin uniquement."); return; }
+    var txt = document.getElementById("texteAImporter").value, msg = document.getElementById("importMessage");
+    if (!txt.trim()) { msg.textContent = "Vide."; return; } msg.textContent = "Analyse...";
+    var lignes = txt.split(/\r?\n/), nv = [], cf = [], inv = 0, aA = new Date().getFullYear(), aMax = aA+1, aMin = 2004;
+    lignes.forEach(function(l) {
+        if (!l.trim()) return; var ll = l.toLowerCase();
+        if (ll.indexOf("date")!==-1 || ll.indexOf("column")!==-1 || ll.indexOf("benin")!==-1) return;
+        var d = parseDateExotique(l); if (!d) { inv++; return; }
+        if (d.jour<1||d.jour>31||d.mois<1||d.mois>12||d.annee<aMin||d.annee>aMax) { inv++; return; }
+        var df = d.annee + "-" + String(d.mois).padStart(2,'0') + "-" + String(d.jour).padStart(2,'0');
+        var jt = "Star", ht = "14H";
+        if (ll.indexOf("digital")!==-1) jt = "Digital"; else if (ll.indexOf("fortune")!==-1) jt = "Fortune"; else if (/\b(jeu|ven|lun|mar)\b/i.test(l)) jt = "Fortune";
+        var mh = l.match(/(\d{1,2})\s*[hH]/); if (mh) ht = mh[1].padStart(2,'0') + "H";
+        var tn = l.replace(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/, ' ').replace(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/, ' ').replace(/\d{1,2}(?:er)?\s+[a-zéèûôàç]+\.?\s+\d{2,4}/i, ' ').replace(/\b\d{1,2}\s*[hH]\b/g, ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ');
+        var ns = [], mn2 = tn.match(/\b\d{1,2}\b/g); if (mn2) for (var i=0;i<mn2.length;i++){ var num = parseInt(mn2[i],10); if (num>=1&&num<=90) ns.push(num); }
+        var b = ns.slice(0,5); if (b.length<5) b = ns.slice(-5);
+        if (b.length===5 && new Set(b).size===5) {
+            var no = { date: df, heure: ht, jeu: jt, boules: JSON.stringify(b), numero_tirage: "Auto", _b: b };
+            var ii = nv.findIndex(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; }); if (ii !== -1) { nv[ii] = no; return; }
+            var ic = cf.findIndex(function(c){ return c.nouveau.date===no.date && c.nouveau.heure===no.heure && c.nouveau.jeu===no.jeu; }); if (ic !== -1) { cf[ic].nouveau = no; return; }
+            var ex = donneesCloud.find(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
+            if (ex) cf.push({ existant: { id: ex.id, date: ex.date, heure: ex.heure, jeu: ex.jeu, boules: ex.boules }, nouveau: no }); else nv.push(no);
+        } else { inv++; }
+    });
+    if (nv.length === 0 && cf.length === 0) { msg.textContent = "Aucun valide (" + inv + ")."; return; }
+    importAttente = { nouveaux: nv, conflits: cf, invalides: inv };
+    var statNv = document.getElementById("statNouveaux"); if (!statNv) { alert("Modale manquante"); return; }
+    statNv.textContent = nv.length; document.getElementById("statConflits").textContent = cf.length; document.getElementById("statInvalides").textContent = inv; document.getElementById("nbConflitsQuestion").textContent = cf.length;
+    var ll2 = document.getElementById("listeConflits"); if (cf.length === 0) ll2.innerHTML = "<p>Aucun conflit.</p>"; else { var h = ""; cf.slice(0,10).forEach(function(c){ h += "<div class='ligne-conflit'>⚠️ <b>" + c.nouveau.date + "</b> · " + c.nouveau.jeu + "<br>Ancien : " + c.existant.boules.join(",") + "<br>Nouveau : " + c.nouveau._b.join(",") + "</div>"; }); ll2.innerHTML = h; }
+    document.getElementById("btnEcraser").style.display = cf.length > 0 ? "inline-block" : "none";
+    document.getElementById("modalConflitImport").style.display = "flex"; document.getElementById("messageConflit").textContent = ""; msg.textContent = "En attente.";
+}
+async function executerImport(mode) {
+    if (!importAttente) return; var msg = document.getElementById("messageConflit"), mp = document.getElementById("importMessage"); msg.textContent = "⏳...";
+    var nv = importAttente.nouveaux, cf = importAttente.conflits, nbA = 0, nbE = 0, nbI = 0, err = null;
+    if (mode === 'ecraser' && cf.length > 0) {
+        var tb = 20;
+        for (var i=0;i<cf.length;i+=tb) { var batch = cf.slice(i,i+tb); var ps = batch.map(function(c){ return supabaseClient.from('tirages').update({ boules: c.nouveau.boules }).eq('id', c.existant.id); }); var rs = await Promise.all(ps); for (var r=0;r<rs.length;r++) if (rs[r].error) { err = rs[r].error; break; } if (err) break; nbE += batch.length; }
+    } else { nbI = cf.length; }
+    if (!err && nv.length > 0) {
+        var tp = 100, ai = nv.map(function(t){ return { date: t.date, heure: t.heure, jeu: t.jeu, boules: t.boules, numero_tirage: t.numero_tirage }; });
+        for (var j=0;j<ai.length;j+=tp) { var paq = ai.slice(j,j+tp); var res = await supabaseClient.from('tirages').insert(paq); if (res.error) { err = res.error; break; } nbA += paq.length; }
+    }
+    if (err) { msg.textContent = "❌ " + err.message; return; }
+    var res2 = "✅ Terminé. " + nbA + " ajoutés, " + (mode==='ecraser'?nbE+" écrasés":nbI+" ignorés"); msg.textContent = res2; mp.textContent = res2;
+    importAttente = null; document.getElementById("texteAImporter").value = ""; setTimeout(function(){ document.getElementById("modalConflitImport").style.display = "none"; chargerDonnees(true); }, 1500);
+}
+function annulerImport() { importAttente = null; document.getElementById("modalConflitImport").style.display = "none"; }
+
+function changerTailleBoules(t) { localStorage.setItem('loto_taille_boules', t); document.body.className = t; }
+
+document.addEventListener('DOMContentLoaded', function() { 
+    var t = localStorage.getItem('loto_taille_boules') || 'taille-normale'; document.body.className = t;
+    if (document.getElementById("selectTailleBoules")) document.getElementById("selectTailleBoules").value = t;
+    if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); verifierSession(); 
+});
