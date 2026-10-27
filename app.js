@@ -520,59 +520,8 @@ function parseDateExotique(ligne) {
     return null;
 }
 
-async function traiterTexteColle() {
-    if (!estAdmin) { alert("Admin uniquement."); return; }
-    var txt = document.getElementById("texteAImporter").value;
-    var msg = document.getElementById("importMessage");
-    if (!txt.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Vide."; return; }
-    msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse en cours...";
-    
-    var lignes = txt.split(/\r?\n/), nv = [], cf = [], inv = 0;
-    var aA = new Date().getFullYear(), aMax = aA+1, aMin = 2004;
-    
-    lignes.forEach(function(l) {
-        if (!l.trim()) return;
-        var ll = l.toLowerCase();
-        if (ll.indexOf("date")!==-1 || ll.indexOf("column")!==-1 || ll.indexOf("benin")!==-1) return;
-        
-        var d = parseDateExotique(l);
-        if (!d) { inv++; return; }
-        if (d.jour<1||d.jour>31||d.mois<1||d.mois>12||d.annee<aMin||d.annee>aMax) { inv++; return; }
-        
-        var df = d.annee + "-" + String(d.mois).padStart(2,'0') + "-" + String(d.jour).padStart(2,'0');
-        var jt = "Star", ht = "14H";
-        if (ll.indexOf("digital")!==-1) jt = "Digital";
-        else if (ll.indexOf("fortune")!==-1) jt = "Fortune";
-        else if (/\b(jeu|ven|lun|mar)\b/i.test(l)) jt = "Fortune";
-        
-        var mh = l.match(/(\d{1,2})\s*[hH]/);
-        if (mh) ht = mh[1].padStart(2,'0') + "H";
-        
-        // NETTOYAGE : On enlève la date, l'heure (ex: 18h), le jeu et le numéro de tirage
-        var tn = l.replace(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/, ' ')
-                   .replace(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/, ' ')
-                   .replace(/\d{1,2}(?:er)?\s+[a-zéèûôàç]+\.?\s+\d{2,4}/i, ' ')
-                   .replace(/\b\d{1,2}\s*[hH]\b/g, ' ') // <-- ENLEVE L'HEURE (ex: "18h")
-                   .replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ')
-                   .replace(/N[°o]\s*\d+/i, ' ');
-                   
-        var ns = [], mn2 = tn.match(/\b\d{1,2}\b/g);
-        if (mn2) for (var i=0;i<mn2.length;i++){ var num = parseInt(mn2[i],10); if (num>=1&&num<=90) ns.push(num); }
-        var b = ns.slice(0,5); 
-        if (b.length<5) b = ns.slice(-5);
-        
-        if (b.length===5 && new Set(b).size===5) {
-            var no = { date: df, heure: ht, jeu: jt, boules: JSON.stringify(b), numero_tirage: "Auto", _b: b };
-            var ii = nv.findIndex(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
-            if (ii !== -1) { nv[ii] = no; return; }
-            var ic = cf.findIndex(function(c){ return c.nouveau.date===no.date && c.nouveau.heure===no.heure && c.nouveau.jeu===no.jeu; });
-            if (ic !== -1) { cf[ic].nouveau = no; return; }
-            var ex = donneesCloud.find(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
-            if (ex) cf.push({ existant: { id: ex.id, date: ex.date, heure: ex.heure, jeu: ex.jeu, boules: ex.boules }, nouveau: no });
-            else nv.push(no);
-        } else { inv++; }
-    });
-    
+    // ... (garde tout le début de la fonction qui analyse les lignes) ...
+
     if (nv.length === 0 && cf.length === 0) { 
         msg.style.color = "var(--color-star)"; 
         msg.textContent = "⚠️ Aucun valide (" + inv + " invalides)."; 
@@ -581,15 +530,26 @@ async function traiterTexteColle() {
     
     importAttente = { nouveaux: nv, conflits: cf, invalides: inv };
     
-    // SÉCURITÉ : On vérifie que la fenêtre existe avant de la modifier
-    var statNv = document.getElementById("statNouveaux");
-    if (!statNv) {
-        alert("⚠️ Erreur : La fenêtre d'importation est manquante dans ton code HTML. Vérifie que le fichier index.html est complet.");
-        msg.textContent = "❌ Impossible d'afficher la fenêtre.";
+    // VÉRIFICATION DE SÉCURITÉ :
+    var modal = document.getElementById("modalConflitImport");
+    if (!modal) {
+        // Si la fenêtre n'existe pas, on utilise une alerte classique
+        var resume = "📥 Résumé :\n" + nv.length + " nouveaux\n" + cf.length + " conflits\n" + inv + " invalides.\n\n";
+        if (cf.length > 0) {
+            if (confirm(resume + "Voulez-vous écraser les anciens ?")) {
+                executerImport('ecraser');
+            } else {
+                executerImport('ignorer');
+            }
+        } else {
+            alert(resume + "Ajout en cours...");
+            executerImport('ignorer');
+        }
         return;
     }
 
-    statNv.textContent = nv.length;
+    // Si la fenêtre existe, on affiche les détails normalement
+    document.getElementById("statNouveaux").textContent = nv.length;
     document.getElementById("statConflits").textContent = cf.length;
     document.getElementById("statInvalides").textContent = inv;
     document.getElementById("nbConflitsQuestion").textContent = cf.length;
@@ -603,7 +563,7 @@ async function traiterTexteColle() {
     }
     
     document.getElementById("btnEcraser").style.display = cf.length > 0 ? "inline-block" : "none";
-    document.getElementById("modalConflitImport").style.display = "flex";
+    modal.style.display = "flex";
     document.getElementById("messageConflit").textContent = "";
     document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; });
     msg.style.color = "var(--text-muted)"; msg.textContent = "En attente de votre choix.";
