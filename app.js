@@ -1,5 +1,5 @@
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
-const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U'; // <-- Vérifie que c'est bien TA clé ici
+const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U'; // Vérifie que c'est bien ta clé ici
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 var donneesCloud = [];
@@ -9,6 +9,7 @@ var ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
 var tiragesComparateur = [];
 var tirageLabo = null;
 var nPlages = 0;
+var importAttente = null;
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
@@ -25,7 +26,7 @@ function fermerDrawer() {
 }
 function seDeconnecterDepuisDrawer() { fermerDrawer(); seDeconnecter(); }
 
-// --- 2. BARRE DES ATELIERS (WORKSPACE) ---
+// --- 2. BARRE DES ATELIERS ---
 function majBarreAteliers() {
     var bar = document.getElementById('ateliersBar');
     var topOnglets = ['saisie', 'cockpit', 'analyses'];
@@ -93,6 +94,12 @@ async function seConnecter() {
     const { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
     if (error) { msg.textContent = "❌ " + error.message; } else { msg.textContent = "✅ Connecté !"; setTimeout(() => { verifierSession(); }, 500); }
 }
+async function creerCompte() {
+    var email = document.getElementById("insEmail").value, phone = document.getElementById("insPhone") ? document.getElementById("insPhone").value : null, password = document.getElementById("insPassword").value, msg = document.getElementById("loginMessage");
+    if (!email || !password) { msg.textContent = "Remplissez les champs."; return; }
+    const { error } = await supabaseClient.auth.signUp({ email: email, password: password, options: { data: { telephone: phone } } });
+    if (error) { msg.textContent = "❌ " + error.message; } else { msg.textContent = "✅ Compte créé !"; setTimeout(() => { afficherConnexion(); }, 2000); }
+}
 function entrerVisiteur() { estAdmin = false; estAbonne = false; afficherApplication(false, false, null); }
 async function seDeconnecter() { await supabaseClient.auth.signOut(); document.getElementById("login-screen").style.display = "flex"; document.getElementById("app-content").style.display = "none"; afficherConnexion(); }
 function afficherConnexion() { document.getElementById("form-inscription").style.display = "none"; document.getElementById("form-connexion").style.display = "block"; document.getElementById("loginMessage").textContent = ""; }
@@ -104,13 +111,10 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
     if (isAdmin) { badgeEl.textContent = "👑 Admin"; badgeEl.className = "status-badge badge-admin"; document.body.classList.remove("mode-visiteur"); }
     else if (isAbonne) { badgeEl.textContent = "⭐ Abonné"; badgeEl.className = "status-badge badge-abonne"; document.body.classList.remove("mode-visiteur"); }
     else { badgeEl.textContent = "🚫 Gratuit"; badgeEl.className = "status-badge badge-gratuit"; document.body.classList.add("mode-visiteur"); }
-        var db = document.getElementById('drawerBadge');
+    
+    var db = document.getElementById('drawerBadge');
     if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
     
-    var dash = document.getElementById('dashboardAdmin');     var db = document.getElementById('drawerBadge');
-    if (db) { db.textContent = badgeEl.textContent; db.className = badgeEl.className; }
-    
-    var dash = document.getElementById('dashboardAdmin'); 
     var dash = document.getElementById('dashboardAdmin'); if (dash) dash.style.display = isAdmin ? "block" : "none";
     chargerDonnees(); if (isAdmin) chargerUtilisateursAuto();
 }
@@ -138,7 +142,7 @@ function afficherSacSelectionne() {
     var parDate = {}; tf.forEach(function(t) { if (!parDate[t.date]) parDate[t.date] = []; parDate[t.date].push(t); });
     var html = "";
     Object.keys(parDate).sort().forEach(function(dateStr) {
-                var dObj = new Date(dateStr);
+        var dObj = new Date(dateStr);
         var df = dObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         html += "<div class='day-card'><h3 class='day-header'>📅 " + df + "</h3>";
         parDate[dateStr].forEach(function(t) {
@@ -313,201 +317,71 @@ function mettreAJourZoneComparaison() {
 function retirerDuComparateur(idx) { tiragesComparateur.splice(idx, 1); mettreAJourZoneComparaison(); }
 function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneComparaison(); }
 
-// --- 11. LABO ---
+// --- 11. LABO (TOUS LES OUTILS) ---
 function remplirSelecteursLabo() {
     var s1 = document.getElementById("selectTirageLabo"); 
-    if(s1) {
-        s1.innerHTML = "";
-        donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s1.appendChild(o); });
-        analyserTirageLabo();
-    }
-    
+    if(s1) { s1.innerHTML = ""; donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s1.appendChild(o); }); analyserTirageLabo(); }
     var s2 = document.getElementById("selectMultiTirages"); 
-    if(s2) { 
-        s2.innerHTML = ""; 
-        donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s2.appendChild(o); }); 
-    }
-
-    // L'APPEL QUI MANQUAIT POUR L'ANALYSEUR DE SUIVI :
-    remplirSuiviDeclencheur(); 
+    if(s2) { s2.innerHTML = ""; donneesCloud.forEach(function(t,i){ var o = document.createElement("option"); o.value = i; o.textContent = t.date + " | " + t.jeu + " " + t.heure; s2.appendChild(o); }); }
+    remplirSuiviDeclencheur();
 }
 function analyserTirageLabo() { var i = document.getElementById("selectTirageLabo").value; if (i !== "" && donneesCloud[i]) { tirageLabo = donneesCloud[i]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageLabo.boules.join(" - "); } }
 function faireTurning() { if (!tirageLabo) return; var r = tirageLabo.boules.map(function(n){ var s = n.toString(); if (s.length===1) s = "0"+s; var i = parseInt(s.split('').reverse().join(''),10); return (i>90||i===0)?n:i; }); document.getElementById("resultatOperations").innerHTML = "<b>Miroir :</b><br>Base : " + tirageLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + r.join(" - ") + "</span>"; }
 function faireAddition() { if (!tirageLabo) return; var s = tirageLabo.boules.reduce(function(a,b){ return a+b; },0), r = s; while (r > 90) r -= 90; document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>" + tirageLabo.boules.join(" + ") + " = " + s + "<br>Réduit : <strong>" + r + "</strong>"; }
 function faireTheosophie() { if (!tirageLabo) return; var st = 0, cd = []; tirageLabo.boules.forEach(function(n) { var s = n.toString(), sn = 0, dn = []; for (var i=0;i<s.length;i++) { var c = parseInt(s[i],10); sn += c; dn.push(c); } st += sn; cd.push(dn.join("+") + "=" + sn); }); var ta = st, rt = ""; while (ta > 90) { ta -= 90; rt += " -> " + ta; } document.getElementById("resultatOperations").innerHTML = "<b>Théosophie :</b><br>" + cd.join(" | ") + "<br><b>Total : " + st + "</b><br>" + (rt ? "Réduction : " + rt + "<br>" : "") + "Résultat : <span class='ball'>" + ta + "</span>"; }
 
-// --- 12. ADMINISTRATION ---
-async function chargerUtilisateursAuto() {
-    var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
-    if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='4'>Chargement...</td></tr>";
-    const { data: profils } = await supabaseClient.from('profils').select('*').order('role');
-    var html = "";
-    if(profils) profils.forEach(function(p) {
-        var dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
-        html += "<tr><td>" + (p.email || 'Inconnu') + "</td><td>" + p.role + "</td><td><input type='date' value='" + dateVal + "' id='dateUser_" + p.id + "'></td>";
-        html += "<td><select id='roleUser_" + p.id + "'><option value='visiteur' "+(p.role==='visiteur'?'selected':'')+">Visiteur</option><option value='abonne' "+(p.role==='abonne'?'selected':'')+">Abonné</option><option value='admin' "+(p.role==='admin'?'selected':'')+">Admin</option></select>";
-        html += " <button onclick=\"sauvegarderPrivileges('" + p.id + "')\" style='background:green;'>💾</button></td></tr>";
-    });
-    tbody.innerHTML = html;
-}
-async function sauvegarderPrivileges(userId) {
-    var role = document.getElementById("roleUser_" + userId).value, dateFin = document.getElementById("dateUser_" + userId).value || null;
-    const { error } = await supabaseClient.from('profils').update({ role: role, date_fin_abonnement: dateFin }).eq('id', userId);
-    if(error) alert("Erreur: " + error.message); else alert("✅ Utilisateur mis à jour !");
-}
-async function actualiserDashboard() {
-    var total = donneesCloud.length;
-    document.getElementById('dashTotal').textContent = total.toLocaleString('fr-FR');
-    document.getElementById('dashStar').textContent = donneesCloud.filter(function(t){return t.jeu==='Star';}).length;
-    document.getElementById('dashFortune').textContent = donneesCloud.filter(function(t){return t.jeu==='Fortune';}).length;
-    document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
-    if (total > 0) { var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date); document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
-}
-
-// --- INITIALISATION ---
-// =========================================================
-// OUTILS DU LABORATOIRE (Bankers, Suivi, Multi-Draws)
-// =========================================================
-
-// 1. Chasseur de Bankers
 function chercherBanker() {
-    var jeuChoisi = document.getElementById('bankerJeu').value;
-    var resultatBox = document.getElementById('resultatBanker');
-    var tiragesJeu = donneesCloud.filter(function(t) { return t.jeu === jeuChoisi; });
-    
-    if (tiragesJeu.length < 10) { alert("Pas assez de données pour analyser."); return; }
-    var totalTirages = tiragesJeu.length;
-    
-    // Le plus en retard
-    var ecarts = {}; for (var i = 1; i <= 90; i++) ecarts[i] = totalTirages;
+    var jeuChoisi = document.getElementById('bankerJeu').value, tiragesJeu = donneesCloud.filter(function(t) { return t.jeu === jeuChoisi; });
+    if (tiragesJeu.length < 10) { alert("Pas assez de données."); return; }
+    var totalTirages = tiragesJeu.length, ecarts = {}; for (var i = 1; i <= 90; i++) ecarts[i] = totalTirages;
     for (var idx = 0; idx < totalTirages; idx++) { tiragesJeu[idx].boules.forEach(function(b) { ecarts[b] = (totalTirages - 1) - idx; }); }
     var maxEcart = -1, numRetard = null; for (var n = 1; n <= 90; n++) if (ecarts[n] > maxEcart) { maxEcart = ecarts[n]; numRetard = n; }
-    
-    // Le plus régulier
-    var freq = {}; for (var f = 1; f <= 90; f++) freq[f] = 0; 
-    tiragesJeu.forEach(function(t) { t.boules.forEach(function(b) { freq[b]++; }); });
+    var freq = {}; for (var f = 1; f <= 90; f++) freq[f] = 0; tiragesJeu.forEach(function(t) { t.boules.forEach(function(b) { freq[b]++; }); });
     var maxFreq = -1, numFrequent = null; for (var m = 1; m <= 90; m++) if (freq[m] > maxFreq) { maxFreq = freq[m]; numFrequent = m; }
-    
-    // Le suiveur
     var dernierTirage = tiragesJeu[totalTirages - 1], suiveurs = {};
-    for (var k = 0; k < totalTirages - 1; k++) { 
-        if (tiragesJeu[k].boules.some(function(b) { return dernierTirage.boules.includes(b); })) { 
-            tiragesJeu[k + 1].boules.forEach(function(b) { suiveurs[b] = (suiveurs[b] || 0) + 1; }); 
-        } 
-    }
+    for (var k = 0; k < totalTirages - 1; k++) { if (tiragesJeu[k].boules.some(function(b) { return dernierTirage.boules.includes(b); })) { tiragesJeu[k + 1].boules.forEach(function(b) { suiveurs[b] = (suiveurs[b] || 0) + 1; }); } }
     var topSuiveur = null, maxSuivi = -1; for (var s in suiveurs) if (suiveurs[s] > maxSuivi) { maxSuivi = suiveurs[s]; topSuiveur = s; }
     
-    // Affichage
-    resultatBox.style.display = 'block';
+    document.getElementById('resultatBanker').style.display = 'block';
     document.getElementById('bankerRetard').innerHTML = "<span class='ball hot' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#e74c3c;'>" + numRetard + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Écart de " + maxEcart + " tirages</b></p>";
     document.getElementById('bankerFrequent').innerHTML = "<span class='ball star' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#f39c12;'>" + numFrequent + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxFreq + " fois</b></p>";
-    
-    if (topSuiveur) {
-        document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#3498db;'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>";
-    } else {
-        document.getElementById('bankerSuiveur').innerHTML = "<p style='font-size: 12px;'>Pas assez de données.</p>";
-    }
+    if (topSuiveur) { document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#3498db;'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>"; } 
+    else { document.getElementById('bankerSuiveur').innerHTML = "<p style='font-size: 12px;'>Pas assez de données.</p>"; }
 }
 
-// 2. Analyseur de Suivi
 function remplirSuiviDeclencheur() {
-    var sel = document.getElementById('suiviDeclencheur'); 
-    if (!sel) return; 
+    var sel = document.getElementById('suiviDeclencheur'); if (!sel) return; 
     sel.innerHTML = "<option value=''>Sélectionnez un tirage déclencheur...</option>"; 
     var limit = Math.max(0, donneesCloud.length - 50); 
-    for (var i = donneesCloud.length - 1; i >= limit; i--) { 
-        var t = donneesCloud[i], opt = document.createElement("option"); 
-        opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure; 
-        sel.appendChild(opt); 
-    } 
+    for (var i = donneesCloud.length - 1; i >= limit; i--) { var t = donneesCloud[i], opt = document.createElement("option"); opt.value = i; opt.textContent = t.date + " | " + t.jeu + " " + t.heure; sel.appendChild(opt); } 
 }
-
 function analyserSuivi() {
-    var idxSel = document.getElementById('suiviDeclencheur').value; 
-    if (idxSel === "") { alert("Sélectionnez un tirage."); return; }
+    var idxSel = document.getElementById('suiviDeclencheur').value; if (idxSel === "") { alert("Sélectionnez un tirage."); return; }
     var idx = parseInt(idxSel, 10), declencheur = donneesCloud[idx], resultats = {}, tiragesSuivants = [];
-    
-    for (var i = idx + 1; i < donneesCloud.length; i++) { 
-        if (donneesCloud[i].jeu === declencheur.jeu) { 
-            tiragesSuivants.push(donneesCloud[i]); 
-            if (tiragesSuivants.length === 5) break; 
-        } 
-    }
-    
-    var box = document.getElementById('resultatSuivi'); 
-    if (tiragesSuivants.length === 0) { box.style.display = 'block'; box.innerHTML = "<p>Aucun tirage suivant trouvé.</p>"; return; }
-    
+    for (var i = idx + 1; i < donneesCloud.length; i++) { if (donneesCloud[i].jeu === declencheur.jeu) { tiragesSuivants.push(donneesCloud[i]); if (tiragesSuivants.length === 5) break; } }
+    var box = document.getElementById('resultatSuivi'); if (tiragesSuivants.length === 0) { box.style.display = 'block'; box.innerHTML = "<p>Aucun tirage suivant.</p>"; return; }
     tiragesSuivants.forEach(function(t) { t.boules.forEach(function(b) { resultats[b] = (resultats[b] || 0) + 1; }); });
     var top = Object.keys(resultats).map(function(k) { return { n: parseInt(k, 10), c: resultats[k] }; }).sort(function(a, b) { return b.c - a.c; });
-    
-    var html = "<h4 style='margin-top:0; color:var(--color-star);'>Résultats du suivi</h4><p style='font-size: 13px; margin-bottom: 15px;'>Analyse des <b>" + tiragesSuivants.length + "</b> tirages suivants (jeu " + declencheur.jeu + ").</p><div class='ana-grid'>";
-    top.slice(0, 5).forEach(function(item) { 
-        var pourcentage = Math.round((item.c / tiragesSuivants.length) * 100); 
-        html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>"; 
-    });
+    var html = "<h4 style='margin-top:0; color:var(--color-star);'>Résultats du suivi</h4><p style='font-size: 13px; margin-bottom: 15px;'>Analyse des <b>" + tiragesSuivants.length + "</b> tirages suivants.</p><div class='ana-grid'>";
+    top.slice(0, 5).forEach(function(item) { var pourcentage = Math.round((item.c / tiragesSuivants.length) * 100); html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>"; });
     html += "</div>"; box.innerHTML = html; box.style.display = 'block';
 }
-
-// 3. Multi-Draws (Additionner et Communs)
 function executerAdditions() {
-    var sel = document.getElementById("selectMultiTirages"); 
-    var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
+    var sel = document.getElementById("selectMultiTirages"); var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
     if (idx.length === 0) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez des tirages."; return; } 
-    
-    var html = "<b>Additions :</b><br>"; 
-    idx.forEach(function(i){ 
-        var t = donneesCloud[i]; 
-        var s = t.boules.reduce(function(a,b){ return a+b; },0); 
-        var r = s; while(r > 90) r -= 90; 
-        html += t.date + " " + t.heure + " : " + s + " → " + r + "<br>"; 
-    }); 
+    var html = "<b>Additions :</b><br>"; idx.forEach(function(i){ var t = donneesCloud[i]; var s = t.boules.reduce(function(a,b){ return a+b; },0); var r = s; while(r > 90) r -= 90; html += t.date + " " + t.heure + " : " + s + " → " + r + "<br>"; }); 
     document.getElementById("resultatLaboAvance").innerHTML = html; 
 }
-
 function executerBankersMulti() {
-    var sel = document.getElementById("selectMultiTirages"); 
-    var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
+    var sel = document.getElementById("selectMultiTirages"); var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); }); 
     if (idx.length < 2) { document.getElementById("resultatLaboAvance").textContent = "Sélectionnez au moins 2 tirages."; return; } 
-    
-    var communs = donneesCloud[idx[0]].boules.slice(); 
-    for (var i=1;i<idx.length;i++) {
-        communs = communs.filter(function(n){ return donneesCloud[idx[i]].boules.indexOf(n) !== -1; }); 
-    }
-    
-    var html = "<b>Communs (" + idx.length + " tirages) :</b><br>"; 
-    if (communs.length === 0) html += "Aucun numéro commun.";
+    var communs = donneesCloud[idx[0]].boules.slice(); for (var i=1;i<idx.length;i++) communs = communs.filter(function(n){ return donneesCloud[idx[i]].boules.indexOf(n) !== -1; }); 
+    var html = "<b>Communs (" + idx.length + " tirages) :</b><br>"; if (communs.length === 0) html += "Aucun numéro commun.";
     else html += communs.map(function(n){ return "<span class='ball' style='background:#e74c3c;'>" + n + "</span>"; }).join(" "); 
     document.getElementById("resultatLaboAvance").innerHTML = html; 
 }
-function exporterSauvegardeComplete() {
-    if (!estAdmin) { alert("Action réservée aux administrateurs."); return; }
-    if (donneesCloud.length === 0) { alert("Aucune donnée à exporter."); return; }
-    
-    var l = ["date,heure,jeu,boules"];
-    donneesCloud.forEach(function(t){ 
-        l.push([t.date, t.heure, t.jeu, '"' + t.boules.join(",") + '"'].join(",")); 
-    });
-    
-    var blob = new Blob([l.join("\n")], { type: "text/csv;charset=utf-8;" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a"); 
-    a.href = url;
-    a.download = "loto-benin-sauvegarde-" + new Date().toISOString().slice(0,10) + ".csv";
-    a.click(); 
-    URL.revokeObjectURL(url);
-}
 
-function chargerUtilisateursDansTableau() {
-    // Si ta fonction s'appelle chargerUtilisateursAuto, tu peux juste l'appeler ici
-    if (typeof chargerUtilisateursAuto === 'function') {
-        chargerUtilisateursAuto();
-    }
-}
-// =========================================================
-// IMPORTATION DE DONNÉES (AVEC GESTION DES CONFLITS)
-// =========================================================
-var importAttente = null;
-
+// --- 12. IMPORTATION (SÉCURISÉE) ---
 function parseDateExotique(ligne) {
     var moisMap = { 'janv':1,'jan':1,'janvier':1,'fevr':2,'fev':2,'fevrier':2,'févr':2,'fév':2,'février':2,'mars':3,'mar':3,'avr':4,'avril':4,'mai':5,'juin':6,'juil':7,'juillet':7,'aout':8,'août':8,'sept':9,'septembre':9,'oct':10,'octobre':10,'nov':11,'novembre':11,'dec':12,'déc':12,'decembre':12,'décembre':12 };
     var m;
@@ -520,36 +394,56 @@ function parseDateExotique(ligne) {
     return null;
 }
 
-    // ... (garde tout le début de la fonction qui analyse les lignes) ...
-
-    if (nv.length === 0 && cf.length === 0) { 
-        msg.style.color = "var(--color-star)"; 
-        msg.textContent = "⚠️ Aucun valide (" + inv + " invalides)."; 
-        return; 
-    }
+async function traiterTexteColle() {
+    if (!estAdmin) { alert("Admin uniquement."); return; }
+    var txt = document.getElementById("texteAImporter").value;
+    var msg = document.getElementById("importMessage");
+    if (!txt.trim()) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ Vide."; return; }
+    msg.style.color = "var(--primary)"; msg.textContent = "⏳ Analyse en cours...";
     
+    var lignes = txt.split(/\r?\n/), nv = [], cf = [], inv = 0;
+    var aA = new Date().getFullYear(), aMax = aA+1, aMin = 2004;
+    
+    lignes.forEach(function(l) {
+        if (!l.trim()) return;
+        var ll = l.toLowerCase();
+        if (ll.indexOf("date")!==-1 || ll.indexOf("column")!==-1 || ll.indexOf("benin")!==-1) return;
+        var d = parseDateExotique(l);
+        if (!d) { inv++; return; }
+        if (d.jour<1||d.jour>31||d.mois<1||d.mois>12||d.annee<aMin||d.annee>aMax) { inv++; return; }
+        
+        var df = d.annee + "-" + String(d.mois).padStart(2,'0') + "-" + String(d.jour).padStart(2,'0');
+        var jt = "Star", ht = "14H";
+        if (ll.indexOf("digital")!==-1) jt = "Digital";
+        else if (ll.indexOf("fortune")!==-1) jt = "Fortune";
+        else if (/\b(jeu|ven|lun|mar)\b/i.test(l)) jt = "Fortune";
+        
+        var mh = l.match(/(\d{1,2})\s*[hH]/);
+        if (mh) ht = mh[1].padStart(2,'0') + "H";
+        
+        var tn = l.replace(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/, ' ').replace(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/, ' ').replace(/\d{1,2}(?:er)?\s+[a-zéèûôàç]+\.?\s+\d{2,4}/i, ' ').replace(/\b\d{1,2}\s*[hH]\b/g, ' ').replace(/star|fortune|digital|\b(jeu|ven|lun|mar|mer|sam|dom)\b/gi, ' ').replace(/N[°o]\s*\d+/i, ' ');
+        var ns = [], mn2 = tn.match(/\b\d{1,2}\b/g);
+        if (mn2) for (var i=0;i<mn2.length;i++){ var num = parseInt(mn2[i],10); if (num>=1&&num<=90) ns.push(num); }
+        var b = ns.slice(0,5); if (b.length<5) b = ns.slice(-5);
+        
+        if (b.length===5 && new Set(b).size===5) {
+            var no = { date: df, heure: ht, jeu: jt, boules: JSON.stringify(b), numero_tirage: "Auto", _b: b };
+            var ii = nv.findIndex(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
+            if (ii !== -1) { nv[ii] = no; return; }
+            var ic = cf.findIndex(function(c){ return c.nouveau.date===no.date && c.nouveau.heure===no.heure && c.nouveau.jeu===no.jeu; });
+            if (ic !== -1) { cf[ic].nouveau = no; return; }
+            var ex = donneesCloud.find(function(t){ return t.date===no.date && t.heure===no.heure && t.jeu===no.jeu; });
+            if (ex) cf.push({ existant: { id: ex.id, date: ex.date, heure: ex.heure, jeu: ex.jeu, boules: ex.boules }, nouveau: no });
+            else nv.push(no);
+        } else { inv++; }
+    });
+    
+    if (nv.length === 0 && cf.length === 0) { msg.style.color = "var(--color-star)"; msg.textContent = "⚠️ Aucun valide (" + inv + " invalides)."; return; }
     importAttente = { nouveaux: nv, conflits: cf, invalides: inv };
     
-    // VÉRIFICATION DE SÉCURITÉ :
-    var modal = document.getElementById("modalConflitImport");
-    if (!modal) {
-        // Si la fenêtre n'existe pas, on utilise une alerte classique
-        var resume = "📥 Résumé :\n" + nv.length + " nouveaux\n" + cf.length + " conflits\n" + inv + " invalides.\n\n";
-        if (cf.length > 0) {
-            if (confirm(resume + "Voulez-vous écraser les anciens ?")) {
-                executerImport('ecraser');
-            } else {
-                executerImport('ignorer');
-            }
-        } else {
-            alert(resume + "Ajout en cours...");
-            executerImport('ignorer');
-        }
-        return;
-    }
-
-    // Si la fenêtre existe, on affiche les détails normalement
-    document.getElementById("statNouveaux").textContent = nv.length;
+    var statNv = document.getElementById("statNouveaux");
+    if (!statNv) { alert("⚠️ Fenêtre d'importation manquante."); return; }
+    statNv.textContent = nv.length;
     document.getElementById("statConflits").textContent = cf.length;
     document.getElementById("statInvalides").textContent = inv;
     document.getElementById("nbConflitsQuestion").textContent = cf.length;
@@ -561,9 +455,8 @@ function parseDateExotique(ligne) {
         cf.slice(0,10).forEach(function(c){ h += "<div class='ligne-conflit'>⚠️ <b>" + c.nouveau.date + "</b> · " + c.nouveau.jeu + " · " + c.nouveau.heure + "<br>Ancien : <span class='ancien'>[" + c.existant.boules.join(", ") + "]</span><br>Nouveau : <span class='nouveau'>[" + c.nouveau._b.join(", ") + "]</span></div>"; });
         ll2.innerHTML = h;
     }
-    
     document.getElementById("btnEcraser").style.display = cf.length > 0 ? "inline-block" : "none";
-    modal.style.display = "flex";
+    document.getElementById("modalConflitImport").style.display = "flex";
     document.getElementById("messageConflit").textContent = "";
     document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; });
     msg.style.color = "var(--text-muted)"; msg.textContent = "En attente de votre choix.";
@@ -574,7 +467,6 @@ async function executerImport(mode) {
     var msg = document.getElementById("messageConflit"), mp = document.getElementById("importMessage");
     msg.style.color = "var(--primary)"; msg.textContent = "⏳...";
     document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = true; });
-    
     var nv = importAttente.nouveaux, cf = importAttente.conflits, nbA = 0, nbE = 0, nbI = 0, err = null;
     
     if (mode === 'ecraser' && cf.length > 0) {
@@ -598,28 +490,56 @@ async function executerImport(mode) {
             nbA += paq.length;
         }
     }
-    
-    if (err) { 
-        msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + err.message; 
-        document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; }); 
-        return; 
-    }
-    
+    if (err) { msg.style.color = "var(--color-hot)"; msg.textContent = "❌ " + err.message; document.querySelectorAll("#modalConflitImport button").forEach(function(b){ b.disabled = false; }); return; }
     var res2 = "✅ Terminé. " + nbA + " ajouté(s)" + (mode==='ecraser' ? ", " + nbE + " écrasé(s)" : ", " + nbI + " ignoré(s)") + ".";
-    msg.style.color = "#27ae60"; msg.textContent = res2;
-    mp.style.color = "#27ae60"; mp.textContent = res2;
-    
-    importAttente = null;
-    document.getElementById("texteAImporter").value = "";
+    msg.style.color = "#27ae60"; msg.textContent = res2; mp.style.color = "#27ae60"; mp.textContent = res2;
+    importAttente = null; document.getElementById("texteAImporter").value = "";
     setTimeout(function(){ document.getElementById("modalConflitImport").style.display = "none"; chargerDonnees(); }, 1500);
 }
-
 function annulerImport() {
-    importAttente = null;
-    document.getElementById("modalConflitImport").style.display = "none";
-    document.getElementById("importMessage").style.color = "var(--color-star)";
-    document.getElementById("importMessage").textContent = "⏹️ Annulé.";
+    importAttente = null; document.getElementById("modalConflitImport").style.display = "none";
+    document.getElementById("importMessage").style.color = "var(--color-star)"; document.getElementById("importMessage").textContent = "⏹️ Annulé.";
 }
+
+// --- 13. ADMINISTRATION (UTILISATEURS & SAUVEGARDE) ---
+async function chargerUtilisateursAuto() {
+    var tbody = document.getElementById("tbodyUtilisateurs"), table = document.getElementById("tableUtilisateurs");
+    if (!tbody) return; table.style.display = "table"; tbody.innerHTML = "<tr><td colspan='5'>Chargement...</td></tr>";
+    const { data: profils } = await supabaseClient.from('profils').select('*').order('role');
+    var html = "";
+    if(profils) profils.forEach(function(p) {
+        var dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
+        var tel = p.telephone ? p.telephone : "Non renseigné";
+        html += "<tr><td>" + (p.email || 'Inconnu') + "</td><td>" + tel + "</td><td>" + p.role + "</td><td><input type='date' value='" + dateVal + "' id='dateUser_" + p.id + "'></td>";
+        html += "<td><select id='roleUser_" + p.id + "'><option value='visiteur' "+(p.role==='visiteur'?'selected':'')+">Visiteur</option><option value='abonne' "+(p.role==='abonne'?'selected':'')+">Abonné</option><option value='admin' "+(p.role==='admin'?'selected':'')+">Admin</option></select>";
+        html += " <button onclick=\"sauvegarderPrivileges('" + p.id + "')\" style='background:green;'>💾</button></td></tr>";
+    });
+    tbody.innerHTML = html;
+}
+async function sauvegarderPrivileges(userId) {
+    var role = document.getElementById("roleUser_" + userId).value, dateFin = document.getElementById("dateUser_" + userId).value || null;
+    const { error } = await supabaseClient.from('profils').update({ role: role, date_fin_abonnement: dateFin }).eq('id', userId);
+    if(error) alert("Erreur: " + error.message); else alert("✅ Utilisateur mis à jour !");
+}
+async function actualiserDashboard() {
+    var total = donneesCloud.length;
+    document.getElementById('dashTotal').textContent = total.toLocaleString('fr-FR');
+    document.getElementById('dashStar').textContent = donneesCloud.filter(function(t){return t.jeu==='Star';}).length;
+    document.getElementById('dashFortune').textContent = donneesCloud.filter(function(t){return t.jeu==='Fortune';}).length;
+    document.getElementById('dashDigital').textContent = donneesCloud.filter(function(t){return t.jeu==='Digital';}).length;
+    if (total > 0) { var dd = donneesCloud.reduce(function(max,t){return t.date>max?t.date:max;}, donneesCloud[0].date); document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
+}
+function exporterSauvegardeComplete() {
+    if (!estAdmin) { alert("Admin uniquement."); return; }
+    if (donneesCloud.length === 0) { alert("Aucune donnée."); return; }
+    var l = ["date,heure,jeu,boules"];
+    donneesCloud.forEach(function(t){ l.push([t.date,t.heure,t.jeu,'"'+t.boules.join(",")+'"'].join(",")); });
+    var blob = new Blob([l.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob); var a = document.createElement("a"); a.href = url;
+    a.download = "loto-benin-sauvegarde-" + new Date().toISOString().slice(0,10) + ".csv"; a.click(); URL.revokeObjectURL(url);
+}
+
+// --- 14. INITIALISATION ---
 document.addEventListener('DOMContentLoaded', function() { 
     if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date(); 
     verifierSession(); 
