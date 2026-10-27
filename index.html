@@ -188,15 +188,18 @@
             <div class="lock-overlay" id="overlay-analyses" style="display: none;"><h2>🔒 Accès Requis</h2><p>Abonnez-vous.</p><button onclick="contacterAdmin()">💬 S'abonner</button></div>
             <div id="content-analyses">
               <h2>📊 Analyses Avancées</h2>
-              <select id="anaJeu" onchange="executerAnalyses()"><option value="tous">Tous les jeux</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
-              <div class="ana-grid" style="margin-top:20px;">
+              <select id="anaJeu" onchange="executerAnalyses()" style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">
+                  <option value="tous">Tous les jeux</option>
+                  <option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option>
+                  <option value="Star_Digital">Star + Digital</option><option value="Fortune_Digital">Fortune + Digital</option><option value="Star_Fortune">Star + Fortune</option>
+              </select>
+              <div class="ana-grid">
                 <div class="ana-card"><h4>🥇 Paires fréquentes</h4><ul class="ana-list" id="anaPairesTop10"></ul></div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- LES AUTRES ONGLETS (CACHÉS) -->
         <div id="onglet-comparateur" class="tab-content" role="tabpanel" tabindex="0"><div class="card" id="lock-comparateur"><div class="lock-overlay" id="overlay-comparateur" style="display:none;"><h2>🔒</h2></div><div id="content-comparateur"><h2>⚖️ Comparateur</h2><div id="zoneComparaison" style="display:none; background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:10px;"><div id="listeComparaison"></div></div><div id="plages-config"></div><button onclick="ajouterPlage()">➕ Ajouter</button><button onclick="executerComparateurMulti()">🔍 Comparer</button><div id="resultatComparaison" class="comp-container"></div></div></div></div>
 
         <div id="onglet-labo" class="tab-content" role="tabpanel" tabindex="0">
@@ -224,7 +227,10 @@
                 <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
                   <h3>🎯 Chasseur de Bankers</h3>
                   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <select id="bankerJeu"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+                    <select id="bankerJeu">
+                        <option value="tous">Tous les jeux</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option>
+                        <option value="Star_Digital">Star + Digital</option><option value="Fortune_Digital">Fortune + Digital</option><option value="Star_Fortune">Star + Fortune</option>
+                    </select>
                     <button onclick="chercherBanker()">🔍 Analyser</button>
                   </div>
                   <div id="resultatBanker" class="result-box" style="display: none;"><div class="ana-grid"><div class="ana-card"><h4>Plus en retard</h4><div id="bankerRetard"></div></div><div class="ana-card"><h4>Plus régulier</h4><div id="bankerFrequent"></div></div><div class="ana-card"><h4>Suiveur</h4><div id="bankerSuiveur"></div></div></div></div>
@@ -239,12 +245,14 @@
                   <div id="resultatSuivi" class="result-box" style="display: none;"></div>
                 </div>
 
-                <!-- NOUVEAU : TRAQUEUR DE SOMME -->
                 <div style="margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
                   <h3>🔍 Traqueur de Somme (Dernière chance)</h3>
                   <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Entrez une somme (ex: 201). L'outil trouvera les boules qui ne sont pas sorties lors des 4 premiers tirages suivant cette somme, signalant leur dernière chance pour le 5ème tirage.</p>
                   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <select id="traqueurSac"><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>
+                    <select id="traqueurSac">
+                        <option value="tous">Tous les jeux</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option>
+                        <option value="Star_Digital">Star + Digital</option><option value="Fortune_Digital">Fortune + Digital</option><option value="Star_Fortune">Star + Fortune</option>
+                    </select>
                     <input type="number" id="traqueurSomme" placeholder="Ex: 201" style="width: 100px;">
                     <button onclick="traquerSomme()" style="background-color: var(--color-star); color: white;">🕵️ Traquer</button>
                   </div>
@@ -310,7 +318,6 @@
     </div>
 </aside>
 
-<!-- Modales -->
 <div id="modalHistorique" class="modal-backdrop" style="display: none; z-index: 10001;">
   <div class="modal-box" style="max-width: 700px; border-top: 6px solid var(--primary);">
     <h2>📜 Contexte du tirage</h2><div id="histoContent" style="max-height: 60vh; overflow-y: auto;"></div>
