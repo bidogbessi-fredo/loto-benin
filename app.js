@@ -142,13 +142,43 @@ function afficherSacSelectionne() {
 }
 
 document.getElementById("btnAjouter")?.addEventListener("click", async function () {
-  if (!estAdmin) { return; } var msg = document.getElementById("message"); msg.textContent = "Envoi...";
+  if (!estAdmin) { return; } 
+  var msg = document.getElementById("message"); msg.textContent = "Envoi...";
   var date = document.getElementById("date").value, jeu = document.getElementById("jeuSaisie").value, heure = document.getElementById("heureSaisie").value, boules = [];
-  for (var i = 1; i <= 5; i++) { var v = parseInt(document.getElementById("b" + i).value, 10); if (isNaN(v)) { msg.textContent = "Erreur"; return; } boules.push(v); }
+  
+  for (var i = 1; i <= 5; i++) { 
+      var v = parseInt(document.getElementById("b" + i).value, 10); 
+      if (isNaN(v)) { msg.textContent = "Erreur"; return; } 
+      boules.push(v); 
+  }
+  
   let { error } = await supabaseClient.from('tirages').insert([{ date: date, jeu: jeu, heure: heure, boules: JSON.stringify(boules), numero_tirage: "Auto" }]);
-  if (error) { msg.textContent = "❌"; } else { msg.textContent = "✅"; for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = ""; document.getElementById("filtrePeriode").value = "tout"; chargerDonnees(); }
+  
+  if (error) { 
+      msg.textContent = "❌ Erreur"; 
+  } else { 
+      msg.textContent = "✅ Enregistré !"; 
+      for (var j = 1; j <= 5; j++) document.getElementById("b" + j).value = ""; 
+      
+      // On regarde la date la plus ancienne actuellement chargée en mémoire
+      var datePlusAncienne = donneesCloud.length > 0 ? donneesCloud[0].date : date;
+      
+      if (date < datePlusAncienne) {
+          // Si on insère une donnée plus vieille que ce qui est chargé, on recharge TOUT
+          msg.textContent = "✅ Enregistré ! Mise à jour de l'historique...";
+          await chargerDonnees(); // Recharge complète
+      } else {
+          // Si c'est une date récente, on l'ajoute juste en mémoire (ultra rapide)
+          var nouveauTirage = { id: Date.now(), date: date, jeu: jeu, heure: heure, boules: boules, somme: boules.reduce(function(a,b){return a+b;},0) };
+          donneesCloud.push(nouveauTirage);
+          donneesCloud.sort(function(a, b) { return a.date.localeCompare(b.date) || a.heure.localeCompare(b.heure); });
+      }
+      
+      document.getElementById("filtrePeriode").value = "tout"; 
+      afficherSacSelectionne(); 
+      actualiserDashboard();
+  }
 });
-
 // 6. COCKPIT (Sacs + Sommes)
 function actualiserCockpit() {
     var sacId = document.getElementById("cockpitSac").value, h = document.getElementById("cockpitHeure").value;
