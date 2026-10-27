@@ -538,7 +538,28 @@
     <div id="messageConflit" style="margin-top: 15px;"></div>
   </div>
 </div>
-
+<!-- Modale de conflit d'importation -->
+<div id="modalConflitImport" class="modal-backdrop" role="dialog" style="display: none;">
+  <div class="modal-box modal-box-conflit">
+    <h2 style="color: var(--primary);">📥 Résumé de l'import</h2>
+    <div class="conflit-resume">
+      <div class="conflit-stat nouveaux"><span class="num" id="statNouveaux">0</span><span>nouveaux</span></div>
+      <div class="conflit-stat conflits"><span class="num" id="statConflits">0</span><span>conflits</span></div>
+      <div class="conflit-stat invalides"><span class="num" id="statInvalides">0</span><span>invalides</span></div>
+    </div>
+    <details id="detailsConflits" style="margin: 10px 0;">
+      <summary style="cursor: pointer; font-weight: bold;">🔍 Voir le détail des conflits</summary>
+      <div class="conflit-detail" id="listeConflits"></div>
+    </details>
+    <p style="margin: 20px 0 10px; font-weight: bold;">Que faire des <span id="nbConflitsQuestion">0</span> conflits ?</p>
+    <div class="conflit-choix">
+      <button type="button" class="secondary" onclick="annulerImport()">❌ Annuler</button>
+      <button type="button" class="warning" onclick="executerImport('ignorer')">⏭️ Ignorer</button>
+      <button type="button" class="danger" onclick="executerImport('ecraser')" id="btnEcraser">🔄 Écraser</button>
+    </div>
+    <div id="messageConflit" style="margin-top: 15px;"></div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 </body>
