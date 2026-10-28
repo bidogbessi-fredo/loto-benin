@@ -3,7 +3,6 @@
 // ============================================================
 if (typeof supabase === 'undefined') {
     console.error("❌ ERREUR CRITIQUE : Supabase CDN non chargé !");
-    console.error("👉 Dans index.html, la ligne <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script> doit être AVANT <script src='app.js'></script>");
 }
 
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
@@ -34,6 +33,13 @@ var LS_KEY_TIRAGES = 'loto_cache_tirages_v1';
 var LS_KEY_TS = 'loto_cache_tirages_ts_v1';
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+
+// ============================================================
+// FONCTION UNIVERSELLE POUR LES BOULES CLIQUABLES
+// ============================================================
+function toggleBoule(element) {
+    element.classList.toggle('boule-selectionnee');
+}
 
 // ============================================================
 // 1. MENU LATÉRAL (DRAWER)
@@ -187,10 +193,7 @@ function sauvegarderCacheLocal() {
     try {
         localStorage.setItem(LS_KEY_TIRAGES, JSON.stringify(donneesCloud));
         localStorage.setItem(LS_KEY_TS, String(Date.now()));
-    } catch (e) {
-        console.warn("sauvegarderCacheLocal:", e);
-        try { localStorage.removeItem(LS_KEY_TIRAGES); } catch(_) {}
-    }
+    } catch (e) { console.warn("sauvegarderCacheLocal:", e); try { localStorage.removeItem(LS_KEY_TIRAGES); } catch(_) {} }
 }
 function majCompteurChargement(charge, total) {
     var statusEl = document.getElementById("statusCloud");
@@ -201,7 +204,7 @@ function majCompteurChargement(charge, total) {
 }
 
 // ============================================================
-// 7. CHARGEMENT DES DONNÉES (optimisé)
+// 7. CHARGEMENT DES DONNÉES
 // ============================================================
 async function chargerDonnees(force) {
     var now = Date.now();
@@ -346,7 +349,13 @@ function afficherSacSelectionne() {
             var time = document.createElement('div'); time.className = 'day-time'; time.textContent = t.heure;
             var game = document.createElement('div'); game.className = 'day-game'; game.textContent = t.jeu;
             var nums = document.createElement('div'); nums.className = 'day-nums';
-            t.boules.forEach(function (b) { var span = document.createElement('span'); span.className = 'ball ' + c; span.textContent = b; nums.appendChild(span); });
+            t.boules.forEach(function (b) { 
+                var span = document.createElement('span'); 
+                span.className = 'ball ' + c; 
+                span.textContent = b; 
+                span.onclick = function() { toggleBoule(this); }; 
+                nums.appendChild(span); 
+            });
             row.appendChild(time); row.appendChild(game); row.appendChild(nums); dayCard.appendChild(row);
         });
         fragment.appendChild(dayCard);
@@ -374,7 +383,7 @@ function afficherSacSelectionne() {
 }
 
 // ============================================================
-// 9. BOUTON AJOUTER (optimisé)
+// 9. BOUTON AJOUTER
 // ============================================================
 document.getElementById("btnAjouter")?.addEventListener("click", async function () {
     if (!estAdmin) { alert("Admin uniquement."); return; }
@@ -447,9 +456,9 @@ function actualiserCockpit() {
     var tr = ns.slice().sort(function(a,b){ return b.e-a.e; }).slice(0,5);
 
     var hp = "<p><b>🔥 Chauds :</b><br>";
-    tc.forEach(function(x){ hp += "<span class='ball hot' style='background:#e74c3c'>" + x.n + "</span> (" + x.f + "x) "; });
+    tc.forEach(function(x){ hp += "<span class='ball hot' style='background:#e74c3c' onclick='toggleBoule(this)'>" + x.n + "</span> (" + x.f + "x) "; });
     hp += "</p><p style='margin-top:15px;'><b>❄️ Retards :</b><br>";
-    tr.forEach(function(x){ hp += "<span class='ball cold' style='background:#3498db'>" + x.n + "</span> (R:" + x.e + ") "; });
+    tr.forEach(function(x){ hp += "<span class='ball cold' style='background:#3498db' onclick='toggleBoule(this)'>" + x.n + "</span> (R:" + x.e + ") "; });
     hp += "</p>";
     document.getElementById("cockpitPrediction").innerHTML = hp;
 
@@ -538,13 +547,13 @@ function executerRecherche() {
         var c = t.jeu === 'Star' ? 'star' : (t.jeu === 'Fortune' ? 'fortune' : 'digital');
         var idxGlobal = donneesCloud.indexOf(t) + 1;
         var tr = document.createElement('tr');
-        tr.innerHTML = "<td><b>L." + idxGlobal + "</b></td><td>" + t.date + " " + t.heure + "</td><td>" + t.jeu + "</td><td>" + t.boules.map(function(b){return "<span class='ball "+c+"'>"+b+"</span>";}).join("") + "</td><td>" + t.somme + "</td>";
+        tr.innerHTML = "<td><b>L." + idxGlobal + "</b></td><td>" + t.date + " " + t.heure + "</td><td>" + t.jeu + "</td><td>" + t.boules.map(function(b){return "<span class='ball "+c+"' onclick='toggleBoule(this)'>"+b+"</span>";}).join("") + "</td><td>" + t.somme + "</td>";
         tbody.appendChild(tr);
     });
 }
 
 // ============================================================
-// 13. LES BOULES (version enrichie d'origine)
+// 13. LES BOULES
 // ============================================================
 function remplirBoulesGrid() {
     var grid = document.getElementById('boulesGrid'); if (!grid) return;
@@ -580,52 +589,48 @@ function afficherDetailBoule(num) {
 }
 
 // ============================================================
-// 14. COMPARATEUR (version d'origine)
+// 14. COMPARATEUR (Logique Stricte + Clic)
 // ============================================================
 function ajouterPlage() {
     if (nPlages >= 5) { alert("Max 5."); return; }
     nPlages++;
-    var d = document.createElement("div");
-    d.className = "plage-box";
-    d.id = "plage-container-" + nPlages;
+    var d = document.createElement("div"); 
+    d.className = "plage-box"; 
+    d.id = "plage-container-" + nPlages; 
     d.style.borderTop = "4px solid #2980b9";
+    d.style.padding = "15px";
+    d.style.marginBottom = "15px";
+    d.style.background = "#fff";
+    d.style.borderRadius = "8px";
     
-    // Ajout du sélecteur de mode (Global vs Jeu) et meilleur agencement
-    d.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="font-weight:bold; color:#2980b9; margin:0;">Plage ${nPlages}</label>
-            <button class="danger" style="font-size:12px; padding:4px 10px; margin:0;" onclick="supprimerPlage(${nPlages})">Retirer</button>
-        </div>
-        
-        <div class="plage-inputs">
-            <div>
-                <label style="font-size:11px; color:#666;">Sac</label>
-                <select id="sacNum${nPlages}">
-                    <option value="tous">Tous (Global)</option>
-                    <option value="Star">Star</option>
-                    <option value="Fortune">Fortune</option>
-                    <option value="Digital">Digital</option>
-                </select>
-            </div>
-
-            <div>
-                <label style="font-size:11px; color:#666;">Numéro (Ligne)</label>
-                <input type="number" id="refNum${nPlages}" placeholder="Ex: 500" style="width:100%; box-sizing:border-box;">
-            </div>
-
-            <div>
-                <label style="font-size:11px; color:#666;">Plage (+/-)</label>
-                <select id="refRange${nPlages}">
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="30" selected>30</option>
-                </select>
-            </div>
-        </div>
-    `;
+    d.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+                    '<label style="font-weight:bold; color:#2980b9; margin:0;">Plage ' + nPlages + '</label>' +
+                    '<button class="danger" style="font-size:12px; padding:4px 10px; margin:0;" onclick="supprimerPlage(' + nPlages + ')">Retirer</button>' +
+                  '</div>' +
+                  '<div style="display:flex; gap:10px;">' +
+                    '<div style="flex:1; display:flex; flex-direction:column;">' +
+                        '<label style="font-size:11px; color:#666;">Sac (Global ou Jeu)</label>' +
+                        '<select id="sacNum' + nPlages + '" style="padding:8px; border:1px solid #ccc; border-radius:4px; height:38px;">' +
+                            '<option value="tous">Tous (Global)</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<div style="flex:1; display:flex; flex-direction:column;">' +
+                        '<label style="font-size:11px; color:#666;">Ligne N°</label>' +
+                        '<input type="number" id="refNum' + nPlages + '" placeholder="Ex: 500" style="padding:8px; border:1px solid #ccc; border-radius:4px; height:38px; box-sizing:border-box;">' +
+                    '</div>' +
+                    '<div style="flex:1; display:flex; flex-direction:column;">' +
+                        '<label style="font-size:11px; color:#666;">Plage (+/-)</label>' +
+                        '<select id="refRange' + nPlages + '" style="padding:8px; border:1px solid #ccc; border-radius:4px; height:38px;">' +
+                            '<option value="10">10</option><option value="20">20</option><option value="30" selected>30</option>' +
+                        '</select>' +
+                    '</div>' +
+                  '</div>';
+                  
     document.getElementById("plages-config").appendChild(d);
 }
+
 function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
+
 function executerComparateurMulti() {
     var plages = [];
     if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1, isRef: false }; }), color: "#e74c3c" });
@@ -647,7 +652,6 @@ function executerComparateurMulti() {
         
         var p = [], mn = Math.max(0, si-rg), mx = Math.min(td.length-1, si+rg);
         for (var j=mn;j<=mx;j++) { 
-            // On indique si c'est la ligne de référence ou non
             p.push({ data: td[j], ligneLocale: j+1, isRef: (j === si) }); 
         }
         
@@ -656,28 +660,25 @@ function executerComparateurMulti() {
     
     if (plages.length < 2) { alert("Il faut au moins 2 colonnes."); return; }
     
-    // --- ÉTAPE 1 : Trouver les boules qui apparaissent dans au moins 2 colonnes ---
-    var occurrences = {};
+    var refBoulesParPlage = [];
     plages.forEach(function(p) {
-        var boulesUniquesDeLaPlage = {};
-        p.data.forEach(function(item) {
-            item.data.boules.forEach(function(boule) {
-                boulesUniquesDeLaPlage[boule] = true;
-            });
-        });
-        // On ajoute 1 à chaque boule présente dans cette colonne
-        for (var b in boulesUniquesDeLaPlage) {
-            occurrences[b] = (occurrences[b] || 0) + 1;
-        }
+        var refItem = p.data.find(function(item) { return item.isRef; });
+        if (refItem) refBoulesParPlage.push(refItem.data.boules);
     });
-    
-    // Une boule "matche" si elle apparaît dans 2 colonnes ou plus
+
+    var occurrences = {};
+    refBoulesParPlage.forEach(function(boules) {
+        var uniques = {}; 
+        boules.forEach(function(b) { uniques[b] = true; });
+        for (var b in uniques) { occurrences[b] = (occurrences[b] || 0) + 1; }
+    });
+
+    var totalPlagesRef = refBoulesParPlage.length;
     var boulesMatches = {};
     for (var b in occurrences) {
-        if (occurrences[b] >= 2) boulesMatches[b] = true;
+        if (occurrences[b] === totalPlagesRef) boulesMatches[b] = true;
     }
-    
-    // --- ÉTAPE 2 : Construire le tableau ---
+
     var ml = 0; 
     plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
     var html = "";
@@ -690,16 +691,13 @@ function executerComparateurMulti() {
             if (!it) { html += "<tr><td><i>-</i></td><td>-</td></tr>"; continue; }
             
             var t = it.data;
-            
-            // On ajoute la classe 'comp-row-ref' si c'est la ligne de référence
             var rowClass = it.isRef ? "class='comp-row-ref'" : "";
             
             html += "<tr " + rowClass + "><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
             
             t.boules.forEach(function(n) {
-                // On ajoute la classe 'match' si la boule est commune
                 var ballClass = boulesMatches[n] ? "comp-ball match" : "comp-ball";
-                html += "<span class='" + ballClass + "'>" + n + "</span>";
+                html += "<span class='" + ballClass + "' onclick='toggleBoule(this)'>" + n + "</span>";
             });
             
             html += "</td></tr>";
@@ -709,6 +707,7 @@ function executerComparateurMulti() {
     
     document.getElementById("resultatComparaison").innerHTML = html;
 }
+
 function mettreAJourZoneComparaison() {
     var zone = document.getElementById('zoneComparaison'), liste = document.getElementById('listeComparaison');
     if (!zone || !liste) return;
@@ -724,7 +723,7 @@ function retirerDuComparateur(idx) { tiragesComparateur.splice(idx, 1); mettreAJ
 function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneComparaison(); }
 
 // ============================================================
-// 15. LABO (complet d'origine + traquerSomme récupéré)
+// 15. LABO
 // ============================================================
 function remplirSelecteursLabo() {
     var s1 = document.getElementById("selectTirageLabo");
@@ -743,7 +742,7 @@ function remplirSelecteursLabo() {
 function analyserTirageLabo() { var i = document.getElementById("selectTirageLabo").value; if (i !== "" && donneesCloud[i]) { tirageLabo = donneesCloud[i]; document.getElementById("resultatOperations").innerHTML = "Tirage : " + tirageLabo.boules.join(" - "); } }
 function faireTurning() { if (!tirageLabo) return; var r = tirageLabo.boules.map(function(n){ var s = n.toString(); if (s.length===1) s = "0"+s; var i = parseInt(s.split('').reverse().join(''),10); return (i>90||i===0)?n:i; }); document.getElementById("resultatOperations").innerHTML = "<b>Miroir :</b><br>Base : " + tirageLabo.boules.join(" - ") + "<br>Miroir : <span style='color:#9b59b6; font-weight:bold;'>" + r.join(" - ") + "</span>"; }
 function faireAddition() { if (!tirageLabo) return; var s = tirageLabo.boules.reduce(function(a,b){ return a+b; },0), r = s; while (r > 90) r -= 90; document.getElementById("resultatOperations").innerHTML = "<b>Somme :</b><br>" + tirageLabo.boules.join(" + ") + " = " + s + "<br>Réduit : <strong>" + r + "</strong>"; }
-function faireTheosophie() { if (!tirageLabo) return; var st = 0, cd = []; tirageLabo.boules.forEach(function(n) { var s = n.toString(), sn = 0, dn = []; for (var i=0;i<s.length;i++) { var c = parseInt(s[i],10); sn += c; dn.push(c); } st += sn; cd.push(dn.join("+") + "=" + sn); }); var ta = st, rt = ""; while (ta > 90) { ta -= 90; rt += " -> " + ta; } document.getElementById("resultatOperations").innerHTML = "<b>Théosophie :</b><br>" + cd.join(" | ") + "<br><b>Total : " + st + "</b><br>" + (rt ? "Réduction : " + rt + "<br>" : "") + "Résultat : <span class='ball'>" + ta + "</span>"; }
+function faireTheosophie() { if (!tirageLabo) return; var st = 0, cd = []; tirageLabo.boules.forEach(function(n) { var s = n.toString(), sn = 0, dn = []; for (var i=0;i<s.length;i++) { var c = parseInt(s[i],10); sn += c; dn.push(c); } st += sn; cd.push(dn.join("+") + "=" + sn); }); var ta = st, rt = ""; while (ta > 90) { ta -= 90; rt += " -> " + ta; } document.getElementById("resultatOperations").innerHTML = "<b>Théosophie :</b><br>" + cd.join(" | ") + "<br><b>Total : " + st + "</b><br>" + (rt ? "Réduction : " + rt + "<br>" : "") + "Résultat : <span class='ball' onclick='toggleBoule(this)'>" + ta + "</span>"; }
 
 function chercherBanker() {
     var jeuChoisi = document.getElementById('bankerJeu').value;
@@ -769,10 +768,10 @@ function chercherBanker() {
     var topSuiveur = null, maxSuivi = -1; for (var s in suiveurs) if (suiveurs[s] > maxSuivi) { maxSuivi = suiveurs[s]; topSuiveur = s; }
 
     resultatBox.style.display = 'block';
-    document.getElementById('bankerRetard').innerHTML = "<span class='ball hot' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#e74c3c;'>" + numRetard + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Écart de " + maxEcart + " tirages</b></p>";
-    document.getElementById('bankerFrequent').innerHTML = "<span class='ball star' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#f39c12;'>" + numFrequent + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxFreq + " fois</b></p>";
+    document.getElementById('bankerRetard').innerHTML = "<span class='ball hot' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#e74c3c;' onclick='toggleBoule(this)'>" + numRetard + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Écart de " + maxEcart + " tirages</b></p>";
+    document.getElementById('bankerFrequent').innerHTML = "<span class='ball star' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#f39c12;' onclick='toggleBoule(this)'>" + numFrequent + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxFreq + " fois</b></p>";
     if (topSuiveur) {
-        document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#3498db;'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>";
+        document.getElementById('bankerSuiveur').innerHTML = "<span class='ball fortune' style='width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; background:#3498db;' onclick='toggleBoule(this)'>" + topSuiveur + "</span><p style='font-size: 13px; margin-top: 5px;'><b>Sorti " + maxSuivi + " fois</b></p>";
     } else {
         document.getElementById('bankerSuiveur').innerHTML = "<p style='font-size: 12px;'>Pas assez de données.</p>";
     }
@@ -806,12 +805,11 @@ function analyserSuivi() {
     var html = "<h4 style='margin-top:0; color:var(--color-star);'>Résultats du suivi</h4><p style='font-size: 13px; margin-bottom: 15px;'>Analyse des <b>" + tiragesSuivants.length + "</b> tirages suivants (jeu " + declencheur.jeu + ").</p><div class='ana-grid'>";
     top.slice(0, 5).forEach(function(item) {
         var pourcentage = Math.round((item.c / tiragesSuivants.length) * 100);
-        html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>";
+        html += "<div class='ana-card' style='display:flex; align-items:center; gap:10px; padding: 10px;'><span class='ball fortune' style='width:50px; height:50px; font-size:20px;' onclick='toggleBoule(this)'>" + item.n + "</span><div><b>Sorti " + item.c + " fois</b><br><span style='font-size:12px;'>(" + pourcentage + "%)</span></div></div>";
     });
     html += "</div>"; box.innerHTML = html; box.style.display = 'block';
 }
 
-// ⭐ TRAQUEUR DE SOMME (récupéré de la version optimisée)
 function traquerSomme() {
     var sac = document.getElementById("traqueurSac").value;
     var cible = parseInt(document.getElementById("traqueurSomme").value, 10);
@@ -841,7 +839,7 @@ function traquerSomme() {
     alertes.slice(-5).reverse().forEach(function(a) {
         html += "<div style='background:#f9f9f9; padding:10px; margin-bottom:10px; border-left:4px solid var(--color-star); border-radius:4px;'>";
         html += "<b>Déclencheur :</b> " + a.declencheur.date + " (Somme: " + cible + ")<br><b>Tirage de la dernière chance :</b> " + a.suivant5.date + " " + a.suivant5.heure + "<br><b>Boules qui ont sauvé leur place :</b><br>";
-        a.boules.forEach(function(b){ html += "<span class='ball star'>" + b + "</span> "; });
+        a.boules.forEach(function(b){ html += "<span class='ball star' onclick='toggleBoule(this)'>" + b + "</span> "; });
         html += "</div>";
     });
     box.innerHTML = html;
@@ -870,7 +868,7 @@ function executerBankersMulti() {
     }
     var html = "<b>Communs (" + idx.length + " tirages) :</b><br>";
     if (communs.length === 0) html += "Aucun numéro commun.";
-    else html += communs.map(function(n){ return "<span class='ball' style='background:#e74c3c;'>" + n + "</span>"; }).join(" ");
+    else html += communs.map(function(n){ return "<span class='ball' style='background:#e74c3c;' onclick='toggleBoule(this)'>" + n + "</span>"; }).join(" ");
     document.getElementById("resultatLaboAvance").innerHTML = html;
 }
 
@@ -929,7 +927,7 @@ function chargerUtilisateursDansTableau() {
 }
 
 // ============================================================
-// 17. IMPORTATION (complet d'origine)
+// 17. IMPORTATION
 // ============================================================
 function parseDateExotique(ligne) {
     var moisMap = { 'janv':1,'jan':1,'janvier':1,'fevr':2,'fev':2,'fevrier':2,'févr':2,'fév':2,'février':2,'mars':3,'mar':3,'avr':4,'avril':4,'mai':5,'juin':6,'juil':7,'juillet':7,'aout':8,'août':8,'sept':9,'septembre':9,'oct':10,'octobre':10,'nov':11,'novembre':11,'dec':12,'déc':12,'decembre':12,'décembre':12 };
@@ -1050,68 +1048,27 @@ function changerTailleBoules(t) { localStorage.setItem('loto_taille_boules', t);
 // ============================================================
 // 19. EXPOSITION GLOBALE
 // ============================================================
-window.ouvrirDrawer = ouvrirDrawer;
-window.fermerDrawer = fermerDrawer;
-window.seDeconnecterDepuisDrawer = seDeconnecterDepuisDrawer;
-window.retirerAtelier = retirerAtelier;
-window.ouvrirOnglet = ouvrirOnglet;
-window.ouvrirOngletDepuisDrawer = ouvrirOngletDepuisDrawer;
-
-window.verifierSession = verifierSession;
-window.seConnecter = seConnecter;
-window.entrerVisiteur = entrerVisiteur;
-window.seDeconnecter = seDeconnecter;
-window.afficherConnexion = afficherConnexion;
-window.afficherInscription = afficherInscription;
-window.afficherApplication = afficherApplication;
-
-window.chargerDonnees = chargerDonnees;
-window.afficherSacSelectionne = afficherSacSelectionne;
-
-window.actualiserCockpit = actualiserCockpit;
-window.genererGrilleCockpit = genererGrilleCockpit;
-
-window.executerAnalyses = executerAnalyses;
-window.initialiserRecherche = initialiserRecherche;
-window.ajouterChampRecherche = ajouterChampRecherche;
-window.retirerChampRecherche = retirerChampRecherche;
-window.changerModeRecherche = changerModeRecherche;
-window.executerRecherche = executerRecherche;
-
-window.remplirBoulesGrid = remplirBoulesGrid;
-window.afficherDetailBoule = afficherDetailBoule;
-
-window.ajouterPlage = ajouterPlage;
-window.supprimerPlage = supprimerPlage;
-window.executerComparateurMulti = executerComparateurMulti;
-window.mettreAJourZoneComparaison = mettreAJourZoneComparaison;
-window.retirerDuComparateur = retirerDuComparateur;
-window.viderZoneComparaison = viderZoneComparaison;
-
-window.remplirSelecteursLabo = remplirSelecteursLabo;
-window.analyserTirageLabo = analyserTirageLabo;
-window.faireTurning = faireTurning;
-window.faireAddition = faireAddition;
-window.faireTheosophie = faireTheosophie;
-window.chercherBanker = chercherBanker;
-window.analyserSuivi = analyserSuivi;
-window.traquerSomme = traquerSomme;
-window.executerAdditions = executerAdditions;
-window.executerBankersMulti = executerBankersMulti;
-
-window.chargerUtilisateursAuto = chargerUtilisateursAuto;
-window.sauvegarderPrivileges = sauvegarderPrivileges;
-window.actualiserDashboard = actualiserDashboard;
-window.exporterSauvegardeComplete = exporterSauvegardeComplete;
-window.chargerUtilisateursDansTableau = chargerUtilisateursDansTableau;
-
-window.traiterTexteColle = traiterTexteColle;
-window.executerImport = executerImport;
-window.annulerImport = annulerImport;
-
+window.ouvrirDrawer = ouvrirDrawer; window.fermerDrawer = fermerDrawer; window.seDeconnecterDepuisDrawer = seDeconnecterDepuisDrawer;
+window.retirerAtelier = retirerAtelier; window.ouvrirOnglet = ouvrirOnglet; window.ouvrirOngletDepuisDrawer = ouvrirOngletDepuisDrawer;
+window.verifierSession = verifierSession; window.seConnecter = seConnecter; window.entrerVisiteur = entrerVisiteur; window.seDeconnecter = seDeconnecter;
+window.afficherConnexion = afficherConnexion; window.afficherInscription = afficherInscription; window.afficherApplication = afficherApplication;
+window.chargerDonnees = chargerDonnees; window.afficherSacSelectionne = afficherSacSelectionne;
+window.actualiserCockpit = actualiserCockpit; window.genererGrilleCockpit = genererGrilleCockpit;
+window.executerAnalyses = executerAnalyses; window.initialiserRecherche = initialiserRecherche; window.ajouterChampRecherche = ajouterChampRecherche;
+window.retirerChampRecherche = retirerChampRecherche; window.changerModeRecherche = changerModeRecherche; window.executerRecherche = executerRecherche;
+window.remplirBoulesGrid = remplirBoulesGrid; window.afficherDetailBoule = afficherDetailBoule;
+window.ajouterPlage = ajouterPlage; window.supprimerPlage = supprimerPlage; window.executerComparateurMulti = executerComparateurMulti;
+window.mettreAJourZoneComparaison = mettreAJourZoneComparaison; window.retirerDuComparateur = retirerDuComparateur; window.viderZoneComparaison = viderZoneComparaison;
+window.remplirSelecteursLabo = remplirSelecteursLabo; window.analyserTirageLabo = analyserTirageLabo; window.faireTurning = faireTurning;
+window.faireAddition = faireAddition; window.faireTheosophie = faireTheosophie; window.chercherBanker = chercherBanker; window.analyserSuivi = analyserSuivi;
+window.traquerSomme = traquerSomme; window.executerAdditions = executerAdditions; window.executerBankersMulti = executerBankersMulti;
+window.chargerUtilisateursAuto = chargerUtilisateursAuto; window.sauvegarderPrivileges = sauvegarderPrivileges; window.actualiserDashboard = actualiserDashboard;
+window.exporterSauvegardeComplete = exporterSauvegardeComplete; window.chargerUtilisateursDansTableau = chargerUtilisateursDansTableau;
+window.traiterTexteColle = traiterTexteColle; window.executerImport = executerImport; window.annulerImport = annulerImport;
 window.changerTailleBoules = changerTailleBoules;
+window.toggleBoule = toggleBoule;
 
-console.log("✅ app.js — toutes les fonctions exposées globalement (version complète)");
+console.log("✅ app.js — Version complète et optimisée chargée.");
 
 // ============================================================
 // 20. INITIALISATION
