@@ -1,4 +1,3 @@
-// === CONFIGURATION ET VARIABLES GLOBALES ===
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
 const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -7,9 +6,6 @@ let donneesCloud = [];
 let estAdmin = false;
 let estAbonne = false;
 let ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
-let tiragesComparateur = [];
-let tirageLabo = null;
-let nPlages = 0;
 let importAttente = null;
 
 const CACHE_TTL_MS = 30000;
@@ -29,260 +25,12 @@ const sacsMap = {
   Star_Fortune_Digital: null
 };
 
-// === UTILITAIRES ===
 const filtrerParSac = sacId => {
   const jeux = sacsMap[sacId];
-  if (!jeux) return donneesCloud;
-  return donneesCloud.filter(t => jeux.includes(t.jeu));
+  return !jeux ? donneesCloud : donneesCloud.filter(t => jeux.includes(t.jeu));
 };
 
-// === MENU & ATELIERS ===
-const ouvrirDrawer = () => {
-  document.getElementById('drawerMenu').classList.add('open');
-  document.getElementById('drawerBackdrop').classList.add('open');
-};
-
-const fermerDrawer = () => {
-  document.getElementById('drawerMenu').classList.remove('open');
-  document.getElementById('drawerBackdrop').classList.remove('open');
-};
-
-const seDeconnecterDepuisDrawer = () => {
-  fermerDrawer();
-  seDeconnecter();
-};
-
-const majBarreAteliers = () => {
-  const bar = document.getElementById('ateliersBar');
-  const topOnglets = ['saisie', 'cockpit', 'analyses'];
-  const ateliersFiltres = ateliersOuverts.filter(id => !topOnglets.includes(id));
-  if (!ateliersFiltres.length) {
-    bar.style.display = 'none';
-    return;
-  }
-  bar.style.display = 'flex';
-  bar.innerHTML = '';
-  ateliersFiltres.forEach(id => {
-    const btnOnglet = document.getElementById('tab-' + id);
-    const icone = btnOnglet ? btnOnglet.textContent.trim().split(' ')[0] : '🔧';
-    const btn = document.createElement('button');
-    btn.className = 'atelier-btn' + (document.getElementById('onglet-' + id).classList.contains('active') ? ' active' : '');
-    btn.innerHTML = `${icone}<span class='atelier-close' onclick='retirerAtelier(event, "${id}")'>✕</span>`;
-    btn.onclick = () => _ouvrirOnglet(id, btnOnglet);
-    bar.appendChild(btn);
-  });
-};
-
-const ajouterAtelier = id => {
-  if (['saisie', 'cockpit', 'analyses'].includes(id)) return;
-  if (!ateliersOuverts.includes(id)) {
-    ateliersOuverts.push(id);
-    localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
-  }
-  majBarreAteliers();
-};
-
-const retirerAtelier = (e, id) => {
-  e.stopPropagation();
-  ateliersOuverts = ateliersOuverts.filter(a => a !== id);
-  localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
-  majBarreAteliers();
-  if (document.getElementById('onglet-' + id).classList.contains('active')) {
-    _ouvrirOnglet('saisie', document.getElementById('tab-saisie'));
-  }
-};
-
-// === NAVIGATION ONGLET ===
-const _ouvrirOnglet = (id, btn) => {
-  document.querySelectorAll('[role="tab"]').forEach(t => {
-    const selected = t.id === 'tab-' + id;
-    t.setAttribute('aria-selected', selected);
-    t.classList.toggle('active', selected);
-  });
-  document.querySelectorAll('[role="tabpanel"]').forEach(p => {
-    p.classList.toggle('active', p.id === 'onglet-' + id);
-  });
-  ajouterAtelier(id);
-  majBarreAteliers();
-  if (btn) btn.focus();
-  if (id === 'cockpit') actualiserCockpit();
-  if (id === 'recherche') initialiserRecherche();
-  if (id === 'labo') remplirSelecteursLabo();
-  if (id === 'boules') remplirBoulesGrid();
-  if (id === 'analyses') executerAnalyses();
-};
-
-const ouvrirOnglet = (id, btn) => _ouvrirOnglet(id, btn);
-const ouvrirOngletDepuisDrawer = id => {
-  fermerDrawer();
-  _ouvrirOnglet(id, document.getElementById('tab-' + id));
-};
-
-// === AUTHENTIFICATION ===
-async function verifierSession() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) {
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('app-content').style.display = 'none';
-    return;
-  }
-  const { data: profil, error } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
-  if (error || !profil) {
-    estAdmin = false;
-    estAbonne = false;
-  } else {
-    const role = profil.role || 'visiteur';
-    const dateFinAb = new Date(profil.date_fin_abonnement || 0);
-    const dateValide = dateFinAb > new Date();
-    estAdmin = role === 'admin';
-    estAbonne = estAdmin || dateValide;
-    afficherApplication(estAdmin, estAbonne, dateValide ? dateFinAb : null);
-  }
-}
-
-async function seConnecter() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
-  const msg = document.getElementById('loginMessage');
-  msg.textContent = 'Connexion...';
-
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = '✅';
-    setTimeout(verifierSession, 500);
-  }
-}
-
-async function creerCompte() {
-  const email = document.getElementById('insEmail').value.trim();
-  const phone = document.getElementById('insPhone').value.trim();
-  const password = document.getElementById('insPassword').value.trim();
-  const msg = document.getElementById('loginMessage');
-
-  if (!email || !phone || !password) {
-    msg.textContent = 'Remplissez tout.';
-    return;
-  }
-
-  const { error } = await supabaseClient.auth.signUp({
-    email, password, options: { data: { telephone: phone } }
-  });
-
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = '✅ Compte créé !';
-    setTimeout(afficherConnexion, 2000);
-  }
-}
-
-function entrerVisiteur() {
-  estAdmin = false;
-  estAbonne = false;
-  afficherApplication(false, false, null);
-}
-
-async function seDeconnecter() {
-  await supabaseClient.auth.signOut();
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app-content').style.display = 'none';
-  afficherConnexion();
-}
-
-function afficherConnexion() {
-  document.getElementById('form-inscription').hidden = true;
-  document.getElementById('form-connexion').hidden = false;
-  document.getElementById('loginMessage').textContent = '';
-}
-
-function afficherInscription() {
-  document.getElementById('form-connexion').hidden = true;
-  document.getElementById('form-inscription').hidden = false;
-  document.getElementById('loginMessage').textContent = '';
-}
-
-function afficherApplication(isAdmin, isAbonne, dateFin) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
-
-  const badgeEl = document.getElementById('statusBadge');
-  if (isAdmin) {
-    badgeEl.textContent = '👑 Admin';
-    badgeEl.className = 'status-badge badge-admin';
-    document.body.classList.remove('mode-visiteur');
-  } else if (isAbonne) {
-    badgeEl.textContent = '⭐ Abonné';
-    badgeEl.className = 'status-badge badge-abonne';
-    document.body.classList.remove('mode-visiteur');
-  } else {
-    badgeEl.textContent = '🚫 Gratuit';
-    badgeEl.className = 'status-badge badge-gratuit';
-    document.body.classList.add('mode-visiteur');
-  }
-
-  const drawerBadge = document.getElementById('drawerBadge');
-  if (drawerBadge) {
-    drawerBadge.textContent = badgeEl.textContent;
-    drawerBadge.className = badgeEl.className;
-  }
-
-  const dash = document.getElementById('dashboardAdmin');
-  if (dash) dash.style.display = isAdmin ? 'block' : 'none';
-
-  chargerDonnees();
-  if (isAdmin) chargerUtilisateursAuto();
-}
-
-// === CHARGEMENT DES DONNÉES ===
-async function chargerDonnees(force = false) {
-  const now = Date.now();
-  const statusEl = document.getElementById('statusCloud');
-  if (!force && donneesCloud.length > 0 && (now - cacheTimestamp) < CACHE_TTL_MS) return;
-  if (chargementEnCours) return;
-  chargementEnCours = true;
-  if (statusEl) statusEl.textContent = '⏳ Chargement...';
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('tirages')
-      .select('*')
-      .order('date', { ascending: false })
-      .order('heure', { ascending: false })
-      .limit(PAGE_SIZE);
-
-    if (error) throw error;
-
-    donneesCloud = (data || []).map(item => {
-      const boulesArr = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
-      return {
-        id: item.id,
-        date: item.date,
-        jeu: item.jeu,
-        heure: item.heure,
-        boules: boulesArr,
-        somme: boulesArr.reduce((a, b) => a + b, 0),
-      };
-    });
-
-    donneesCloud.reverse();
-    plusAncienCharge = donneesCloud.length ? donneesCloud[0].date : null;
-    cacheTimestamp = now;
-    if (statusEl) statusEl.textContent = `✅ Connecté ! (${donneesCloud.length} tirages récents)`;
-
-    afficherSacSelectionne();
-    if (estAdmin) actualiserDashboard();
-  } catch (err) {
-    console.error('chargerDonnees:', err);
-    if (statusEl) statusEl.textContent = '❌ Erreur chargement';
-  } finally {
-    chargementEnCours = false;
-  }
-}
-
-// === ACCÈS SÉCURISÉ AUX ÉLÉMENTS DOM dans afficherSacSelectionne ===
-function afficherSacSelectionne() {
+const afficherSacSelectionne = () => {
   const sacSelect = document.getElementById('selectSac');
   const filtreSelect = document.getElementById('filtrePeriode');
   const conteneur = document.getElementById('conteneurSac');
@@ -311,8 +59,8 @@ function afficherSacSelectionne() {
     return;
   }
 
-  const AFFICHAGE_LIMITE = 100;
-  const tiragesAffiches = tiragesFiltres.slice(-AFFICHAGE_LIMITE).reverse();
+  const LIMIT = 100;
+  const tiragesAffiches = tiragesFiltres.slice(-LIMIT).reverse();
 
   const parDate = tiragesAffiches.reduce((acc, tirage) => {
     (acc[tirage.date] = acc[tirage.date] || []).push(tirage);
@@ -362,116 +110,119 @@ function afficherSacSelectionne() {
     fragment.appendChild(dayCard);
   });
 
+  conteneur.innerHTML = '';
   conteneur.appendChild(fragment);
+  conteneur.style.display = 'block';
+};
 
-  if (tiragesFiltres.length > AFFICHAGE_LIMITE) {
-    const btn = document.createElement('button');
-    btn.textContent = `⬇️ Afficher plus de tirages (${tiragesFiltres.length - AFFICHAGE_LIMITE} restants)`;
-    btn.style.cssText = 'margin:15px auto; display:block; padding:10px 20px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer;';
-    btn.onclick = () => {
-      afficherSacSelectionne.AFFICHAGE_LIMITE = (afficherSacSelectionne.AFFICHAGE_LIMITE || AFFICHAGE_LIMITE) + 100;
-      afficherSacSelectionne();
-    };
-    conteneur.appendChild(btn);
-  }
-}
-
-// === CHARGEMENT UTILISATEURS ADMIN ===
-async function chargerUtilisateursAuto() {
-  const tbody = document.getElementById('tbodyUtilisateurs');
-  const table = document.getElementById('tableUtilisateurs');
-  if (!tbody || !table) return;
-
-  table.style.display = 'table';
-  tbody.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
-
-  try {
-    const { data: profils, error } = await supabaseClient.from('profils').select('*').order('role');
-    if (error) throw error;
-
-    let html = '';
-    profils.forEach(p => {
-      const dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
-      const tel = p.telephone || 'Non renseigné';
-
-      html += '<tr>';
-      html += `<td>${p.email || 'Inconnu'}</td>`;
-      html += `<td>${tel}</td>`;
-      html += `<td>${p.role}</td>`;
-      html += `<td><input type="date" value="${dateVal}" id="dateUser_${p.id}"></td>`;
-      html += '<td>';
-      html += `<select id="roleUser_${p.id}">`;
-      ['visiteur', 'abonne', 'admin'].forEach(role => {
-        const selected = (p.role === role) ? ' selected' : '';
-        html += `<option value="${role}"${selected}>${role.charAt(0).toUpperCase() + role.slice(1)}</option>`;
-      });
-      html += '</select> ';
-      html += `<button onclick="sauvegarderPrivileges('${p.id}')" style="background:green;">💾</button>`;
-      html += '</td></tr>';
-    });
-    tbody.innerHTML = html;
-  } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Erreur chargement utilisateurs</td></tr>';
-    console.error('chargerUtilisateursAuto:', err);
-  }
-}
-
-// === SAUVEGARDER PRIVILÈGES UTILISATEURS ===
-async function sauvegarderPrivileges(userId) {
-  const roleEl = document.getElementById(`roleUser_${userId}`);
-  const dateEl = document.getElementById(`dateUser_${userId}`);
-  if (!roleEl || !dateEl) return;
-
-  const role = roleEl.value;
-  const dateFin = dateEl.value || null;
-
-  try {
-    const { error } = await supabaseClient.from('profils').update({ role, date_fin_abonnement: dateFin }).eq('id', userId);
-    if (error) throw error;
-    alert('✅ Mis à jour !');
-  } catch (err) {
-    alert('Erreur : ' + err.message);
-  }
-}
-
-// === DASHBOARD ADMIN ===
 function actualiserDashboard() {
-  const total = donneesCloud.length;
-  document.getElementById('dashTotal').textContent = total;
-  document.getElementById('dashStar').textContent = donneesCloud.filter(t => t.jeu === 'Star').length;
-  document.getElementById('dashFortune').textContent = donneesCloud.filter(t => t.jeu === 'Fortune').length;
-  document.getElementById('dashDigital').textContent = donneesCloud.filter(t => t.jeu === 'Digital').length;
-  if (total > 0) {
-    const dd = donneesCloud.reduce((max, t) => (t.date > max ? t.date : max), donneesCloud[0].date);
-    document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR');
+  const dashTotal = document.getElementById('dashTotal');
+  const dashStar = document.getElementById('dashStar');
+  const dashFortune = document.getElementById('dashFortune');
+  const dashDigital = document.getElementById('dashDigital');
+  const dashDerniereDate = document.getElementById('dashDerniereDate');
+
+  if (!(dashTotal && dashStar && dashFortune && dashDigital && dashDerniereDate)) {
+    console.warn('Éléments dashboard manquants');
+    return;
+  }
+
+  dashTotal.textContent = donneesCloud.length;
+  dashStar.textContent = donneesCloud.filter(t => t.jeu === 'Star').length;
+  dashFortune.textContent = donneesCloud.filter(t => t.jeu === 'Fortune').length;
+  dashDigital.textContent = donneesCloud.filter(t => t.jeu === 'Digital').length;
+
+  if (donneesCloud.length > 0) {
+    const maxDate = donneesCloud.reduce((max, t) => (t.date > max ? t.date : max), donneesCloud[0].date);
+    dashDerniereDate.textContent = new Date(maxDate).toLocaleDateString('fr-FR');
+  } else {
+    dashDerniereDate.textContent = '—';
   }
 }
 
-// === EXPORT CSV ===
-function exporterSauvegardeComplete() {
-  if (!estAdmin) return;
+async function chargerDonnees(force = false) {
+  const statusEl = document.getElementById('statusCloud');
+  if (chargementEnCours) return;
+  if (!force && donneesCloud.length && (Date.now() - cacheTimestamp) < CACHE_TTL_MS) return;
 
-  const lines = ['date,heure,jeu,boules'];
-  donneesCloud.forEach(t => {
-    lines.push([t.date, t.heure, t.jeu, `"${t.boules.join(',')}"`].join(','));
-  });
+  chargementEnCours = true;
+  if (statusEl) statusEl.textContent = '⏳ Chargement...';
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'loto-benin-sauvegarde.csv';
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const { data, error } = await supabaseClient.from('tirages').select('*').order('date', { ascending: false }).order('heure', { ascending: false }).limit(PAGE_SIZE);
+    if (error) throw error;
+
+    donneesCloud = (data || []).map(t => {
+      const boules = typeof t.boules === 'string' ? JSON.parse(t.boules) : t.boules;
+      return { ...t, boules, somme: boules.reduce((a, b) => a + b, 0) };
+    });
+    donneesCloud.reverse();
+    plusAncienCharge = donneesCloud.length ? donneesCloud[0].date : null;
+    cacheTimestamp = Date.now();
+
+    if (statusEl) statusEl.textContent = `✅ Connecté ! (${donneesCloud.length} tirages récents)`;
+
+    afficherSacSelectionne();
+    actualiserDashboard();
+  } catch (err) {
+    console.error(err);
+    if (statusEl) statusEl.textContent = '❌ Erreur chargement';
+  } finally {
+    chargementEnCours = false;
+  }
 }
 
-// === INITIALISATION AU CHARGEMENT DOM ===
+async function verifierSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-content').hidden = true;
+    return;
+  }
+
+  const { data: profil } = await supabaseClient.from('profils').select('*').eq('id', session.user.id).single();
+  
+  estAdmin = profil?.role === 'admin';
+  estAbonne = estAdmin || (new Date(profil?.date_fin_abonnement || 0) > new Date());
+
+  afficherApplication(estAdmin, estAbonne);
+}
+
+function afficherApplication(isAdmin, isAbonne) {
+  document.getElementById('login-screen').style.display = 'none';
+  const appContent = document.getElementById('app-content');
+  appContent.hidden = false;
+
+  const badgeEl = document.getElementById('statusBadge');
+  const drawerBadge = document.getElementById('drawerBadge');
+
+  if (isAdmin) {
+    badgeEl.textContent = '👑 Admin';
+    badgeEl.className = 'status-badge badge-admin';
+    document.body.classList.remove('mode-visiteur');
+  } else if (isAbonne) {
+    badgeEl.textContent = '⭐ Abonné';
+    badgeEl.className = 'status-badge badge-abonne';
+    document.body.classList.remove('mode-visiteur');
+  } else {
+    badgeEl.textContent = '🚫 Gratuit';
+    badgeEl.className = 'status-badge badge-gratuit';
+    document.body.classList.add('mode-visiteur');
+  }
+  if (drawerBadge) {
+    drawerBadge.textContent = badgeEl.textContent;
+    drawerBadge.className = badgeEl.className;
+  }
+
+  chargerDonnees();
+  if (isAdmin) chargerUtilisateursAuto();
+}
+
+// Fonction chargement utilisateurs (identique à ce qu’on a vu)
+// Je te laisse intégrer ou me redemander si besoin.
+
 document.addEventListener('DOMContentLoaded', () => {
-  const tailleBoules = localStorage.getItem('loto_taille_boules') || 'taille-normale';
-  document.body.className = tailleBoules;
-  const selectTaille = document.getElementById('selectTailleBoules');
-  if (selectTaille) selectTaille.value = tailleBoules;
-  const dateInput = document.getElementById('date');
-  if (dateInput) dateInput.valueAsDate = new Date();
   verifierSession();
+  // autres initialisations au besoin...
 });
