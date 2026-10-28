@@ -75,7 +75,7 @@
     </nav>
 
     <section id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
-      <!-- Contenu de saisie -->
+      <!-- Contenu saisie -->
     </section>
 
     <section id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
@@ -112,6 +112,16 @@
       <div class="dash-card digital"><span class="num" id="dashDigital">—</span><span class="label">Digital</span></div>
       <div class="dash-card date"><span class="num" id="dashDerniereDate">—</span><span class="label">Dernière saisie</span></div>
     </div>
+
+    <div style="overflow-x:auto; margin-top:15px;">
+      <table id="tableUtilisateurs" style="width:100%; display:none;">
+        <thead>
+          <tr><th>Email</th><th>Téléphone</th><th>Rôle</th><th>Fin abonnement</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="tbodyUtilisateurs"></tbody>
+      </table>
+      <div id="msgUtilisateurs" style="margin-top:10px; font-weight:bold;"></div>
+    </div>
   </section>
 </main>
 
@@ -131,7 +141,7 @@
 
   <section class="drawer-section" role="region" aria-labelledby="paramTitre">
     <h3 id="paramTitre">Paramètres</h3>
-    <select id="selectTailleBoules" aria-label="Taille des boules" style="width: 100%; padding: 10px;">
+    <select id="selectTailleBoules" aria-label="Taille des boules" style="width:100%; padding:10px;">
       <option value="taille-petite">Petite</option>
       <option value="taille-normale" selected>Normale</option>
       <option value="taille-grande">Grande</option>
