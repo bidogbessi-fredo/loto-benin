@@ -589,11 +589,40 @@ function ajouterPlage() {
     d.className = "plage-box";
     d.id = "plage-container-" + nPlages;
     d.style.borderTop = "4px solid #2980b9";
-    d.innerHTML = '<label>Plage ' + nPlages + '</label>' +
-        '<select id="sacNum' + nPlages + '"><option value="tous">Tous</option><option value="Star">Star</option><option value="Fortune">Fortune</option><option value="Digital">Digital</option></select>' +
-        '<div style="display:flex; gap:5px;"><input type="number" id="refNum' + nPlages + '" placeholder="Ligne N°" style="width:80px;">' +
-        '<select id="refRange' + nPlages + '" style="flex:1;"><option value="10">10</option><option value="20">20</option><option value="30" selected>30</option></select></div>' +
-        '<button class="danger" style="font-size:12px;" onclick="supprimerPlage(' + nPlages + ')">Retirer</button>';
+    
+    // Ajout du sélecteur de mode (Global vs Jeu) et meilleur agencement
+    d.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <label style="font-weight:bold; color:#2980b9; margin:0;">Plage ${nPlages}</label>
+            <button class="danger" style="font-size:12px; padding:4px 10px; margin:0;" onclick="supprimerPlage(${nPlages})">Retirer</button>
+        </div>
+        
+        <div class="plage-inputs">
+            <div>
+                <label style="font-size:11px; color:#666;">Sac</label>
+                <select id="sacNum${nPlages}">
+                    <option value="tous">Tous (Global)</option>
+                    <option value="Star">Star</option>
+                    <option value="Fortune">Fortune</option>
+                    <option value="Digital">Digital</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size:11px; color:#666;">Numéro (Ligne)</label>
+                <input type="number" id="refNum${nPlages}" placeholder="Ex: 500" style="width:100%; box-sizing:border-box;">
+            </div>
+
+            <div>
+                <label style="font-size:11px; color:#666;">Plage (+/-)</label>
+                <select id="refRange${nPlages}">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30" selected>30</option>
+                </select>
+            </div>
+        </div>
+    `;
     document.getElementById("plages-config").appendChild(d);
 }
 function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
