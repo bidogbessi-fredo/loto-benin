@@ -628,35 +628,85 @@ function ajouterPlage() {
 function supprimerPlage(id) { var d = document.getElementById("plage-container-" + id); if (d) { d.remove(); nPlages--; } }
 function executerComparateurMulti() {
     var plages = [];
-    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1 }; }), color: "#e74c3c" });
+    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1, isRef: false }; }), color: "#e74c3c" });
+    
     for (var i=1;i<=nPlages;i++) {
-        var c = document.getElementById("plage-container-" + i); if (!c) continue;
+        var c = document.getElementById("plage-container-" + i); 
+        if (!c) continue;
+        
         var s = document.getElementById("sacNum" + i).value;
         var rl = parseInt(document.getElementById("refNum" + i).value, 10);
         var rg = parseInt(document.getElementById("refRange" + i).value, 10);
+        
         if (isNaN(rl)) continue;
+        
         var td = donneesCloud.filter(function(t){ return s === 'tous' || t.jeu === s; });
         var si = rl - 1;
-        if (si < 0 || si >= td.length) { alert("Ligne " + rl + " n'existe pas."); return; }
+        
+        if (si < 0 || si >= td.length) { alert("Ligne " + rl + " n'existe pas pour ce sac."); return; }
+        
         var p = [], mn = Math.max(0, si-rg), mx = Math.min(td.length-1, si+rg);
-        for (var j=mn;j<=mx;j++) p.push({ data: td[j], ligneLocale: j+1 });
+        for (var j=mn;j<=mx;j++) { 
+            // On indique si c'est la ligne de référence ou non
+            p.push({ data: td[j], ligneLocale: j+1, isRef: (j === si) }); 
+        }
+        
         plages.push({ id: i, nomSac: "Plage " + i, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
     }
+    
     if (plages.length < 2) { alert("Il faut au moins 2 colonnes."); return; }
-    var ml = 0; plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
+    
+    // --- ÉTAPE 1 : Trouver les boules qui apparaissent dans au moins 2 colonnes ---
+    var occurrences = {};
+    plages.forEach(function(p) {
+        var boulesUniquesDeLaPlage = {};
+        p.data.forEach(function(item) {
+            item.data.boules.forEach(function(boule) {
+                boulesUniquesDeLaPlage[boule] = true;
+            });
+        });
+        // On ajoute 1 à chaque boule présente dans cette colonne
+        for (var b in boulesUniquesDeLaPlage) {
+            occurrences[b] = (occurrences[b] || 0) + 1;
+        }
+    });
+    
+    // Une boule "matche" si elle apparaît dans 2 colonnes ou plus
+    var boulesMatches = {};
+    for (var b in occurrences) {
+        if (occurrences[b] >= 2) boulesMatches[b] = true;
+    }
+    
+    // --- ÉTAPE 2 : Construire le tableau ---
+    var ml = 0; 
+    plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
     var html = "";
+    
     plages.forEach(function(p) {
         html += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><tbody>";
+        
         for (var l=0;l<ml;l++) {
             var it = p.data[l];
             if (!it) { html += "<tr><td><i>-</i></td><td>-</td></tr>"; continue; }
+            
             var t = it.data;
-            html += "<tr><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
-            t.boules.forEach(function(n) { html += "<span class='comp-ball'>" + n + "</span>"; });
+            
+            // On ajoute la classe 'comp-row-ref' si c'est la ligne de référence
+            var rowClass = it.isRef ? "class='comp-row-ref'" : "";
+            
+            html += "<tr " + rowClass + "><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
+            
+            t.boules.forEach(function(n) {
+                // On ajoute la classe 'match' si la boule est commune
+                var ballClass = boulesMatches[n] ? "comp-ball match" : "comp-ball";
+                html += "<span class='" + ballClass + "'>" + n + "</span>";
+            });
+            
             html += "</td></tr>";
         }
         html += "</tbody></table></div>";
     });
+    
     document.getElementById("resultatComparaison").innerHTML = html;
 }
 function mettreAJourZoneComparaison() {
