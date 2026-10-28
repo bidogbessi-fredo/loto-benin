@@ -633,7 +633,7 @@ function supprimerPlage(id) { var d = document.getElementById("plage-container-"
 
 function executerComparateurMulti() {
     var plages = [];
-    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: idx + 1, isRef: false }; }), color: "#e74c3c" });
+    if (tiragesComparateur.length > 0) plages.push({ id: "Sélection", nomSac: "🎯 Chercheur", data: tiragesComparateur.map(function(t, idx) { return { data: t, ligneLocale: donneesCloud.indexOf(t) + 1, isRef: false }; }), color: "#e74c3c" });
     
     for (var i=1;i<=nPlages;i++) {
         var c = document.getElementById("plage-container-" + i); 
@@ -646,13 +646,28 @@ function executerComparateurMulti() {
         if (isNaN(rl)) continue;
         
         var td = donneesCloud.filter(function(t){ return s === 'tous' || t.jeu === s; });
-        var si = rl - 1;
         
-        if (si < 0 || si >= td.length) { alert("Ligne " + rl + " n'existe pas pour ce sac."); return; }
+        // CORRECTION : On cherche le tirage par son numéro global (pour être raccord avec le Chercheur)
+        var refTirage = donneesCloud[rl - 1];
+        if (!refTirage || (s !== 'tous' && refTirage.jeu !== s)) {
+            // Si le numéro n'existe pas ou ne correspond pas au sac, on prend le numéro "local" (ex: 316ème Star)
+            refTirage = td[rl - 1];
+        }
+        
+        if (!refTirage) { alert("Ligne " + rl + " n'existe pas."); return; }
+        
+        // On trouve l'index du tirage dans la liste filtrée pour générer la plage autour
+        var si = td.indexOf(refTirage);
+        if (si === -1) si = rl - 1; // Fallback
         
         var p = [], mn = Math.max(0, si-rg), mx = Math.min(td.length-1, si+rg);
         for (var j=mn;j<=mx;j++) { 
-            p.push({ data: td[j], ligneLocale: j+1, isRef: (j === si) }); 
+            // Ligne locale (numéro du tirage dans le sac)
+            var ligneNum = j + 1;
+            // On affiche l'index global pour être raccord avec le Chercheur
+            var idxGlobal = donneesCloud.indexOf(td[j]) + 1;
+            
+            p.push({ data: td[j], ligneLocale: idxGlobal, isRef: (j === si) }); 
         }
         
         plages.push({ id: i, nomSac: "Plage " + i, data: p, color: ["#2980b9","#d35400","#c0392b","#27ae60","#8e44ad"][(i-1)%5] });
@@ -677,7 +692,10 @@ function executerComparateurMulti() {
                 var uniques = {};
                 it.data.boules.forEach(function(b) { uniques[b] = true; });
                 for (var b in uniques) compteBoules[b] = (compteBoules[b] || 0) + 1;
-                compteSomme[it.data.somme] = (compteSomme[it.data.somme] || 0) + 1;
+                
+                // CORRECTION : On s'assure que la somme est le total des boules
+                var sommeReelle = it.data.boules.reduce(function(a,b){ return a+b; }, 0);
+                compteSomme[sommeReelle] = (compteSomme[sommeReelle] || 0) + 1;
             }
         });
         
@@ -699,19 +717,20 @@ function executerComparateurMulti() {
             var t = it.data;
             var rowClass = it.isRef ? "class='comp-row-ref'" : "";
             
+            // On affiche le numéro de ligne global
             html += "<tr " + rowClass + "><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
             
-            // Affichage des boules
             t.boules.forEach(function(n) {
                 var isMatch = matchsParLigneBoules[l] && matchsParLigneBoules[l][n];
                 var ballClass = isMatch ? "comp-ball match" : "comp-ball";
                 html += "<span class='" + ballClass + "' onclick='toggleBoule(this)'>" + n + "</span>";
             });
             
-            // Affichage de la somme
-            var isMatchSomme = matchsParLigneSomme[l] && matchsParLigneSomme[l][t.somme];
+            // Calcul et affichage de la somme
+            var sommeReelle = t.boules.reduce(function(a,b){ return a+b; }, 0);
+            var isMatchSomme = matchsParLigneSomme[l] && matchsParLigneSomme[l][sommeReelle];
             var sommeClass = isMatchSomme ? "comp-somme match" : "comp-somme";
-            html += "<br><span class='" + sommeClass + "' onclick='toggleBoule(this)'>S: " + t.somme + "</span>";
+            html += "<br><span class='" + sommeClass + "' onclick='toggleBoule(this)'>S: " + sommeReelle + "</span>";
             
             html += "</td></tr>";
         }
