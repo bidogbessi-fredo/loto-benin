@@ -7,16 +7,19 @@ let donneesCloud = [];
 let estAdmin = false;
 let estAbonne = false;
 let ateliersOuverts = JSON.parse(localStorage.getItem('loto_ateliers')) || [];
+let tiragesComparateur = [];
+let tirageLabo = null;
+let nPlages = 0;
 let importAttente = null;
 
-// Cache et paramètres
+// Cache & paramètres
 const CACHE_TTL_MS = 30000;
 const PAGE_SIZE = 200;
 let cacheTimestamp = 0;
 let chargementEnCours = false;
 let plusAncienCharge = null;
 
-// Map pour filtrer par sac
+// Map sacs pour filtrage
 const sacsMap = {
   tous: null,
   Star: ['Star'],
@@ -25,30 +28,32 @@ const sacsMap = {
   Star_Digital: ['Star', 'Digital'],
   Fortune_Digital: ['Fortune', 'Digital'],
   Star_Fortune: ['Star', 'Fortune'],
-  Star_Fortune_Digital: null,
+  Star_Fortune_Digital: null
 };
 
-// === FONCTIONS D’UTILITÉ ===
-const filtrerParSac = (sacId) => {
+// === UTILITAIRES ===
+const filtrerParSac = sacId => {
   const jeux = sacsMap[sacId];
   if (!jeux) return donneesCloud;
   return donneesCloud.filter(t => jeux.includes(t.jeu));
 };
 
-// === GESTION DU MENU ET ATELIERS ===
+// === MENU & ATELIERS ===
 const ouvrirDrawer = () => {
   document.getElementById('drawerMenu').classList.add('open');
   document.getElementById('drawerBackdrop').classList.add('open');
 };
+
 const fermerDrawer = () => {
   document.getElementById('drawerMenu').classList.remove('open');
   document.getElementById('drawerBackdrop').classList.remove('open');
 };
+
 const seDeconnecterDepuisDrawer = () => {
   fermerDrawer();
   seDeconnecter();
 };
-  
+
 const majBarreAteliers = () => {
   const bar = document.getElementById('ateliersBar');
   const topOnglets = ['saisie', 'cockpit', 'analyses'];
@@ -70,36 +75,52 @@ const majBarreAteliers = () => {
   });
 };
 
-// === NAVIGATION ===
+const ajouterAtelier = id => {
+  if (['saisie', 'cockpit', 'analyses'].includes(id)) return;
+  if (!ateliersOuverts.includes(id)) {
+    ateliersOuverts.push(id);
+    localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
+  }
+  majBarreAteliers();
+};
+
+const retirerAtelier = (e, id) => {
+  e.stopPropagation();
+  ateliersOuverts = ateliersOuverts.filter(a => a !== id);
+  localStorage.setItem('loto_ateliers', JSON.stringify(ateliersOuverts));
+  majBarreAteliers();
+  if (document.getElementById('onglet-' + id).classList.contains('active')) {
+    _ouvrirOnglet('saisie', document.getElementById('tab-saisie'));
+  }
+};
+
+// === NAVIGATION ONGLET ===
 const _ouvrirOnglet = (id, btn) => {
-  const tabs = document.querySelectorAll('[role="tab"]');
-  const panels = document.querySelectorAll('[role="tabpanel"]');
-  tabs.forEach(t => {
+  document.querySelectorAll('[role="tab"]').forEach(t => {
     const selected = t.id === 'tab-' + id;
     t.setAttribute('aria-selected', selected);
     t.classList.toggle('active', selected);
   });
-  panels.forEach(p => {
+  document.querySelectorAll('[role="tabpanel"]').forEach(p => {
     p.classList.toggle('active', p.id === 'onglet-' + id);
   });
   ajouterAtelier(id);
   majBarreAteliers();
   if (btn) btn.focus();
-
-  // Actions spécifiques par onglet
   if (id === 'cockpit') actualiserCockpit();
   if (id === 'recherche') initialiserRecherche();
   if (id === 'labo') remplirSelecteursLabo();
   if (id === 'boules') remplirBoulesGrid();
   if (id === 'analyses') executerAnalyses();
 };
+
 const ouvrirOnglet = (id, btn) => _ouvrirOnglet(id, btn);
 const ouvrirOngletDepuisDrawer = id => {
   fermerDrawer();
   _ouvrirOnglet(id, document.getElementById('tab-' + id));
 };
 
-// === AUTHENTIFICATION & SESSION ===
+// === AUTHENTIFICATION ===
 async function verifierSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
@@ -216,17 +237,145 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
   if (isAdmin) chargerUtilisateursAuto();
 }
 
-// === CHARGEMENT DES DONNÉES & AFFICHAGE ===
-// (fonctions chargerDonnees, afficherSacSelectionne, etc.)
+// === CHARGEMENT DES DONNÉES ===
+async function chargerDonnees(force = false) {
+  const now = Date.now();
+  const statusEl = document.getElementById('statusCloud');
+  if (!force && donneesCloud.length > 0 && (now - cacheTimestamp) < CACHE_TTL_MS) {
+    return;
+  }
+  if (chargementEnCours) return;
+  chargementEnCours = true;
+  if (statusEl) statusEl.textContent = '⏳ Chargement...';
 
-// === ÉVÉNEMENTS ET INTERACTIONS ===
-document.getElementById('btnAjouter')?.addEventListener('click', async () => {
-  if (!estAdmin) return;
-  // code d'ajout simplifié ici...
-});
+  try {
+    const { data, error } = await supabaseClient
+      .from('tirages')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('heure', { ascending: false })
+      .limit(PAGE_SIZE);
 
-// Charger plus anciens, cockpit, labo, analyses, etc.  
-// Découper en fonctions plus petites et claires...
+    if (error) throw error;
+
+    donneesCloud = (data || []).map(item => {
+      const boulesArr = typeof item.boules === 'string' ? JSON.parse(item.boules) : item.boules;
+      return {
+        id: item.id,
+        date: item.date,
+        jeu: item.jeu,
+        heure: item.heure,
+        boules: boulesArr,
+        somme: boulesArr.reduce((a, b) => a + b, 0),
+      };
+    });
+
+    donneesCloud.reverse();
+    plusAncienCharge = donneesCloud.length ? donneesCloud[0].date : null;
+    cacheTimestamp = now;
+    if (statusEl) statusEl.textContent = `✅ Connecté ! (${donneesCloud.length} tirages récents)`;
+
+    afficherSacSelectionne();
+    if (estAdmin) actualiserDashboard();
+  } catch (err) {
+    console.error('chargerDonnees:', err);
+    if (statusEl) statusEl.textContent = '❌ Erreur chargement';
+  } finally {
+    chargementEnCours = false;
+  }
+}
+
+// Fonction afficherSacSelectionne (mise à jour conteneurSac)
+function afficherSacSelectionne() {
+  const sacId = document.getElementById('selectSac').value;
+  const filtre = document.getElementById('filtrePeriode').value;
+  let tiragesFiltres = filtrerParSac(sacId);
+
+  if (filtre === 'recent') {
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    tiragesFiltres = tiragesFiltres.filter(t => t.date === today || t.date === yesterday);
+  } else if (filtre === 'mois') {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    tiragesFiltres = tiragesFiltres.filter(t => t.date.startsWith(currentMonth));
+  }
+
+  const conteneur = document.getElementById('conteneurSac');
+  if (!conteneur) return;
+  conteneur.innerHTML = '';
+
+  if (tiragesFiltres.length === 0) {
+    conteneur.innerHTML = '<p>Aucun tirage.</p>';
+    return;
+  }
+
+  const LIMIT = 100;
+  const tiragesAffiches = tiragesFiltres.slice(-LIMIT).reverse();
+
+  const parDate = tiragesAffiches.reduce((group, tirage) => {
+    (group[tirage.date] = group[tirage.date] || []).push(tirage);
+    return group;
+  }, {});
+
+  const fragment = document.createDocumentFragment();
+
+  Object.keys(parDate).sort().reverse().forEach(dateStr => {
+    const dObj = new Date(dateStr);
+    const df = dObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const dayCard = document.createElement('div');
+    dayCard.className = 'day-card';
+
+    const h3 = document.createElement('h3');
+    h3.className = 'day-header';
+    h3.textContent = `📅 ${df}`;
+    dayCard.appendChild(h3);
+
+    parDate[dateStr].forEach(t => {
+      const gameClass = t.jeu.toLowerCase();
+      const row = document.createElement('div');
+      row.className = 'day-row';
+
+      const time = document.createElement('div');
+      time.className = 'day-time';
+      time.textContent = t.heure;
+
+      const game = document.createElement('div');
+      game.className = 'day-game';
+      game.textContent = t.jeu;
+
+      const nums = document.createElement('div');
+      nums.className = 'day-nums';
+      t.boules.forEach(boule => {
+        const span = document.createElement('span');
+        span.className = `ball ${gameClass}`;
+        span.textContent = boule;
+        nums.appendChild(span);
+      });
+
+      row.append(time, game, nums);
+      dayCard.appendChild(row);
+    });
+
+    fragment.appendChild(dayCard);
+  });
+
+  conteneur.appendChild(fragment);
+
+  if (tiragesFiltres.length > LIMIT) {
+    const btn = document.createElement('button');
+    btn.textContent = `⬇️ Afficher plus de tirages (${tiragesFiltres.length - LIMIT} restants)`;
+    btn.style.cssText = 'margin:15px auto; display:block; padding:10px 20px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer;';
+    btn.onclick = () => {
+      afficherSacSelectionne.LIMITE = (afficherSacSelectionne.LIMITE || LIMIT) + 100;
+      afficherSacSelectionne();
+    };
+    conteneur.appendChild(btn);
+  }
+}
+
+// === AUTRES FONCTIONS (ex : ajout tirage, cockpit, labo, analyses...) ===
+// ... à compléter selon besoin...
 
 // === INITIALISATION ===
 document.addEventListener('DOMContentLoaded', () => {
