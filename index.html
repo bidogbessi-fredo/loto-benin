@@ -56,7 +56,7 @@
     </aside>
 
     <header class="topbar">
-      <button id="btnBurger" class="burger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu" onclick="ouvrirDrawer()">☰</button>
+      <button id="btnBurger" class="burger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawerMenu">☰</button>
 
       <div class="topbar-logo-title">
         <img src="./logo.png" alt="Logo Loto Bénin" />
@@ -69,24 +69,23 @@
     <p id="statusCloud" role="status" aria-live="polite" class="status-cloud">⏳ Connexion à la base de données...</p>
 
     <nav class="tabs" role="tablist" aria-label="Navigation principale">
-      <button class="tab-btn" id="tab-saisie" role="tab" aria-controls="onglet-saisie" aria-selected="true" tabindex="0" onclick="ouvrirOnglet('saisie', this)">📝 Compilation</button>
-      <button class="tab-btn" id="tab-cockpit" role="tab" aria-controls="onglet-cockpit" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('cockpit', this)">🚀 Cockpit</button>
-      <button class="tab-btn" id="tab-analyses" role="tab" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1" onclick="ouvrirOnglet('analyses', this)">📊 Analyses</button>
+      <button class="tab-btn" id="tab-saisie" role="tab" aria-controls="onglet-saisie" aria-selected="true" tabindex="0">📝 Compilation</button>
+      <button class="tab-btn" id="tab-cockpit" role="tab" aria-controls="onglet-cockpit" aria-selected="false" tabindex="-1">🚀 Cockpit</button>
+      <button class="tab-btn" id="tab-analyses" role="tab" aria-controls="onglet-analyses" aria-selected="false" tabindex="-1">📊 Analyses</button>
     </nav>
 
     <section id="onglet-saisie" class="tab-content active" role="tabpanel" aria-labelledby="tab-saisie" tabindex="0">
-      <!-- Contenu de saisie... -->
+      <!-- Contenu de saisie -->
     </section>
 
     <section id="onglet-cockpit" class="tab-content" role="tabpanel" aria-labelledby="tab-cockpit" tabindex="0">
-      <!-- Contenu cockpit... -->
+      <!-- Contenu cockpit -->
     </section>
 
     <section id="onglet-analyses" class="tab-content" role="tabpanel" aria-labelledby="tab-analyses" tabindex="0">
-      <!-- Contenu analyses... -->
+      <!-- Contenu analyses -->
     </section>
 
-    <!-- SÉLECTEURS ET CONTENEUR ESSENTIELS POUR JAVASCRIPT -->
     <select id="selectSac" style="display:none;">
       <option value="tous">Vue Globale</option>
       <option value="Star">Star Bénin</option>
@@ -106,7 +105,6 @@
 
     <div id="conteneurSac" style="display:none;"></div>
 
-    <!-- Dashboard -->
     <div class="dashboard-grid" id="dashboardAdmin">
       <div class="dash-card"><span class="num" id="dashTotal">—</span><span class="label">Total tirages</span></div>
       <div class="dash-card star"><span class="num" id="dashStar">—</span><span class="label">Star</span></div>
@@ -116,6 +114,40 @@
     </div>
   </section>
 </main>
+
+<div class="drawer-backdrop" id="drawerBackdrop" tabindex="-1"></div>
+<aside class="drawer" id="drawerMenu" aria-label="Menu principal" role="menu" tabindex="-1">
+  <header class="drawer-header">
+    <h2>🎰 Menu</h2>
+    <button class="drawer-close" aria-label="Fermer le menu">✕</button>
+  </header>
+
+  <section class="drawer-section" role="region" aria-labelledby="compteTitre">
+    <h3 id="compteTitre">Mon compte</h3>
+    <span class="status-badge" id="drawerBadge" role="status" aria-live="polite">Chargement...</span>
+    <button class="drawer-export admin-only">💾 Sauvegarder les données</button>
+    <button class="drawer-deconnexion">🚪 Déconnexion</button>
+  </section>
+
+  <section class="drawer-section" role="region" aria-labelledby="paramTitre">
+    <h3 id="paramTitre">Paramètres</h3>
+    <select id="selectTailleBoules" aria-label="Taille des boules" style="width: 100%; padding: 10px;">
+      <option value="taille-petite">Petite</option>
+      <option value="taille-normale" selected>Normale</option>
+      <option value="taille-grande">Grande</option>
+    </select>
+  </section>
+
+  <section class="drawer-section" role="region" aria-labelledby="outilsTitre">
+    <h3 id="outilsTitre">Outils</h3>
+    <button class="drawer-nav-btn" data-onglet="comparateur">⚖️ Comparateur</button>
+    <button class="drawer-nav-btn" data-onglet="labo">🧪 Laboratoire</button>
+    <button class="drawer-nav-btn" data-onglet="boules">🔍 Boules</button>
+    <button class="drawer-nav-btn" data-onglet="recherche">🕵️ Chercheur</button>
+    <button class="drawer-nav-btn" data-onglet="verif">✅ Vérifier</button>
+    <button class="drawer-nav-btn" data-onglet="demo">🎬 Démo</button>
+  </section>
+</aside>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="app.js" defer></script>
