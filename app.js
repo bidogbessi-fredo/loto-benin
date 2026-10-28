@@ -299,8 +299,6 @@ async function chargerResteEnArrierePlan() {
     cacheTimestamp = Date.now();
     sauvegarderCacheLocal();
     majCompteurChargement(donneesCloud.length, totalAttendu);
-
-    // Rafraîchir les sélecteurs dépendants (labo, comparateur)
     if (typeof remplirSelecteursLabo === 'function') remplirSelecteursLabo();
 }
 
@@ -461,7 +459,6 @@ function actualiserCockpit() {
     document.getElementById("cockpitCycles").innerHTML = hc;
 }
 
-// Version ORIGINALE de genererGrilleCockpit (3 chauds + 2 retards)
 function genererGrilleCockpit() {
     var jeu = document.getElementById("cockpitJeu").value;
     var h = document.getElementById("cockpitHeure").value;
@@ -547,7 +544,7 @@ function executerRecherche() {
 }
 
 // ============================================================
-// 13. LES BOULES
+// 13. LES BOULES (version enrichie d'origine)
 // ============================================================
 function remplirBoulesGrid() {
     var grid = document.getElementById('boulesGrid'); if (!grid) return;
@@ -583,7 +580,7 @@ function afficherDetailBoule(num) {
 }
 
 // ============================================================
-// 14. COMPARATEUR (VERSION ORIGINALE)
+// 14. COMPARATEUR (version d'origine)
 // ============================================================
 function ajouterPlage() {
     if (nPlages >= 5) { alert("Max 5."); return; }
@@ -648,7 +645,7 @@ function retirerDuComparateur(idx) { tiragesComparateur.splice(idx, 1); mettreAJ
 function viderZoneComparaison() { tiragesComparateur = []; mettreAJourZoneComparaison(); }
 
 // ============================================================
-// 15. LABO
+// 15. LABO (complet d'origine + traquerSomme récupéré)
 // ============================================================
 function remplirSelecteursLabo() {
     var s1 = document.getElementById("selectTirageLabo");
@@ -735,6 +732,42 @@ function analyserSuivi() {
     html += "</div>"; box.innerHTML = html; box.style.display = 'block';
 }
 
+// ⭐ TRAQUEUR DE SOMME (récupéré de la version optimisée)
+function traquerSomme() {
+    var sac = document.getElementById("traqueurSac").value;
+    var cible = parseInt(document.getElementById("traqueurSomme").value, 10);
+    if (isNaN(cible)) { alert("Entrez une somme."); return; }
+    var source = filtrerParSac(sac), alertes = [];
+
+    source.forEach(function(t, idx) {
+        if (t.somme === cible) {
+            var suivants = [];
+            for (var i = idx + 1; i < source.length && suivants.length < 5; i++) { suivants.push(source[i]); }
+            if (suivants.length === 5) {
+                var sortis = [];
+                for (var j = 0; j < 4; j++) { suivants[j].boules.forEach(function(b){ if(sortis.indexOf(b)===-1) sortis.push(b); }); }
+                var manquantes = [];
+                for (var n=1; n<=90; n++) { if (sortis.indexOf(n) === -1) manquantes.push(n); }
+                var dernierChance = manquantes.filter(function(n){ return suivants[4].boules.indexOf(n) !== -1; });
+                if (dernierChance.length > 0) { alertes.push({ declencheur: t, boules: dernierChance, suivant5: suivants[4] }); }
+            }
+        }
+    });
+
+    var box = document.getElementById("resultatTraqueur"); 
+    if (!box) return;
+    box.style.display = "block";
+    if (alertes.length === 0) { box.innerHTML = "<p style='color:var(--text-muted);'>Aucune alerte trouvée.</p>"; return; }
+    var html = "<h4 style='color:var(--color-star);'>🚨 Alertes trouvées (" + alertes.length + ")</h4>";
+    alertes.slice(-5).reverse().forEach(function(a) {
+        html += "<div style='background:#f9f9f9; padding:10px; margin-bottom:10px; border-left:4px solid var(--color-star); border-radius:4px;'>";
+        html += "<b>Déclencheur :</b> " + a.declencheur.date + " (Somme: " + cible + ")<br><b>Tirage de la dernière chance :</b> " + a.suivant5.date + " " + a.suivant5.heure + "<br><b>Boules qui ont sauvé leur place :</b><br>";
+        a.boules.forEach(function(b){ html += "<span class='ball star'>" + b + "</span> "; });
+        html += "</div>";
+    });
+    box.innerHTML = html;
+}
+
 function executerAdditions() {
     var sel = document.getElementById("selectMultiTirages");
     var idx = Array.from(sel.selectedOptions).map(function(o){ return parseInt(o.value,10); });
@@ -817,7 +850,7 @@ function chargerUtilisateursDansTableau() {
 }
 
 // ============================================================
-// 17. IMPORTATION (AVEC GESTION DES CONFLITS)
+// 17. IMPORTATION (complet d'origine)
 // ============================================================
 function parseDateExotique(ligne) {
     var moisMap = { 'janv':1,'jan':1,'janvier':1,'fevr':2,'fev':2,'fevrier':2,'févr':2,'fév':2,'février':2,'mars':3,'mar':3,'avr':4,'avril':4,'mai':5,'juin':6,'juil':7,'juillet':7,'aout':8,'août':8,'sept':9,'septembre':9,'oct':10,'octobre':10,'nov':11,'novembre':11,'dec':12,'déc':12,'decembre':12,'décembre':12 };
@@ -936,7 +969,7 @@ function annulerImport() {
 function changerTailleBoules(t) { localStorage.setItem('loto_taille_boules', t); document.body.className = t; }
 
 // ============================================================
-// 19. EXPOSITION GLOBALE (indispensable pour les onclick="...")
+// 19. EXPOSITION GLOBALE
 // ============================================================
 window.ouvrirDrawer = ouvrirDrawer;
 window.fermerDrawer = fermerDrawer;
@@ -983,6 +1016,7 @@ window.faireAddition = faireAddition;
 window.faireTheosophie = faireTheosophie;
 window.chercherBanker = chercherBanker;
 window.analyserSuivi = analyserSuivi;
+window.traquerSomme = traquerSomme;
 window.executerAdditions = executerAdditions;
 window.executerBankersMulti = executerBankersMulti;
 
@@ -998,7 +1032,7 @@ window.annulerImport = annulerImport;
 
 window.changerTailleBoules = changerTailleBoules;
 
-console.log("✅ app.js — toutes les fonctions exposées globalement");
+console.log("✅ app.js — toutes les fonctions exposées globalement (version complète)");
 
 // ============================================================
 // 20. INITIALISATION
