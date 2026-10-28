@@ -405,3 +405,33 @@
 .ball, .boule-selecteur, .comp-ball {
     cursor: pointer;
 }
+/* Somme de base */
+.comp-somme {
+    display: inline-block;
+    background: #ecf0f1;
+    color: #2c3e50;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+    border: 1px solid #bdc3c7;
+    vertical-align: middle;
+}
+
+/* Somme qui matche (Violet) */
+.comp-somme.match {
+    background-color: #9b59b6 !important;
+    color: white !important;
+    border-color: #8e44ad !important;
+    box-shadow: 0 0 8px rgba(155, 89, 182, 0.6);
+}
+
+/* La sélection manuelle au clic (on change pour un contour doré) */
+.boule-selectionnee {
+    border: 3px solid #f1c40f !important;
+    box-shadow: 0 0 8px rgba(241, 196, 15, 0.8) !important;
+    transform: scale(1.15);
+    transition: all 0.2s ease-in-out;
+}
