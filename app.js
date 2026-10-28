@@ -660,29 +660,39 @@ function executerComparateurMulti() {
     
     if (plages.length < 2) { alert("Il faut au moins 2 colonnes."); return; }
     
-    var refBoulesParPlage = [];
-    plages.forEach(function(p) {
-        var refItem = p.data.find(function(item) { return item.isRef; });
-        if (refItem) refBoulesParPlage.push(refItem.data.boules);
-    });
-
-    var occurrences = {};
-    refBoulesParPlage.forEach(function(boules) {
-        var uniques = {}; 
-        boules.forEach(function(b) { uniques[b] = true; });
-        for (var b in uniques) { occurrences[b] = (occurrences[b] || 0) + 1; }
-    });
-
-    var totalPlagesRef = refBoulesParPlage.length;
-    var boulesMatches = {};
-    for (var b in occurrences) {
-        if (occurrences[b] === totalPlagesRef) boulesMatches[b] = true;
-    }
-
+    // 1. Trouver la longueur maximale pour construire les lignes côte à côte
     var ml = 0; 
     plages.forEach(function(p){ if (p.data.length > ml) ml = p.data.length; });
+
+    // 2. Pré-calculer les matchs pour chaque index de ligne (l)
+    var matchsParLigne = {};
+    for (var l=0; l<ml; l++) {
+        var compteBoules = {};
+        var nbPlagesAvecCetteLigne = 0;
+        
+        plages.forEach(function(p) {
+            var it = p.data[l];
+            if (it) {
+                nbPlagesAvecCetteLigne++;
+                var uniques = {};
+                it.data.boules.forEach(function(b) { uniques[b] = true; });
+                for (var b in uniques) {
+                    compteBoules[b] = (compteBoules[b] || 0) + 1;
+                }
+            }
+        });
+        
+        // Une boule matche si elle est présente sur cette ligne dans TOUTES les plages qui ont cette ligne
+        matchsParLigne[l] = {};
+        for (var b in compteBoules) {
+            if (compteBoules[b] === nbPlagesAvecCetteLigne) {
+                matchsParLigne[l][b] = true;
+            }
+        }
+    }
+
+    // 3. Construction du tableau
     var html = "";
-    
     plages.forEach(function(p) {
         html += "<div class='comp-col' style='border-top: 4px solid " + p.color + ";'><h3 style='text-align:center; color:" + p.color + ";'>" + p.nomSac + "</h3><table class='comp-table'><tbody>";
         
@@ -696,7 +706,9 @@ function executerComparateurMulti() {
             html += "<tr " + rowClass + "><td><b>L." + it.ligneLocale + "</b><br><small>" + t.date + "</small></td><td>";
             
             t.boules.forEach(function(n) {
-                var ballClass = boulesMatches[n] ? "comp-ball match" : "comp-ball";
+                // On regarde si la boule 'n' est dans le dictionnaire des matchs pour CETTE ligne 'l'
+                var isMatch = matchsParLigne[l] && matchsParLigne[l][n];
+                var ballClass = isMatch ? "comp-ball match" : "comp-ball";
                 html += "<span class='" + ballClass + "' onclick='toggleBoule(this)'>" + n + "</span>";
             });
             
