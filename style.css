@@ -352,3 +352,42 @@
     margin-bottom: 4px;
     font-weight: 500;
 }
+/* =========================================
+   STYLE POUR LES MATCHS DANS LE COMPARATEUR
+   ========================================= */
+
+/* La ligne de référence (celle qu'on a tapée) */
+.comp-row-ref {
+    background-color: #fff3cd !important; /* Fond jaune clair */
+    border-left: 4px solid #f39c12; /* Bordure orange */
+}
+
+.comp-row-ref td {
+    font-weight: bold;
+    color: #d35400;
+}
+
+/* Les boules qui matchent (au moins 2 colonnes) */
+.comp-ball.match {
+    background-color: #2ecc71 !important; /* Vert vif */
+    border: 2px solid #f1c40f; /* Contour doré */
+    color: white;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.6); /* Petit effet lumineux */
+    transform: scale(1.1); /* Légèrement plus grosses */
+    font-weight: bold;
+}
+
+/* Les boules normales */
+.comp-ball {
+    display: inline-block;
+    background: #3498db;
+    color: white;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px;
+    margin: 2px;
+}
