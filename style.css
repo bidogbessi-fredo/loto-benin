@@ -207,3 +207,72 @@
       gap: 4px;
     }
   }
+/* =========================================
+   CORRECTION AFFICHAGE COMPARATEUR
+   ========================================= */
+
+/* 1. Les boules dans le tableau du comparateur */
+.comp-ball {
+    display: inline-block;
+    background: #3498db;
+    color: white;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px;
+    margin: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 2. Aligner les colonnes du comparateur côte à côte */
+#resultatComparaison {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.comp-col {
+    flex: 1;
+    min-width: 250px; /* Pour que ça passe en dessous sur petit écran */
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.comp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comp-table td {
+    padding: 8px 5px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 3. Empêcher les boutons flottants de cacher le texte */
+#ateliersBar {
+    position: relative;
+    z-index: 10;
+    margin-bottom: 15px;
+}
+
+[role="tabpanel"] {
+    position: relative;
+    z-index: 1;
+    /* On décale le contenu de 50px vers la droite pour éviter les boutons de gauche */
+    padding-left: 55px; 
+}
+
+/* 4. Nettoyer les blocs de plages */
+.plage-box {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
