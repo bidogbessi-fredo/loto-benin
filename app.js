@@ -1,4 +1,4 @@
-// === CONFIGURATION ET ÉTAT GLOBAL ===
+// === CONFIGURATION ET VARIABLES GLOBALES ===
 const supabaseUrl = 'https://owaggqstbwlpqtetdwxh.supabase.co';
 const supabaseKey = 'sb_publishable_K0JnNQTYJoEn_AfoH4hi4Q_WpTggV4U';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -12,14 +12,12 @@ let tirageLabo = null;
 let nPlages = 0;
 let importAttente = null;
 
-// Cache & paramètres
 const CACHE_TTL_MS = 30000;
 const PAGE_SIZE = 200;
 let cacheTimestamp = 0;
 let chargementEnCours = false;
 let plusAncienCharge = null;
 
-// Map sacs pour filtrage
 const sacsMap = {
   tous: null,
   Star: ['Star'],
@@ -241,9 +239,7 @@ function afficherApplication(isAdmin, isAbonne, dateFin) {
 async function chargerDonnees(force = false) {
   const now = Date.now();
   const statusEl = document.getElementById('statusCloud');
-  if (!force && donneesCloud.length > 0 && (now - cacheTimestamp) < CACHE_TTL_MS) {
-    return;
-  }
+  if (!force && donneesCloud.length > 0 && (now - cacheTimestamp) < CACHE_TTL_MS) return;
   if (chargementEnCours) return;
   chargementEnCours = true;
   if (statusEl) statusEl.textContent = '⏳ Chargement...';
@@ -285,10 +281,20 @@ async function chargerDonnees(force = false) {
   }
 }
 
-// Fonction afficherSacSelectionne (mise à jour conteneurSac)
+// === ACCÈS SÉCURISÉ AUX ÉLÉMENTS DOM dans afficherSacSelectionne ===
 function afficherSacSelectionne() {
-  const sacId = document.getElementById('selectSac').value;
-  const filtre = document.getElementById('filtrePeriode').value;
+  const sacSelect = document.getElementById('selectSac');
+  const filtreSelect = document.getElementById('filtrePeriode');
+  const conteneur = document.getElementById('conteneurSac');
+
+  if (!sacSelect || !filtreSelect || !conteneur) {
+    console.warn('Eléments manquants pour afficherSacSelectionne');
+    return;
+  }
+
+  const sacId = sacSelect.value;
+  const filtre = filtreSelect.value;
+
   let tiragesFiltres = filtrerParSac(sacId);
 
   if (filtre === 'recent') {
@@ -300,21 +306,17 @@ function afficherSacSelectionne() {
     tiragesFiltres = tiragesFiltres.filter(t => t.date.startsWith(currentMonth));
   }
 
-  const conteneur = document.getElementById('conteneurSac');
-  if (!conteneur) return;
-  conteneur.innerHTML = '';
-
   if (tiragesFiltres.length === 0) {
     conteneur.innerHTML = '<p>Aucun tirage.</p>';
     return;
   }
 
-  const LIMIT = 100;
-  const tiragesAffiches = tiragesFiltres.slice(-LIMIT).reverse();
+  const AFFICHAGE_LIMITE = 100;
+  const tiragesAffiches = tiragesFiltres.slice(-AFFICHAGE_LIMITE).reverse();
 
-  const parDate = tiragesAffiches.reduce((group, tirage) => {
-    (group[tirage.date] = group[tirage.date] || []).push(tirage);
-    return group;
+  const parDate = tiragesAffiches.reduce((acc, tirage) => {
+    (acc[tirage.date] = acc[tirage.date] || []).push(tirage);
+    return acc;
   }, {});
 
   const fragment = document.createDocumentFragment();
@@ -362,22 +364,108 @@ function afficherSacSelectionne() {
 
   conteneur.appendChild(fragment);
 
-  if (tiragesFiltres.length > LIMIT) {
+  if (tiragesFiltres.length > AFFICHAGE_LIMITE) {
     const btn = document.createElement('button');
-    btn.textContent = `⬇️ Afficher plus de tirages (${tiragesFiltres.length - LIMIT} restants)`;
+    btn.textContent = `⬇️ Afficher plus de tirages (${tiragesFiltres.length - AFFICHAGE_LIMITE} restants)`;
     btn.style.cssText = 'margin:15px auto; display:block; padding:10px 20px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer;';
     btn.onclick = () => {
-      afficherSacSelectionne.LIMITE = (afficherSacSelectionne.LIMITE || LIMIT) + 100;
+      afficherSacSelectionne.AFFICHAGE_LIMITE = (afficherSacSelectionne.AFFICHAGE_LIMITE || AFFICHAGE_LIMITE) + 100;
       afficherSacSelectionne();
     };
     conteneur.appendChild(btn);
   }
 }
 
-// === AUTRES FONCTIONS (ex : ajout tirage, cockpit, labo, analyses...) ===
-// ... à compléter selon besoin...
+// === CHARGEMENT UTILISATEURS ADMIN ===
+async function chargerUtilisateursAuto() {
+  const tbody = document.getElementById('tbodyUtilisateurs');
+  const table = document.getElementById('tableUtilisateurs');
+  if (!tbody || !table) return;
 
-// === INITIALISATION ===
+  table.style.display = 'table';
+  tbody.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
+
+  try {
+    const { data: profils, error } = await supabaseClient.from('profils').select('*').order('role');
+    if (error) throw error;
+
+    let html = '';
+    profils.forEach(p => {
+      const dateVal = p.date_fin_abonnement ? p.date_fin_abonnement.split('T')[0] : '';
+      const tel = p.telephone || 'Non renseigné';
+
+      html += '<tr>';
+      html += `<td>${p.email || 'Inconnu'}</td>`;
+      html += `<td>${tel}</td>`;
+      html += `<td>${p.role}</td>`;
+      html += `<td><input type="date" value="${dateVal}" id="dateUser_${p.id}"></td>`;
+      html += '<td>';
+      html += `<select id="roleUser_${p.id}">`;
+      ['visiteur', 'abonne', 'admin'].forEach(role => {
+        const selected = (p.role === role) ? ' selected' : '';
+        html += `<option value="${role}"${selected}>${role.charAt(0).toUpperCase() + role.slice(1)}</option>`;
+      });
+      html += '</select> ';
+      html += `<button onclick="sauvegarderPrivileges('${p.id}')" style="background:green;">💾</button>`;
+      html += '</td></tr>';
+    });
+    tbody.innerHTML = html;
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Erreur chargement utilisateurs</td></tr>';
+    console.error('chargerUtilisateursAuto:', err);
+  }
+}
+
+// === SAUVEGARDER PRIVILÈGES UTILISATEURS ===
+async function sauvegarderPrivileges(userId) {
+  const roleEl = document.getElementById(`roleUser_${userId}`);
+  const dateEl = document.getElementById(`dateUser_${userId}`);
+  if (!roleEl || !dateEl) return;
+
+  const role = roleEl.value;
+  const dateFin = dateEl.value || null;
+
+  try {
+    const { error } = await supabaseClient.from('profils').update({ role, date_fin_abonnement: dateFin }).eq('id', userId);
+    if (error) throw error;
+    alert('✅ Mis à jour !');
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  }
+}
+
+// === DASHBOARD ADMIN ===
+function actualiserDashboard() {
+  const total = donneesCloud.length;
+  document.getElementById('dashTotal').textContent = total;
+  document.getElementById('dashStar').textContent = donneesCloud.filter(t => t.jeu === 'Star').length;
+  document.getElementById('dashFortune').textContent = donneesCloud.filter(t => t.jeu === 'Fortune').length;
+  document.getElementById('dashDigital').textContent = donneesCloud.filter(t => t.jeu === 'Digital').length;
+  if (total > 0) {
+    const dd = donneesCloud.reduce((max, t) => (t.date > max ? t.date : max), donneesCloud[0].date);
+    document.getElementById('dashDerniereDate').textContent = new Date(dd).toLocaleDateString('fr-FR');
+  }
+}
+
+// === EXPORT CSV ===
+function exporterSauvegardeComplete() {
+  if (!estAdmin) return;
+
+  const lines = ['date,heure,jeu,boules'];
+  donneesCloud.forEach(t => {
+    lines.push([t.date, t.heure, t.jeu, `"${t.boules.join(',')}"`].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'loto-benin-sauvegarde.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// === INITIALISATION AU CHARGEMENT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
   const tailleBoules = localStorage.getItem('loto_taille_boules') || 'taille-normale';
   document.body.className = tailleBoules;
