@@ -764,6 +764,79 @@ window.changerTailleBoules = changerTailleBoules;
 // ============================================================
 // INITIALISATION
 // ============================================================
+// ============================================================
+// GÉNÉRATEUR DE GRILLE COCKPIT
+// ============================================================
+function genererGrilleCockpit() {
+    var conteneur = document.getElementById("grilleGeneree");
+    if (!conteneur) { alert("Zone #grilleGeneree introuvable."); return; }
+
+    // Sac sélectionné dans le Cockpit
+    var sacEl = document.getElementById("cockpitSac");
+    var sacId = sacEl ? sacEl.value : "tous";
+
+    // Heure sélectionnée (si le filtre existe)
+    var heureEl = document.getElementById("cockpitHeure");
+    var heureFiltre = heureEl ? heureEl.value : "all";
+
+    var source = filtrerParSac(sacId);
+    if (heureFiltre && heureFiltre !== "all") {
+        source = source.filter(function(t) { return t.heure === heureFiltre; });
+    }
+
+    if (source.length < 10) {
+        conteneur.innerHTML = "❌ Pas assez de données (" + source.length + " tirages).";
+        conteneur.style.color = "#e74c3c";
+        return;
+    }
+
+    // On travaille sur les 200 derniers max
+    var N = Math.min(source.length, 200);
+    var recents = source.slice(-N);
+
+    // Calcul fréquence + retard
+    var freq = {}, dernierIdx = {};
+    for (var n = 1; n <= 90; n++) { freq[n] = 0; dernierIdx[n] = -1; }
+
+    recents.forEach(function(t, idx) {
+        t.boules.forEach(function(b) {
+            freq[b]++;
+            dernierIdx[b] = idx;
+        });
+    });
+
+    // Score : favorise fréquence + retard (retard × 2)
+    var scored = [];
+    for (var num = 1; num <= 90; num++) {
+        var retard = dernierIdx[num] === -1 ? N : (N - 1 - dernierIdx[num]);
+        var score = freq[num] + (retard * 2);
+        scored.push({ n: num, f: freq[num], r: retard, score: score });
+    }
+
+    // Tri décroissant + top 5 (une grille Loto = 5 boules)
+    var top5 = scored.sort(function(a, b) { return b.score - a.score; }).slice(0, 5);
+
+    // On remet dans l'ordre croissant pour un rendu classique
+    var grille = top5.map(function(o) { return o.n; }).sort(function(a, b) { return a - b; });
+
+    // Calcul de la somme
+    var somme = grille.reduce(function(a, b) { return a + b; }, 0);
+
+    // Affichage dans le style demandé (#grilleGeneree)
+    conteneur.style.color = "#27ae60";
+    conteneur.innerHTML =
+        "<span style='font-size: 14px; color: #888; display:block; margin-bottom:8px;'>" +
+        "Sac : <b>" + sacId + "</b> · " + N + " tirages analysés" +
+        (heureFiltre !== "all" ? " · Heure : <b>" + heureFiltre + "</b>" : "") +
+        "</span>" +
+        grille.join(" - ") +
+        "<div style='font-size: 14px; color: #888; margin-top:8px;'>Somme : <b>" + somme + "</b></div>";
+}
+
+// Expose au scope global pour le onclick
+window.genererGrilleCockpit = genererGrilleCockpit;
+
+console.log("✅ genererGrilleCockpit chargée");
 document.addEventListener('DOMContentLoaded', function() {
     var t = localStorage.getItem('loto_taille_boules') || 'taille-normale';
     document.body.className = t;
