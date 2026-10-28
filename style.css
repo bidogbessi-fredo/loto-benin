@@ -391,7 +391,7 @@
     font-size: 13px;
     margin: 2px;
 }
-/* Style universel pour n'importe quelle boule cliquée */
+/* Boule sélectionnée au clic */
 .boule-selectionnee {
     background-color: #9b59b6 !important; /* Violet vif */
     border: 2px solid #8e44ad !important;
@@ -399,4 +399,9 @@
     transform: scale(1.1);
     box-shadow: 0 0 8px rgba(155, 89, 182, 0.7);
     transition: all 0.2s ease-in-out;
+}
+
+/* Rendre les boules cliquables (curseur main) */
+.ball, .boule-selecteur, .comp-ball {
+    cursor: pointer;
 }
