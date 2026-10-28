@@ -276,3 +276,34 @@
     border-radius: 8px;
     margin-bottom: 10px;
 }
+/* Alignement des champs de la plage */
+.plage-inputs {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.plage-inputs > div {
+    flex: 1; /* Chaque champ prend une place égale */
+    display: flex;
+    flex-direction: column;
+}
+
+.plage-inputs select,
+.plage-inputs input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 38px; /* Force la même hauteur pour tous */
+}
+
+/* Nettoyage du fond de la plage */
+.plage-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
